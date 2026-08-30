@@ -1,9 +1,26 @@
-import { useEffect, useState } from 'react'
-import { initializeDatabase } from './db/database'
-import { ensureTrainingSeed } from './features/training/trainingSeed'
+import {
+  useEffect,
+  useState,
+} from 'react'
+
+import {
+  initializeDatabase,
+} from './db/database'
+
+import {
+  ensureTrainingSeed,
+} from './features/training/trainingSeed'
+
+import {
+  ensureNutritionSeed,
+} from './features/nutrition/nutritionSeed'
+
 import TrainingPage from './features/training/TrainingPage'
 
-type AppState = 'checking' | 'ready' | 'error'
+type AppState =
+  | 'checking'
+  | 'ready'
+  | 'error'
 
 function App() {
   const [appState, setAppState] =
@@ -15,6 +32,7 @@ function App() {
     async function initializeApp() {
       await initializeDatabase()
       await ensureTrainingSeed()
+      await ensureNutritionSeed()
     }
 
     initializeApp()
@@ -42,7 +60,9 @@ function App() {
   if (appState === 'checking') {
     return (
       <main>
-        <p>Preparando FÉNIX…</p>
+        <p>
+          Preparando FÉNIX…
+        </p>
       </main>
     )
   }
@@ -50,7 +70,10 @@ function App() {
   if (appState === 'error') {
     return (
       <main>
-        <h1>FÉNIX</h1>
+        <h1>
+          FÉNIX
+        </h1>
+
         <p>
           No se ha podido iniciar la base local.
           Tus datos existentes no han sido borrados.
