@@ -10,44 +10,48 @@ export default defineConfig({
       registerType: 'autoUpdate',
 
       includeAssets: [
-        'fenix-icon.svg',
+        'fenix-icon-32.png',
+        'fenix-icon-180.png',
+        'fenix-icon-192.png',
+        'fenix-icon-512.png',
       ],
 
       manifest: {
         name: 'FÉNIX',
         short_name: 'FÉNIX',
+
         description:
-          'Sistema personal de rutina, entrenamiento, nutrición y progreso.',
+          'FÉNIX — entrenamiento, nutrición, rutina y progreso.',
+
+        lang: 'es',
 
         start_url: '/',
         scope: '/',
 
         display: 'standalone',
 
-        background_color: '#0d0d0d',
-        theme_color: '#0d0d0d',
+        background_color: '#0b0b0b',
+        theme_color: '#0b0b0b',
 
         icons: [
           {
-            src: '/fenix-icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
+            src: '/fenix-icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
             purpose: 'any',
           },
           {
-            src: '/fenix-icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'maskable',
+            src: '/fenix-icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
           },
         ],
       },
 
       workbox: {
-        cleanupOutdatedCaches: true,
-
         globPatterns: [
-          '**/*.{js,css,html,svg,png,ico,webp,gif}',
+          '**/*.{js,css,html,ico,png,svg,webmanifest}',
         ],
       },
     }),
