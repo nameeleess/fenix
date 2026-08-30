@@ -1,0 +1,520 @@
+.training-page {
+  width: min(100%, 860px);
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+.training-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.training-header h1 {
+  margin: 2px 0 6px;
+  font-size: clamp(2rem, 8vw, 3.3rem);
+  letter-spacing: -0.05em;
+}
+
+.training-header p {
+  margin: 0;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8b8b8b;
+}
+
+.training-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 20px;
+  border: 1px solid #242424;
+  border-radius: 14px;
+  background: #141414;
+}
+
+.training-tabs button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  color: #8e8e8e;
+  background: transparent;
+  cursor: pointer;
+}
+
+.training-tabs button.active {
+  color: #fff;
+  background: #292929;
+}
+
+.template-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.template-card,
+.exercise-card,
+.history-card,
+.empty-state {
+  border: 1px solid #242424;
+  border-radius: 18px;
+  background: #151515;
+}
+
+.template-card {
+  padding: 18px;
+}
+
+.template-card h2,
+.exercise-card h2 {
+  margin: 4px 0 6px;
+  font-size: 1.35rem;
+  letter-spacing: -0.025em;
+}
+
+.template-card > div > p:last-child {
+  color: #999;
+}
+
+.template-stats {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.template-stats span {
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #202020;
+  font-size: 0.78rem;
+  color: #b9b9b9;
+}
+
+.template-exercises {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 0 0 18px;
+  list-style: none;
+}
+
+.template-exercises li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 35px;
+  border-bottom: 1px solid #222;
+}
+
+.template-exercises small {
+  flex: 0 0 auto;
+  color: #777;
+}
+
+.primary-button,
+.finish-workout-button {
+  width: 100%;
+  min-height: 50px;
+  border: 0;
+  border-radius: 12px;
+  font-weight: 750;
+  color: #0d0d0d;
+  background: #f2f2f2;
+  cursor: pointer;
+}
+
+.primary-button:disabled,
+.finish-workout-button:disabled {
+  opacity: 0.5;
+}
+
+.training-header--active {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin: -24px -16px 20px;
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid #242424;
+  background: rgba(13, 13, 13, 0.96);
+  backdrop-filter: blur(16px);
+}
+
+.training-header--active h1 {
+  font-size: 1.8rem;
+}
+
+.rest-timer {
+  flex: 0 0 auto;
+  min-width: 104px;
+  padding: 9px 10px;
+  border: 1px solid #282828;
+  border-radius: 12px;
+  text-align: center;
+  background: #161616;
+}
+
+.rest-timer small {
+  display: block;
+  margin-bottom: 1px;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  color: #777;
+}
+
+.rest-timer strong {
+  display: block;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.45rem;
+}
+
+.rest-timer--running {
+  border-color: #555;
+}
+
+.rest-timer div {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.rest-timer button {
+  min-height: 28px;
+  border: 0;
+  border-radius: 7px;
+  color: #aaa;
+  background: #242424;
+}
+
+.exercise-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.exercise-card {
+  padding: 16px;
+}
+
+.exercise-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.exercise-card__header > div:first-child {
+  min-width: 0;
+}
+
+.exercise-target {
+  color: #8c8c8c;
+  font-size: 0.82rem;
+}
+
+.exercise-media {
+  width: 74px;
+  height: 74px;
+  flex: 0 0 74px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #202020;
+}
+
+.exercise-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.exercise-media--empty {
+  display: grid;
+  place-items: center;
+  border: 1px dashed #393939;
+  color: #555;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.previous-performance {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 14px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #1c1c1c;
+}
+
+.previous-performance strong {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #777;
+}
+
+.previous-performance span {
+  overflow-wrap: anywhere;
+  font-size: 0.83rem;
+  color: #bcbcbc;
+}
+
+.sets-header,
+.set-row {
+  display: grid;
+  grid-template-columns:
+    minmax(42px, 0.65fr)
+    minmax(58px, 1fr)
+    minmax(58px, 1fr)
+    minmax(50px, 0.8fr)
+    42px
+    30px;
+  gap: 6px;
+  align-items: end;
+}
+
+.sets-header {
+  padding: 0 2px 5px;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.set-row {
+  position: relative;
+  padding: 6px;
+  border-radius: 10px;
+}
+
+.set-row--completed {
+  background: #1e1e1e;
+}
+
+.set-row label {
+  min-width: 0;
+}
+
+.set-row label span {
+  display: none;
+}
+
+.set-row input {
+  width: 100%;
+  height: 44px;
+  min-width: 0;
+  padding: 0 7px;
+  border: 1px solid #303030;
+  border-radius: 9px;
+  outline: none;
+  text-align: center;
+  font-size: 16px;
+  color: #fff;
+  background: #101010;
+}
+
+.set-row input:focus {
+  border-color: #777;
+}
+
+.set-row--completed input {
+  border-color: #333;
+  background: #191919;
+}
+
+.set-index {
+  align-self: center;
+  text-align: center;
+}
+
+.set-index span {
+  display: block;
+  font-weight: 800;
+}
+
+.set-index small {
+  font-size: 0.5rem;
+  color: #606060;
+}
+
+.set-complete-button,
+.set-remove-button {
+  align-self: center;
+  border: 0;
+  cursor: pointer;
+}
+
+.set-complete-button {
+  width: 42px;
+  height: 44px;
+  border-radius: 10px;
+  font-size: 1.3rem;
+  color: #aaa;
+  background: #262626;
+}
+
+.set-row--completed .set-complete-button {
+  color: #111;
+  background: #efefef;
+}
+
+.set-remove-button {
+  width: 30px;
+  height: 40px;
+  color: #555;
+  background: transparent;
+  font-size: 1.25rem;
+}
+
+.set-message {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  color: #d79b9b;
+}
+
+.exercise-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.secondary-button {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #2f2f2f;
+  border-radius: 10px;
+  color: #aaa;
+  background: #191919;
+  cursor: pointer;
+}
+
+.technique-note {
+  margin: 13px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #232323;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #747474;
+}
+
+.finish-workout-button {
+  margin-top: 18px;
+}
+
+.history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.history-card {
+  overflow: hidden;
+}
+
+.history-card summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.history-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.history-card summary div:first-child {
+  display: flex;
+  flex-direction: column;
+}
+
+.history-card summary span {
+  font-size: 0.76rem;
+  color: #777;
+}
+
+.history-card__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.history-card__content {
+  display: grid;
+  gap: 10px;
+  padding: 0 15px 15px;
+  border-top: 1px solid #232323;
+}
+
+.history-exercise {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 10px;
+}
+
+.history-exercise span {
+  font-size: 0.78rem;
+  color: #888;
+}
+
+.empty-state {
+  padding: 28px 18px;
+  text-align: center;
+}
+
+.empty-state p {
+  margin-top: 5px;
+}
+
+.error-message {
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid #553535;
+  border-radius: 10px;
+  color: #e2b1b1;
+  background: #251919;
+}
+
+.loading-text {
+  padding: 40px 0;
+  text-align: center;
+}
+
+@media (min-width: 720px) {
+  .template-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .training-page {
+    padding-top: 32px;
+  }
+
+  .training-header--active {
+    margin-top: -32px;
+  }
+}
+
+.cancel-workout-button {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 10px;
+  border: 1px solid #3a2b2b;
+  border-radius: 12px;
+  color: #b98787;
+  background: transparent;
+  cursor: pointer;
+}
+
+.cancel-workout-button:disabled {
+  opacity: 0.5;
+}

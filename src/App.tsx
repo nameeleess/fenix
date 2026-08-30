@@ -1,26 +1,36 @@
 import { useEffect, useState } from 'react'
 import { initializeDatabase } from './db/database'
+import { ensureTrainingSeed } from './features/training/trainingSeed'
+import TrainingPage from './features/training/TrainingPage'
 
-type DatabaseState = 'checking' | 'ready' | 'error'
+type AppState = 'checking' | 'ready' | 'error'
 
 function App() {
-  const [databaseState, setDatabaseState] =
-    useState<DatabaseState>('checking')
+  const [appState, setAppState] =
+    useState<AppState>('checking')
 
   useEffect(() => {
     let active = true
 
-    initializeDatabase()
+    async function initializeApp() {
+      await initializeDatabase()
+      await ensureTrainingSeed()
+    }
+
+    initializeApp()
       .then(() => {
         if (active) {
-          setDatabaseState('ready')
+          setAppState('ready')
         }
       })
       .catch((error: unknown) => {
-        console.error('Error inicializando FÉNIX DB:', error)
+        console.error(
+          'Error inicializando FÉNIX:',
+          error,
+        )
 
         if (active) {
-          setDatabaseState('error')
+          setAppState('error')
         }
       })
 
@@ -29,20 +39,27 @@ function App() {
     }
   }, [])
 
-  return (
-    <main>
-      <h1>FÉNIX</h1>
-      <p>Aplicación iniciada correctamente.</p>
+  if (appState === 'checking') {
+    return (
+      <main>
+        <p>Preparando FÉNIX…</p>
+      </main>
+    )
+  }
 
-      {databaseState === 'checking' && <p>Comprobando base local...</p>}
+  if (appState === 'error') {
+    return (
+      <main>
+        <h1>FÉNIX</h1>
+        <p>
+          No se ha podido iniciar la base local.
+          Tus datos existentes no han sido borrados.
+        </p>
+      </main>
+    )
+  }
 
-      {databaseState === 'ready' && <p>Base local: operativa.</p>}
-
-      {databaseState === 'error' && (
-        <p>No se ha podido iniciar la base local.</p>
-      )}
-    </main>
-  )
+  return <TrainingPage />
 }
 
 export default App
