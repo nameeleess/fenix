@@ -17,14 +17,25 @@ import {
 
 import TrainingPage from './features/training/TrainingPage'
 
+import NutritionPage from './features/nutrition/NutritionPage'
+
+import './styles/app.css'
+
 type AppState =
   | 'checking'
   | 'ready'
   | 'error'
 
+type AppSection =
+  | 'training'
+  | 'nutrition'
+
 function App() {
   const [appState, setAppState] =
     useState<AppState>('checking')
+
+  const [section, setSection] =
+    useState<AppSection>('training')
 
   useEffect(() => {
     let active = true
@@ -75,14 +86,71 @@ function App() {
         </h1>
 
         <p>
-          No se ha podido iniciar la base local.
-          Tus datos existentes no han sido borrados.
+          No se ha podido iniciar la
+          base local. Tus datos
+          existentes no han sido
+          borrados.
         </p>
       </main>
     )
   }
 
-  return <TrainingPage />
+  return (
+    <div className="fenix-app">
+      <div
+        className="fenix-view"
+        hidden={
+          section !== 'training'
+        }
+      >
+        <TrainingPage />
+      </div>
+
+      <div
+        className="fenix-view"
+        hidden={
+          section !== 'nutrition'
+        }
+      >
+        <NutritionPage />
+      </div>
+
+      <nav
+        className="fenix-navigation"
+        aria-label="Navegación principal"
+      >
+        <div className="fenix-navigation__inner">
+          <button
+            type="button"
+            className={
+              section === 'training'
+                ? 'active'
+                : ''
+            }
+            onClick={() =>
+              setSection('training')
+            }
+          >
+            Training
+          </button>
+
+          <button
+            type="button"
+            className={
+              section === 'nutrition'
+                ? 'active'
+                : ''
+            }
+            onClick={() =>
+              setSection('nutrition')
+            }
+          >
+            Nutrition
+          </button>
+        </div>
+      </nav>
+    </div>
+  )
 }
 
 export default App
