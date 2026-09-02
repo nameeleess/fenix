@@ -15,6 +15,10 @@ import {
   ensureNutritionSeed,
 } from './features/nutrition/nutritionSeed'
 
+import {
+  ensureTodaySeed,
+} from './features/today/todaySeed'
+
 import TrainingPage from './features/training/TrainingPage'
 
 import NutritionPage from './features/nutrition/NutritionPage'
@@ -31,44 +35,66 @@ type AppSection =
   | 'nutrition'
 
 function App() {
-  const [appState, setAppState] =
-    useState<AppState>('checking')
+  const [
+    appState,
+    setAppState,
+  ] =
+    useState<AppState>(
+      'checking',
+    )
 
-  const [section, setSection] =
-    useState<AppSection>('training')
+  const [
+    section,
+    setSection,
+  ] =
+    useState<AppSection>(
+      'training',
+    )
 
   useEffect(() => {
     let active = true
 
     async function initializeApp() {
       await initializeDatabase()
+
       await ensureTrainingSeed()
+
       await ensureNutritionSeed()
+
+      await ensureTodaySeed()
     }
 
     initializeApp()
       .then(() => {
         if (active) {
-          setAppState('ready')
+          setAppState(
+            'ready',
+          )
         }
       })
-      .catch((error: unknown) => {
-        console.error(
-          'Error inicializando FÉNIX:',
-          error,
-        )
+      .catch(
+        (error: unknown) => {
+          console.error(
+            'Error inicializando FÉNIX:',
+            error,
+          )
 
-        if (active) {
-          setAppState('error')
-        }
-      })
+          if (active) {
+            setAppState(
+              'error',
+            )
+          }
+        },
+      )
 
     return () => {
       active = false
     }
   }, [])
 
-  if (appState === 'checking') {
+  if (
+    appState === 'checking'
+  ) {
     return (
       <main>
         <p>
@@ -78,7 +104,9 @@ function App() {
     )
   }
 
-  if (appState === 'error') {
+  if (
+    appState === 'error'
+  ) {
     return (
       <main>
         <h1>
@@ -86,8 +114,8 @@ function App() {
         </h1>
 
         <p>
-          No se ha podido iniciar la
-          base local. Tus datos
+          No se ha podido iniciar
+          la base local. Tus datos
           existentes no han sido
           borrados.
         </p>
@@ -100,7 +128,8 @@ function App() {
       <div
         className="fenix-view"
         hidden={
-          section !== 'training'
+          section !==
+          'training'
         }
       >
         <TrainingPage />
@@ -109,7 +138,8 @@ function App() {
       <div
         className="fenix-view"
         hidden={
-          section !== 'nutrition'
+          section !==
+          'nutrition'
         }
       >
         <NutritionPage />
@@ -123,12 +153,15 @@ function App() {
           <button
             type="button"
             className={
-              section === 'training'
+              section ===
+              'training'
                 ? 'active'
                 : ''
             }
             onClick={() =>
-              setSection('training')
+              setSection(
+                'training',
+              )
             }
           >
             Training
@@ -137,12 +170,15 @@ function App() {
           <button
             type="button"
             className={
-              section === 'nutrition'
+              section ===
+              'nutrition'
                 ? 'active'
                 : ''
             }
             onClick={() =>
-              setSection('nutrition')
+              setSection(
+                'nutrition',
+              )
             }
           >
             Nutrition

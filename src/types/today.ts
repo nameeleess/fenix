@@ -72,24 +72,18 @@ export interface DailyRoutineTemplateItem
    *
    * Formato:
    * HH:MM
-   *
-   * Ejemplo:
-   * 07:00
    */
   targetTime: string | null
 
   /*
    * Hora límite cuando exista.
    *
-   * Ejemplo:
-   * 07:15
+   * Formato:
+   * HH:MM
    */
   latestTime: string | null
 
   /*
-   * Días de la semana en los que la regla
-   * horaria es aplicable.
-   *
    * 0 = domingo
    * 1 = lunes
    * ...
@@ -102,14 +96,14 @@ export interface DailyRoutineTemplateItem
 }
 
 /*
- * Ejecución de Hoy correspondiente a una
- * fecha concreta.
+ * Ejecución de Hoy correspondiente a
+ * una fecha concreta.
  *
- * Su existencia NO significa que el usuario
- * haya iniciado visualmente el día.
+ * Su existencia NO significa que el
+ * usuario haya pulsado "Iniciar día".
  *
- * startedAt solo registra la acción UX:
- * "Iniciar día".
+ * startedAt registra exclusivamente
+ * esa acción de UX.
  */
 export interface DailyRoutine
   extends BaseEntity {
@@ -121,14 +115,10 @@ export interface DailyRoutine
 }
 
 /*
- * Snapshot histórico de una tarea concreta
- * de una fecha.
- *
- * Puede proceder de una plantilla o haber
- * sido creada únicamente para ese día.
+ * Snapshot histórico de una tarea concreta.
  *
  * Training y Nutrition NO se copian aquí.
- * Sus estados continúan perteneciendo a sus
+ * Sus estados siguen perteneciendo a sus
  * respectivos módulos.
  */
 export interface DailyRoutineTask
@@ -148,6 +138,12 @@ export interface DailyRoutineTask
   title: string
 
   description: string | null
+
+  /*
+   * Snapshot de la regla de aplicabilidad
+   * existente cuando se creó este día.
+   */
+  applicability: TodayApplicability
 
   status: TodayTaskStatus
 
@@ -169,9 +165,8 @@ export interface DailyRoutineTask
 /*
  * Jornada laboral efectiva de una fecha.
  *
- * Es independiente de patrones futuros:
- * cambiar el turno de hoy no modifica
- * automáticamente otros días.
+ * Cambiar este registro afecta únicamente
+ * a esa fecha.
  */
 export interface WorkShift
   extends BaseEntity {
@@ -184,6 +179,8 @@ export interface WorkShift
   endTime: string | null
 
   status: TodayTaskStatus
+
+  statusChangedAt: string | null
 
   notes: string | null
 }
