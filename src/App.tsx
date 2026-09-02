@@ -19,6 +19,8 @@ import {
   ensureTodaySeed,
 } from './features/today/todaySeed'
 
+import TodayPage from './features/today/TodayPage'
+
 import TrainingPage from './features/training/TrainingPage'
 
 import NutritionPage from './features/nutrition/NutritionPage'
@@ -31,8 +33,122 @@ type AppState =
   | 'error'
 
 type AppSection =
+  | 'today'
   | 'training'
   | 'nutrition'
+  | 'progress'
+
+function NavigationIcon({
+  section,
+}: {
+  section: AppSection
+}) {
+  if (section === 'today') {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M3.5 10.5 12 3l8.5 7.5" />
+        <path d="M5.5 9.5V21h13V9.5" />
+        <path d="M9.5 21v-6h5v6" />
+      </svg>
+    )
+  }
+
+  if (
+    section ===
+    'training'
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M6 8v8" />
+        <path d="M18 8v8" />
+        <path d="M3.5 10v4" />
+        <path d="M20.5 10v4" />
+        <path d="M6 12h12" />
+      </svg>
+    )
+  }
+
+  if (
+    section ===
+    'nutrition'
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M7 3v7" />
+        <path d="M4.5 3v5a2.5 2.5 0 0 0 5 0V3" />
+        <path d="M7 10v11" />
+        <path d="M16 3c2 1.5 3 4 3 7v11" />
+        <path d="M16 3v9h3" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 19V9" />
+      <path d="M10 19V5" />
+      <path d="M16 19v-7" />
+      <path d="M22 19V3" />
+    </svg>
+  )
+}
+
+function ProgressPlaceholder() {
+  return (
+    <main className="fenix-placeholder-page">
+      <div className="fenix-placeholder-page__inner">
+        <span className="fenix-placeholder-page__brand">
+          FÉNIX
+        </span>
+
+        <h1>
+          Progreso
+        </h1>
+
+        <p>
+          El módulo está reservado en
+          la navegación, pero todavía
+          no dispone de su
+          implementación técnica.
+          No se mostrarán métricas
+          inventadas.
+        </p>
+      </div>
+    </main>
+  )
+}
 
 function App() {
   const [
@@ -48,7 +164,7 @@ function App() {
     setSection,
   ] =
     useState<AppSection>(
-      'training',
+      'today',
     )
 
   useEffect(() => {
@@ -93,7 +209,8 @@ function App() {
   }, [])
 
   if (
-    appState === 'checking'
+    appState ===
+    'checking'
   ) {
     return (
       <main>
@@ -105,7 +222,8 @@ function App() {
   }
 
   if (
-    appState === 'error'
+    appState ===
+    'error'
   ) {
     return (
       <main>
@@ -129,6 +247,36 @@ function App() {
         className="fenix-view"
         hidden={
           section !==
+          'today'
+        }
+      >
+        <TodayPage
+          isActive={
+            section ===
+            'today'
+          }
+          onOpenTraining={() =>
+            setSection(
+              'training',
+            )
+          }
+          onOpenNutrition={() =>
+            setSection(
+              'nutrition',
+            )
+          }
+          onOpenProgress={() =>
+            setSection(
+              'progress',
+            )
+          }
+        />
+      </div>
+
+      <div
+        className="fenix-view"
+        hidden={
+          section !==
           'training'
         }
       >
@@ -145,44 +293,80 @@ function App() {
         <NutritionPage />
       </div>
 
+      <div
+        className="fenix-view"
+        hidden={
+          section !==
+          'progress'
+        }
+      >
+        <ProgressPlaceholder />
+      </div>
+
       <nav
         className="fenix-navigation"
         aria-label="Navegación principal"
       >
         <div className="fenix-navigation__inner">
-          <button
-            type="button"
-            className={
-              section ===
-              'training'
-                ? 'active'
-                : ''
-            }
-            onClick={() =>
-              setSection(
+          {(
+            [
+              [
+                'today',
+                'Hoy',
+              ],
+              [
                 'training',
-              )
-            }
-          >
-            Training
-          </button>
-
-          <button
-            type="button"
-            className={
-              section ===
-              'nutrition'
-                ? 'active'
-                : ''
-            }
-            onClick={() =>
-              setSection(
+                'Training',
+              ],
+              [
                 'nutrition',
-              )
-            }
-          >
-            Nutrition
-          </button>
+                'Nutrition',
+              ],
+              [
+                'progress',
+                'Progreso',
+              ],
+            ] as const
+          ).map(
+            ([
+              item,
+              label,
+            ]) => (
+              <button
+                key={item}
+                type="button"
+                className={
+                  section ===
+                  item
+                    ? 'active'
+                    : ''
+                }
+                aria-current={
+                  section ===
+                  item
+                    ? 'page'
+                    : undefined
+                }
+                onClick={() =>
+                  setSection(
+                    item,
+                  )
+                }
+              >
+                <span className="fenix-navigation__icon">
+                  <NavigationIcon
+                    section={
+                      item
+                    }
+                  />
+                </span>
+
+                <span className="fenix-navigation__label">
+                  {label}
+                </span>
+              </button>
+            ),
+          )}
         </div>
       </nav>
     </div>

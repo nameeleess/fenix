@@ -1,10 +1,210 @@
+:root {
+  /*
+   * FÉNIX Design System v1
+   *
+   * Los valores cromáticos actuales
+   * son provisionales.
+   *
+   * Cambiar estas variables permitirá
+   * evolucionar la identidad sin
+   * reconstruir cada módulo.
+   */
+
+  --fenix-bg:
+    #090a0b;
+
+  --fenix-surface:
+    #111315;
+
+  --fenix-surface-soft:
+    #191b1e;
+
+  --fenix-surface-elevated:
+    #202226;
+
+  --fenix-border:
+    #272a2e;
+
+  --fenix-border-soft:
+    #1d2023;
+
+  --fenix-border-strong:
+    #34383d;
+
+  --fenix-text:
+    #f5f5f3;
+
+  --fenix-text-muted:
+    #9b9da1;
+
+  --fenix-text-dim:
+    #686b70;
+
+  /*
+   * Acento PROVISIONAL.
+   * Se revisará visualmente.
+   */
+  --fenix-accent:
+    #df6b3c;
+
+  --fenix-accent-strong:
+    #ee7746;
+
+  --fenix-accent-soft:
+    #ef9a72;
+
+  --fenix-success:
+    #79b866;
+
+  --fenix-danger:
+    #ff7373;
+
+  --fenix-radius-sm:
+    10px;
+
+  --fenix-radius-md:
+    14px;
+
+  --fenix-radius-lg:
+    20px;
+
+  --fenix-radius-xl:
+    28px;
+
+  --fenix-shadow-card:
+    0
+    18px
+    50px
+    rgba(0, 0, 0, 0.16);
+
+  color-scheme: dark;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Text",
+    "Segoe UI",
+    sans-serif;
+  font-synthesis: none;
+  text-rendering:
+    optimizeLegibility;
+  -webkit-font-smoothing:
+    antialiased;
+}
+
+html {
+  min-height: 100%;
+  background:
+    var(--fenix-bg);
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    var(--fenix-bg);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color:
+    transparent;
+}
+
+#root {
+  min-height: 100vh;
+}
+
 .fenix-app {
   min-height: 100vh;
+  color:
+    var(--fenix-text);
+  background:
+    var(--fenix-bg);
 }
 
 .fenix-view[hidden] {
   display: none;
 }
+
+/*
+ * Estado temporal del módulo
+ * Progreso hasta recibir su
+ * implementación propia.
+ */
+
+.fenix-placeholder-page {
+  min-height: 100dvh;
+  color:
+    var(--fenix-text);
+  background:
+    var(--fenix-bg);
+}
+
+.fenix-placeholder-page__inner {
+  width:
+    min(
+      100%,
+      520px
+    );
+  box-sizing:
+    border-box;
+  margin:
+    0
+    auto;
+  padding:
+    calc(
+      28px +
+      env(
+        safe-area-inset-top
+      )
+    )
+    16px
+    calc(
+      112px +
+      env(
+        safe-area-inset-bottom
+      )
+    );
+}
+
+.fenix-placeholder-page__brand {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color:
+    var(--fenix-accent);
+}
+
+.fenix-placeholder-page h1 {
+  margin:
+    0
+    0
+    8px;
+  font-size: 34px;
+  letter-spacing: -0.04em;
+}
+
+.fenix-placeholder-page p {
+  max-width: 390px;
+  color:
+    var(--fenix-text-muted);
+  line-height: 1.55;
+}
+
+/*
+ * Bottom navigation global.
+ */
 
 .fenix-navigation {
   position: fixed;
@@ -16,42 +216,111 @@
   justify-content: center;
   padding:
     8px
-    12px
+    10px
     calc(
       8px +
-      env(safe-area-inset-bottom)
+      env(
+        safe-area-inset-bottom
+      )
     );
   pointer-events: none;
 }
 
 .fenix-navigation__inner {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  width: min(100%, 430px);
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
+  width:
+    min(
+      100%,
+      500px
+    );
   padding: 5px;
-  border: 1px solid #2a2a2a;
-  border-radius: 17px;
-  background: rgba(
-    20,
-    20,
-    20,
-    0.96
-  );
-  backdrop-filter: blur(18px);
+  border: 1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+  border-radius: 20px;
+  background:
+    rgba(
+      17,
+      19,
+      21,
+      0.94
+    );
+  box-shadow:
+    0
+    18px
+    50px
+    rgba(
+      0,
+      0,
+      0,
+      0.38
+    );
+  backdrop-filter:
+    blur(22px);
+  -webkit-backdrop-filter:
+    blur(22px);
   pointer-events: auto;
 }
 
 .fenix-navigation button {
-  min-height: 50px;
+  display: grid;
+  min-width: 0;
+  min-height: 54px;
+  padding:
+    6px
+    3px;
   border: 0;
-  border-radius: 12px;
-  font-weight: 650;
-  color: #737373;
-  background: transparent;
+  border-radius: 15px;
+  place-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color:
+    var(--fenix-text-dim);
+  background:
+    transparent;
   cursor: pointer;
 }
 
 .fenix-navigation button.active {
-  color: #fff;
-  background: #2a2a2a;
+  color:
+    var(--fenix-text);
+  background:
+    var(--fenix-surface-elevated);
+}
+
+.fenix-navigation button.active
+.fenix-navigation__icon {
+  color:
+    var(--fenix-accent);
+}
+
+.fenix-navigation__icon {
+  display: block;
+  width: 21px;
+  height: 21px;
+  color: currentColor;
+}
+
+.fenix-navigation__icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fenix-navigation__label {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow:
+    ellipsis;
+  white-space: nowrap;
 }
