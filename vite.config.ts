@@ -30,15 +30,14 @@ export default defineConfig({
 
         display: 'standalone',
 
-        background_color: '#0b0b0b',
-        theme_color: '#0b0b0b',
+        background_color: '#050506',
+        theme_color: '#050506',
 
         icons: [
           {
             src: '/fenix-icon-192.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any',
           },
           {
             src: '/fenix-icon-512.png',
