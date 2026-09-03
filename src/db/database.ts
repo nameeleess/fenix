@@ -39,6 +39,8 @@ import type {
   WorkShift,
 } from '../types/today'
 
+export const CURRENT_SCHEMA_VERSION = 5
+
 export interface AppMeta {
   key: string
 
@@ -447,7 +449,7 @@ export async function initializeDatabase() {
 
   await db.appMeta.put({
     key: 'schemaVersion',
-    value: '5',
+    value: String(CURRENT_SCHEMA_VERSION),
     updatedAt:
       new Date().toISOString(),
   })

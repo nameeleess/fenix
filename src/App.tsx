@@ -25,7 +25,15 @@ import TrainingPage from './features/training/TrainingPage'
 
 import NutritionPage from './features/nutrition/NutritionPage'
 
-import ProgressPlaceholder from './features/progress/ProgressPlaceholder'
+import ProgressPage from './features/progress/ProgressPage'
+
+import {
+  ensureProgressSeed,
+} from './features/progress/progressSeed'
+
+import {
+  ensureVNextDataMigrations,
+} from './services/vNextMigrationService'
 
 import './styles/app.css'
 
@@ -158,6 +166,10 @@ function App() {
       await ensureNutritionSeed()
 
       await ensureTodaySeed()
+
+      await ensureVNextDataMigrations()
+
+      await ensureProgressSeed()
     }
 
     initializeApp()
@@ -286,7 +298,7 @@ function App() {
           'progress'
         }
       >
-        <ProgressPlaceholder />
+        <ProgressPage />
       </div>
 
       <nav
