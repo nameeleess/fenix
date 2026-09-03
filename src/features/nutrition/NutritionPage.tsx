@@ -18,6 +18,7 @@ import {
   getLocalDateKey,
   getNutritionDay,
   getNutritionWeekSuggestion,
+  getRelevantNutritionMeal,
   nutritionRoleLabel,
   replaceDailyMealRecipe,
   setDailyMealPortion,
@@ -560,7 +561,7 @@ export default function NutritionPage() {
   const [showGoal, setShowGoal] = useState(false)
 
   const nextPending = useMemo(
-    () => day?.meals.find((item) => item.meal.status === 'pending') ?? null,
+    () => (day ? getRelevantNutritionMeal(day) : null),
     [day],
   )
 
@@ -644,7 +645,7 @@ export default function NutritionPage() {
           <button type="button" onClick={() => changeTab('week')}>Semana</button>
           <button type="button" className="active">Recetas · Compra</button>
         </nav>
-        <NutritionLibrary />
+        <NutritionLibrary embedded />
       </div>
     )
   }

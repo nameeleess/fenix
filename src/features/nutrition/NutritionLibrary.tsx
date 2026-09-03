@@ -40,6 +40,7 @@ import {
 } from './nutritionService'
 
 import './nutrition.css'
+import './nutrition-library-vnext.css'
 
 type NutritionSection =
   | 'recipes'
@@ -1766,7 +1767,11 @@ function BasketEditor({
   )
 }
 
-export default function NutritionLibrary() {
+export default function NutritionLibrary({
+  embedded = false,
+}: {
+  embedded?: boolean
+}) {
   const [
     recipes,
     setRecipes,
@@ -1862,6 +1867,13 @@ export default function NutritionLibrary() {
     message,
     setMessage,
   ] = useState('')
+
+  const pageClassName = `nutrition-page nutrition-library-vnext${
+    embedded ? ' nutrition-library-vnext--embedded' : ''
+  }`
+
+  const favoriteCount = recipes.filter((item) => item.recipe.isFavorite).length
+  const pendingBasketCount = basket.filter((item) => !item.item.checked).length
 
   useEffect(() => {
     let active = true
@@ -2059,7 +2071,7 @@ export default function NutritionLibrary() {
 
   if (loading) {
     return (
-      <main className="nutrition-page">
+      <main className={pageClassName}>
         Cargando Nutrition…
       </main>
     )
@@ -2067,7 +2079,7 @@ export default function NutritionLibrary() {
 
   if (recipeEditor) {
     return (
-      <main className="nutrition-page">
+      <main className={pageClassName}>
         <RecipeEditor
           key={
             recipeEditor ===
@@ -2096,7 +2108,7 @@ export default function NutritionLibrary() {
 
   if (selectedRecipe) {
     return (
-      <main className="nutrition-page">
+      <main className={pageClassName}>
         {error && (
           <div className="nutrition-error">
             {error}
@@ -2179,17 +2191,34 @@ export default function NutritionLibrary() {
   }
 
   return (
-    <main className="nutrition-page">
-      <header className="nutrition-header">
-        <p className="nutrition-eyebrow">
-          FÉNIX
-        </p>
-        <h1>
-          Nutrition
-        </h1>
-        <p>
-          Recetas y compra bajo tu control.
-        </p>
+    <main className={pageClassName}>
+      <header className="nutrition-header nutrition-library-hero">
+        <div className="nutrition-library-hero__copy">
+          <p className="nutrition-eyebrow">
+            BIBLIOTECA NUTRITION
+          </p>
+          <h1>
+            Recetas & compra
+          </h1>
+          <p>
+            Tu catálogo personal, limpio y reutilizable. Las recetas alimentan el plan; la compra organiza lo que necesitas.
+          </p>
+        </div>
+
+        <div className="nutrition-library-stats" aria-label="Resumen de biblioteca">
+          <div>
+            <strong>{recipes.length}</strong>
+            <span>recetas</span>
+          </div>
+          <div>
+            <strong>{favoriteCount}</strong>
+            <span>favoritas</span>
+          </div>
+          <div>
+            <strong>{pendingBasketCount}</strong>
+            <span>por comprar</span>
+          </div>
+        </div>
       </header>
 
       {error && (
@@ -2298,11 +2327,11 @@ export default function NutritionLibrary() {
             )}
           </div>
 
-          <div className="nutrition-results">
-            {
-              filteredRecipes.length
-            }{' '}
-            recetas
+          <div className="nutrition-results nutrition-library-results">
+            <span>
+              {filteredRecipes.length} {filteredRecipes.length === 1 ? 'receta' : 'recetas'}
+            </span>
+            <small>Abre una tarjeta para editar, duplicar o enviar ingredientes a compra.</small>
           </div>
 
           <section className="nutrition-recipe-grid">
@@ -2330,13 +2359,13 @@ export default function NutritionLibrary() {
           <div className="shopping-catalog-header">
             <div>
               <p className="nutrition-eyebrow">
-                COMPRA
+                DESPENSA PERSONAL
               </p>
               <h2>
-                Catálogo
+                Catálogo de compra
               </h2>
               <p>
-                Tu lista permanente.
+                Añade a la lista solo lo que realmente necesitas comprar.
               </p>
             </div>
 
@@ -2349,18 +2378,8 @@ export default function NutritionLibrary() {
                 )
               }
             >
-              <span>
-                🛒
-              </span>
-
-              {basket.length >
-                0 && (
-                <strong>
-                  {
-                    basket.length
-                  }
-                </strong>
-              )}
+              <span>Lista</span>
+              <strong>{pendingBasketCount}</strong>
             </button>
           </div>
 
@@ -2562,13 +2581,13 @@ export default function NutritionLibrary() {
 
           <div className="shopping-basket-header">
             <p className="nutrition-eyebrow">
-              COMPRA
+              LISTA ACTIVA
             </p>
             <h2>
-              Carrito
+              Compra
             </h2>
             <p>
-              Lo que te falta comprar.
+              {pendingBasketCount} pendiente{pendingBasketCount === 1 ? '' : 's'} · {basket.length - pendingBasketCount} comprado{basket.length - pendingBasketCount === 1 ? '' : 's'}
             </p>
           </div>
 
@@ -2622,82 +2641,71 @@ export default function NutritionLibrary() {
                 </button>
               )}
 
-              {basket.map(
-                (item) => (
-                  <div
-                    className={`shopping-row ${
-                      item.item.checked
-                        ? 'shopping-row--checked'
-                        : ''
-                    }`}
-                    key={
-                      item.item.id
-                    }
-                  >
-                    <button
-                      type="button"
-                      className="shopping-check"
-                      onClick={async () => {
-                        await toggleShoppingItemChecked(
-                          item.item.id,
-                        )
+              {ingredientCategoryOrder.map((group) => {
+                const groupItems = basket.filter(
+                  (item) => item.ingredient.category === group,
+                )
 
-                        setBasket(
-                          await getShoppingList(),
-                        )
-                      }}
-                    >
-                      {item.item.checked
-                        ? '✓'
-                        : '○'}
-                    </button>
+                if (groupItems.length === 0) {
+                  return null
+                }
 
-                    <div className="shopping-info">
-                      <strong>
-                        {
-                          item
-                            .ingredient
-                            .name
-                        }
-                      </strong>
-
-                      <span>
-                        {formatShoppingQuantity(
-                          item,
-                        )}
-                      </span>
+                return (
+                  <section className="shopping-group" key={group}>
+                    <div className="shopping-group__heading">
+                      <span>{ingredientCategoryNames[group]}</span>
+                      <small>{groupItems.filter((item) => !item.item.checked).length} pendientes</small>
                     </div>
 
-                    <button
-                      type="button"
-                      className="shopping-edit"
-                      onClick={() =>
-                        setBasketEditor(
-                          item,
-                        )
-                      }
-                    >
-                      ✎
-                    </button>
+                    {groupItems.map((item) => (
+                      <div
+                        className={`shopping-row ${
+                          item.item.checked ? 'shopping-row--checked' : ''
+                        }`}
+                        key={item.item.id}
+                      >
+                        <button
+                          type="button"
+                          className="shopping-check"
+                          aria-label={item.item.checked ? `Marcar ${item.ingredient.name} como pendiente` : `Marcar ${item.ingredient.name} como comprado`}
+                          onClick={async () => {
+                            await toggleShoppingItemChecked(item.item.id)
+                            setBasket(await getShoppingList())
+                          }}
+                        >
+                          {item.item.checked ? '✓' : ''}
+                        </button>
 
-                    <button
-                      type="button"
-                      className="shopping-remove"
-                      onClick={async () => {
-                        await removeShoppingItem(
-                          item.item.id,
-                        )
+                        <div className="shopping-info">
+                          <strong>{item.ingredient.name}</strong>
+                          <span>{formatShoppingQuantity(item)}</span>
+                        </div>
 
-                        setBasket(
-                          await getShoppingList(),
-                        )
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ),
-              )}
+                        <button
+                          type="button"
+                          className="shopping-edit"
+                          aria-label={`Editar ${item.ingredient.name}`}
+                          onClick={() => setBasketEditor(item)}
+                        >
+                          Editar
+                        </button>
+
+                        <button
+                          type="button"
+                          className="shopping-remove"
+                          aria-label={`Eliminar ${item.ingredient.name} de compra`}
+                          onClick={async () => {
+                            await removeShoppingItem(item.item.id)
+                            setBasket(await getShoppingList())
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </section>
+                )
+              })}
             </div>
           )}
         </>

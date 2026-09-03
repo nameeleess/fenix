@@ -1,0 +1,695 @@
+/*
+ * Nutrition library — vNext integration layer.
+ *
+ * This file intentionally sits after the legacy library stylesheet.
+ * It keeps all existing editor/catalog functionality while aligning
+ * Recetas, Compra and Ingredientes with the FÉNIX dark premium system.
+ */
+
+.nutrition-vnext-shell--library {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 50% -8%, rgb(var(--fenix-accent-rgb) / 0.08), transparent 34%),
+    var(--fenix-bg);
+}
+
+.nutrition-vnext-shell--library .nutrition-library-vnext {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 4px 0 124px;
+  color: var(--fenix-text);
+  background: transparent;
+}
+
+.nutrition-library-vnext .nutrition-library-hero {
+  display: grid;
+  gap: 20px;
+  margin: 8px 0 18px;
+  padding: 22px;
+  border: 1px solid var(--fenix-border);
+  border-radius: var(--fenix-radius-xl);
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 0.045), transparent 48%),
+    var(--fenix-carbon-texture),
+    var(--fenix-surface);
+  box-shadow: var(--fenix-shadow-card);
+}
+
+.nutrition-library-vnext .nutrition-library-hero__copy {
+  min-width: 0;
+}
+
+.nutrition-library-vnext .nutrition-library-hero h1 {
+  margin: 4px 0 8px;
+  font-size: clamp(28px, 8vw, 40px);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.nutrition-library-vnext .nutrition-library-hero p:last-child {
+  max-width: 580px;
+  margin: 0;
+  color: var(--fenix-text-muted);
+  line-height: 1.55;
+}
+
+.nutrition-library-vnext .nutrition-library-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nutrition-library-vnext .nutrition-library-stats > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 12px 10px;
+  border: 1px solid var(--fenix-border-soft);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.025);
+}
+
+.nutrition-library-vnext .nutrition-library-stats strong {
+  font-size: 20px;
+  letter-spacing: -0.04em;
+}
+
+.nutrition-library-vnext .nutrition-library-stats span {
+  overflow: hidden;
+  font-size: 11px;
+  color: var(--fenix-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nutrition-library-vnext .nutrition-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 16px;
+  padding: 5px;
+  border: 1px solid var(--fenix-border-soft);
+  border-radius: 16px;
+  background: var(--fenix-surface);
+}
+
+.nutrition-library-vnext .nutrition-tabs button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 12px;
+  color: var(--fenix-text-muted);
+  background: transparent;
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.nutrition-library-vnext .nutrition-tabs button.active {
+  color: var(--fenix-text);
+  background:
+    linear-gradient(180deg, rgb(var(--fenix-accent-rgb) / 0.19), rgb(var(--fenix-accent-rgb) / 0.09)),
+    var(--fenix-surface-soft);
+  box-shadow: inset 0 0 0 1px rgb(var(--fenix-accent-rgb) / 0.35);
+}
+
+.nutrition-library-vnext .recipes-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.nutrition-library-vnext .nutrition-search {
+  display: grid;
+  gap: 7px;
+}
+
+.nutrition-library-vnext .nutrition-search > span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--fenix-text-muted);
+  text-transform: uppercase;
+}
+
+.nutrition-library-vnext .nutrition-search input,
+.nutrition-library-vnext .recipe-field input,
+.nutrition-library-vnext .recipe-field select,
+.nutrition-library-vnext .recipe-field textarea,
+.nutrition-library-vnext .basket-editor input,
+.nutrition-library-vnext .basket-editor select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--fenix-border);
+  border-radius: 13px;
+  color: var(--fenix-text);
+  background: var(--fenix-surface-soft);
+}
+
+.nutrition-library-vnext .nutrition-search input {
+  padding: 0 14px;
+}
+
+.nutrition-library-vnext .new-recipe-button,
+.nutrition-library-vnext .nutrition-primary-button {
+  min-height: 46px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 13px;
+  color: #fff;
+  background: var(--fenix-accent);
+  font-weight: 800;
+  box-shadow: 0 10px 26px rgb(var(--fenix-accent-rgb) / 0.18);
+  cursor: pointer;
+}
+
+.nutrition-library-vnext .nutrition-categories {
+  display: flex;
+  gap: 7px;
+  margin: 0 -2px 14px;
+  padding: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nutrition-library-vnext .nutrition-categories::-webkit-scrollbar {
+  display: none;
+}
+
+.nutrition-library-vnext .nutrition-categories button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--fenix-border);
+  border-radius: 999px;
+  color: var(--fenix-text-muted);
+  background: var(--fenix-surface);
+  font-size: 12px;
+  font-weight: 720;
+  cursor: pointer;
+}
+
+.nutrition-library-vnext .nutrition-categories button.active {
+  border-color: rgb(var(--fenix-accent-rgb) / 0.56);
+  color: var(--fenix-text);
+  background: rgb(var(--fenix-accent-rgb) / 0.12);
+}
+
+.nutrition-library-vnext .nutrition-library-results {
+  display: flex;
+  gap: 8px 16px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 2px 12px;
+}
+
+.nutrition-library-vnext .nutrition-library-results span {
+  font-size: 13px;
+  font-weight: 780;
+  color: var(--fenix-text);
+}
+
+.nutrition-library-vnext .nutrition-library-results small {
+  max-width: 480px;
+  color: var(--fenix-text-dim);
+  text-align: right;
+}
+
+.nutrition-library-vnext .nutrition-recipe-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.nutrition-library-vnext .nutrition-recipe-card {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--fenix-border);
+  border-radius: 20px;
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 0.035), transparent 52%),
+    var(--fenix-carbon-texture),
+    var(--fenix-surface);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 0.22);
+}
+
+.nutrition-library-vnext .nutrition-recipe-card:hover {
+  border-color: var(--fenix-border-strong);
+}
+
+.nutrition-library-vnext .nutrition-recipe-card__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.nutrition-library-vnext .nutrition-recipe-card h2 {
+  margin: 4px 0 0;
+  font-size: 18px;
+  line-height: 1.18;
+  letter-spacing: -0.025em;
+}
+
+.nutrition-library-vnext .nutrition-eyebrow {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  color: var(--fenix-accent-soft);
+  text-transform: uppercase;
+}
+
+.nutrition-library-vnext .favorite-button {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid var(--fenix-border);
+  border-radius: 12px;
+  color: var(--fenix-text-muted);
+  background: var(--fenix-surface-soft);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.nutrition-library-vnext .favorite-button--active {
+  border-color: rgb(var(--fenix-accent-rgb) / 0.45);
+  color: var(--fenix-accent-soft);
+  background: rgb(var(--fenix-accent-rgb) / 0.1);
+}
+
+.nutrition-library-vnext .nutrition-macros {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.nutrition-library-vnext .nutrition-macros > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 9px 7px;
+  border: 1px solid var(--fenix-border-soft);
+  border-radius: 11px;
+  background: rgb(255 255 255 / 0.018);
+  text-align: center;
+}
+
+.nutrition-library-vnext .nutrition-macros strong {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+}
+
+.nutrition-library-vnext .nutrition-macros span {
+  font-size: 9px;
+  font-weight: 760;
+  color: var(--fenix-text-dim);
+  text-transform: uppercase;
+}
+
+.nutrition-library-vnext .recipe-card-footer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid var(--fenix-border-soft);
+}
+
+.nutrition-library-vnext .recipe-card-footer > span {
+  font-size: 12px;
+  color: var(--fenix-text-muted);
+}
+
+.nutrition-library-vnext .recipe-card-footer button,
+.nutrition-library-vnext .nutrition-back-button,
+.nutrition-library-vnext .recipe-management-actions button,
+.nutrition-library-vnext .section-title-row button,
+.nutrition-library-vnext .catalog-section-header button,
+.nutrition-library-vnext .catalog-row-actions button,
+.nutrition-library-vnext .clear-checked-button {
+  border: 0;
+  color: var(--fenix-text);
+  background: transparent;
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.nutrition-library-vnext .recipe-card-footer button,
+.nutrition-library-vnext .nutrition-back-button {
+  color: var(--fenix-accent-soft);
+}
+
+.nutrition-library-vnext .shopping-catalog-header,
+.nutrition-library-vnext .shopping-basket-header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--fenix-border);
+  border-radius: 20px;
+  background: var(--fenix-carbon-texture), var(--fenix-surface);
+}
+
+.nutrition-library-vnext .shopping-catalog-header h2,
+.nutrition-library-vnext .shopping-basket-header h2 {
+  margin: 4px 0 4px;
+  font-size: 24px;
+  letter-spacing: -0.035em;
+}
+
+.nutrition-library-vnext .shopping-catalog-header p:last-child,
+.nutrition-library-vnext .shopping-basket-header p:last-child {
+  margin: 0;
+  color: var(--fenix-text-muted);
+}
+
+.nutrition-library-vnext .cart-button {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid rgb(var(--fenix-accent-rgb) / 0.38);
+  border-radius: 13px;
+  color: var(--fenix-text);
+  background: rgb(var(--fenix-accent-rgb) / 0.09);
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.nutrition-library-vnext .cart-button strong {
+  display: grid;
+  min-width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--fenix-accent);
+  font-size: 11px;
+}
+
+.nutrition-library-vnext .catalog-sections {
+  display: grid;
+  gap: 12px;
+}
+
+.nutrition-library-vnext .catalog-section,
+.nutrition-library-vnext .shopping-group,
+.nutrition-library-vnext .catalog-editor,
+.nutrition-library-vnext .basket-editor,
+.nutrition-library-vnext .editor-card,
+.nutrition-library-vnext .nutrition-detail-section {
+  border: 1px solid var(--fenix-border);
+  border-radius: 18px;
+  background: var(--fenix-carbon-texture), var(--fenix-surface);
+}
+
+.nutrition-library-vnext .catalog-section {
+  overflow: hidden;
+}
+
+.nutrition-library-vnext .catalog-section-header,
+.nutrition-library-vnext .shopping-group__heading {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 0 15px;
+  border-bottom: 1px solid var(--fenix-border-soft);
+}
+
+.nutrition-library-vnext .catalog-section-header h3,
+.nutrition-library-vnext .shopping-group__heading span {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 820;
+  letter-spacing: 0.02em;
+}
+
+.nutrition-library-vnext .shopping-group__heading small {
+  color: var(--fenix-text-dim);
+}
+
+.nutrition-library-vnext .catalog-section-header button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--fenix-border);
+  border-radius: 10px;
+  background: var(--fenix-surface-soft);
+}
+
+.nutrition-library-vnext .catalog-product-row,
+.nutrition-library-vnext .shopping-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 54px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--fenix-border-soft);
+}
+
+.nutrition-library-vnext .catalog-product-row:last-child,
+.nutrition-library-vnext .shopping-row:last-child {
+  border-bottom: 0;
+}
+
+.nutrition-library-vnext .catalog-product-row > div:first-child,
+.nutrition-library-vnext .shopping-info {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.nutrition-library-vnext .catalog-product-row strong,
+.nutrition-library-vnext .shopping-info strong {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+}
+
+.nutrition-library-vnext .catalog-product-row span,
+.nutrition-library-vnext .shopping-info span {
+  font-size: 11px;
+  color: var(--fenix-text-muted);
+}
+
+.nutrition-library-vnext .catalog-row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.nutrition-library-vnext .catalog-row-actions button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid var(--fenix-border);
+  border-radius: 10px;
+  background: var(--fenix-surface-soft);
+}
+
+.nutrition-library-vnext .catalog-row-actions .catalog-add {
+  border-color: rgb(var(--fenix-accent-rgb) / 0.38);
+  color: var(--fenix-accent-soft);
+}
+
+.nutrition-library-vnext .catalog-row-actions .catalog-delete,
+.nutrition-library-vnext .shopping-remove,
+.nutrition-library-vnext .recipe-management-actions .danger {
+  color: var(--fenix-danger);
+}
+
+.nutrition-library-vnext .shopping-list {
+  display: grid;
+  gap: 10px;
+}
+
+.nutrition-library-vnext .clear-checked-button {
+  justify-self: end;
+  margin: -2px 2px 0;
+  color: var(--fenix-text-muted);
+  font-size: 12px;
+}
+
+.nutrition-library-vnext .shopping-group {
+  overflow: hidden;
+}
+
+.nutrition-library-vnext .shopping-row {
+  grid-template-columns: 34px minmax(0, 1fr) auto 32px;
+}
+
+.nutrition-library-vnext .shopping-check {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--fenix-border-strong);
+  border-radius: 9px;
+  color: #fff;
+  background: transparent;
+  cursor: pointer;
+}
+
+.nutrition-library-vnext .shopping-row--checked .shopping-check {
+  border-color: rgb(121 185 107 / 0.7);
+  background: rgb(121 185 107 / 0.2);
+}
+
+.nutrition-library-vnext .shopping-row--checked .shopping-info {
+  opacity: 0.48;
+}
+
+.nutrition-library-vnext .shopping-edit {
+  min-height: 32px;
+  padding: 0 9px;
+  border: 1px solid var(--fenix-border);
+  border-radius: 9px;
+  color: var(--fenix-text-muted);
+  background: var(--fenix-surface-soft);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nutrition-library-vnext .shopping-remove {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.nutrition-library-vnext .nutrition-empty-state {
+  padding: 36px 20px;
+  border: 1px dashed var(--fenix-border-strong);
+  border-radius: 18px;
+  color: var(--fenix-text-muted);
+  background: rgb(255 255 255 / 0.015);
+  text-align: center;
+}
+
+.nutrition-library-vnext .recipe-editor,
+.nutrition-library-vnext .catalog-editor,
+.nutrition-library-vnext .basket-editor,
+.nutrition-library-vnext .nutrition-detail__header,
+.nutrition-library-vnext .nutrition-detail-section {
+  color: var(--fenix-text);
+}
+
+.nutrition-library-vnext .recipe-editor,
+.nutrition-library-vnext .catalog-editor,
+.nutrition-library-vnext .basket-editor {
+  display: grid;
+  gap: 14px;
+}
+
+.nutrition-library-vnext .catalog-editor,
+.nutrition-library-vnext .basket-editor,
+.nutrition-library-vnext .editor-card,
+.nutrition-library-vnext .nutrition-detail-section {
+  padding: 16px;
+}
+
+.nutrition-library-vnext .recipe-editor__header,
+.nutrition-library-vnext .nutrition-detail__header {
+  margin: 4px 0 8px;
+  padding: 18px 20px;
+  border: 1px solid var(--fenix-border);
+  border-radius: 20px;
+  background: var(--fenix-carbon-texture), var(--fenix-surface);
+}
+
+.nutrition-library-vnext .recipe-editor__header h1,
+.nutrition-library-vnext .nutrition-detail__header h1 {
+  margin: 4px 0 0;
+  font-size: 28px;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.nutrition-library-vnext .recipe-management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.nutrition-library-vnext .recipe-management-actions button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--fenix-border);
+  border-radius: 11px;
+  background: var(--fenix-surface-soft);
+}
+
+.nutrition-library-vnext .ingredient-list {
+  display: grid;
+  gap: 0;
+}
+
+.nutrition-library-vnext .ingredient-row {
+  border-color: var(--fenix-border-soft);
+}
+
+.nutrition-library-vnext .nutrition-error,
+.nutrition-library-vnext .nutrition-success {
+  border-radius: 13px;
+}
+
+@media (max-width: 620px) {
+  .nutrition-vnext-shell--library .nutrition-library-vnext {
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .nutrition-library-vnext .nutrition-library-hero {
+    padding: 18px;
+  }
+
+  .nutrition-library-vnext .recipes-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .nutrition-library-vnext .new-recipe-button {
+    width: 100%;
+  }
+
+  .nutrition-library-vnext .nutrition-library-results {
+    display: grid;
+  }
+
+  .nutrition-library-vnext .nutrition-library-results small {
+    text-align: left;
+  }
+
+  .nutrition-library-vnext .nutrition-recipe-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nutrition-library-vnext .shopping-catalog-header,
+  .nutrition-library-vnext .shopping-basket-header {
+    align-items: flex-start;
+  }
+
+  .nutrition-library-vnext .shopping-row {
+    grid-template-columns: 32px minmax(0, 1fr) auto 28px;
+  }
+}

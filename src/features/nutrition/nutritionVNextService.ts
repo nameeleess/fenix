@@ -538,6 +538,62 @@ export async function getNutritionDay(
   }
 }
 
+export function getRelevantNutritionMeal(
+  day: NutritionDayView,
+): NutritionMealView | null {
+  const pending = day.meals.filter((item) => item.meal.status === 'pending')
+
+  if (pending.length === 0) {
+    return null
+  }
+
+  if (day.trainingSession) {
+    const trainingStatus = day.trainingSession.status
+
+    if (trainingStatus === 'pending') {
+      const preworkout = pending.find((item) => item.meal.role === 'preworkout')
+      if (preworkout) {
+        return preworkout
+      }
+
+      const postworkout = pending.find((item) => item.meal.role === 'postworkout')
+      if (postworkout) {
+        return postworkout
+      }
+    }
+
+    if (
+      trainingStatus === 'in_progress' ||
+      trainingStatus === 'completed' ||
+      trainingStatus === 'incomplete'
+    ) {
+      const postworkout = pending.find((item) => item.meal.role === 'postworkout')
+      if (postworkout) {
+        return postworkout
+      }
+    }
+  }
+
+  const sequence: NutritionRole[] = [
+    'breakfast',
+    'main_meal',
+    'snack',
+    'dinner',
+    'extra',
+    'preworkout',
+    'postworkout',
+  ]
+
+  for (const role of sequence) {
+    const meal = pending.find((item) => item.meal.role === role)
+    if (meal) {
+      return meal
+    }
+  }
+
+  return pending[0] ?? null
+}
+
 export async function setNutritionDayAppetite(
   date: string,
   appetiteMode: AppetiteMode,

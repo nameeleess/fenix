@@ -1,0 +1,114 @@
+.today-page--integrated .today-progress-ring {
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.03),
+    0 14px 34px rgb(0 0 0 / 0.24);
+}
+
+.today-page--integrated .today-progress-ring__inner {
+  background:
+    var(--fenix-carbon-texture),
+    var(--fenix-surface);
+}
+
+.today-hero--integrated {
+  gap: 12px;
+}
+
+.today-now-card--integrated {
+  position: relative;
+  overflow: hidden;
+}
+
+.today-now-card--integrated::after {
+  position: absolute;
+  right: -34px;
+  bottom: -52px;
+  width: 130px;
+  height: 130px;
+  border-radius: 999px;
+  background: rgb(var(--fenix-accent-rgb) / 0.08);
+  content: '';
+  pointer-events: none;
+}
+
+.today-current-block {
+  margin-top: 14px;
+}
+
+.today-current-block .today-block {
+  border-color: rgb(var(--fenix-accent-rgb) / 0.34);
+  box-shadow: inset 3px 0 0 rgb(var(--fenix-accent-rgb) / 0.72);
+}
+
+.today-module-grid--integrated {
+  margin-top: 16px;
+}
+
+.today-module-card--training,
+.today-module-card--nutrition {
+  position: relative;
+  overflow: hidden;
+}
+
+.today-module-card--training::before,
+.today-module-card--nutrition::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(var(--fenix-accent-rgb) / 0.52), transparent);
+  content: '';
+}
+
+.today-module-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 2px;
+}
+
+.today-module-meta span {
+  padding: 6px 8px;
+  border: 1px solid var(--fenix-border-soft);
+  border-radius: 999px;
+  color: var(--fenix-text-muted);
+  background: rgb(255 255 255 / 0.018);
+  font-size: 10px;
+  font-weight: 720;
+}
+
+.today-progress-card--integrated {
+  margin-top: 12px;
+}
+
+.today-progress-live-grid > div {
+  min-height: 116px;
+}
+
+.today-progress-live-grid strong {
+  font-size: 22px;
+  letter-spacing: -0.04em;
+}
+
+.today-progress-live-grid small {
+  line-height: 1.35;
+}
+
+.today-rest-of-day {
+  margin-top: 18px;
+}
+
+.today-page--integrated .today-task-menu {
+  z-index: 12;
+}
+
+@media (max-width: 420px) {
+  .today-module-meta {
+    display: grid;
+  }
+
+  .today-module-meta span {
+    width: fit-content;
+  }
+}
