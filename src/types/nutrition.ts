@@ -244,6 +244,11 @@ export interface DailyMeal
   skippedAt: string | null
 
   notes: string | null
+
+  /* Metadatos de snapshot vNext. */
+  sourceRecipeVersion?: number | null
+
+  planningSource?: 'auto' | 'weekly' | 'manual'
 }
 
 /*

@@ -6,2701 +6,798 @@ import {
 } from 'react'
 
 import type {
-  Ingredient,
-  IngredientCategory,
-  NutritionCategory,
-  PreparationState,
-  RecipeIngredient,
+  AppetiteMode,
+  NutritionRole,
 } from '../../types/nutrition'
 
+import NutritionLibrary from './NutritionLibrary'
+
 import {
-  addCatalogIngredientToBasket,
-  addRecipeIngredientToBasket,
-  clearCheckedShoppingItems,
-  createCatalogIngredient,
-  createRecipe,
-  deleteCatalogIngredient,
-  deleteRecipe,
-  duplicateRecipe,
-  getIngredientCatalog,
-  getNutritionRecipes,
-  getShoppingList,
-  removeShoppingItem,
-  toggleRecipeFavorite,
-  toggleShoppingItemChecked,
-  updateCatalogIngredient,
-  updateRecipe,
-  updateShoppingItem,
-  type CatalogIngredientInput,
-  type RecipeIngredientInput,
-  type RecipeInput,
-  type RecipeView,
-  type ShoppingItemInput,
-  type ShoppingItemView,
-} from './nutritionService'
+  addImprovisedMeal,
+  applyNutritionWeek,
+  getLocalDateKey,
+  getNutritionDay,
+  getNutritionWeekSuggestion,
+  nutritionRoleLabel,
+  replaceDailyMealRecipe,
+  setDailyMealPortion,
+  setDailyMealStatus,
+  setNutritionDayAppetite,
+  updateNutritionGoal,
+  type MacroSummary,
+  type NutritionDayView,
+  type NutritionGoalInput,
+  type NutritionMealView,
+  type NutritionWeekSuggestion,
+} from './nutritionVNextService'
 
-import './nutrition.css'
+import './nutrition-vnext.css'
 
-type NutritionSection =
-  | 'recipes'
-  | 'shopping'
+type NutritionTab =
+  | 'today'
+  | 'week'
+  | 'library'
 
-type ShoppingView =
-  | 'catalog'
-  | 'basket'
-
-type CategoryFilter =
-  | 'all'
-  | 'favorites'
-  | NutritionCategory
-
-type RecipeEditorTarget =
-  | 'new'
-  | RecipeView
-  | null
-
-type CatalogEditorTarget =
-  | {
-      mode: 'new'
-      category: IngredientCategory
-    }
-  | {
-      mode: 'edit'
-      ingredient: Ingredient
-    }
-  | null
-
-interface EditableRecipeIngredient {
-  key: string
-  name: string
-  category: IngredientCategory
-  quantity: string
-  quantityMax: string
-  unit: string
-  preparationState:
-    | ''
-    | PreparationState
-  notes: string
-}
-
-const recipeCategories: Array<{
-  id: NutritionCategory
+const appetiteOptions: Array<{
+  value: AppetiteMode
   label: string
+  detail: string
 }> = [
   {
-    id: 'breakfast',
-    label: 'Desayuno',
+    value: 'compact',
+    label: 'Compacto',
+    detail: 'Menos volumen',
   },
   {
-    id: 'preworkout',
-    label: 'Pre-entreno',
+    value: 'normal',
+    label: 'Normal',
+    detail: 'Equilibrado',
   },
   {
-    id: 'work_snack',
-    label: 'Snack trabajo',
-  },
-  {
-    id: 'main_meal',
-    label: 'Comida principal',
-  },
-  {
-    id: 'bedtime',
-    label: 'Antes de dormir',
-  },
-  {
-    id: 'shake',
-    label: 'Batido',
+    value: 'voluminous',
+    label: 'Voluminoso',
+    detail: 'Más volumen',
   },
 ]
 
-const filterCategories = [
-  {
-    id: 'all',
-    label: 'Todas',
-  },
-  {
-    id: 'favorites',
-    label: 'Favoritas',
-  },
-  ...recipeCategories,
-] as Array<{
-  id: CategoryFilter
-  label: string
-}>
+const portionOptions = [0.5, 1, 1.5, 2]
 
-const ingredientCategoryOrder:
-  IngredientCategory[] = [
-    'protein',
-    'carbohydrate',
-    'fat',
-    'dairy',
-    'fruit_vegetable',
-    'pantry',
-    'supplement',
-    'other',
-  ]
-
-const ingredientCategoryNames:
-  Record<
-    IngredientCategory,
-    string
-  > = {
-    protein: 'Proteínas',
-    carbohydrate:
-      'Carbohidratos',
-    fat: 'Grasas',
-    dairy: 'Lácteos',
-    fruit_vegetable:
-      'Fruta y verdura',
-    pantry: 'Despensa',
-    supplement: 'Suplementos',
-    other: 'Otros',
-  }
-
-const recipeCategoryNames:
-  Record<
-    NutritionCategory,
-    string
-  > = {
-    breakfast: 'Desayuno',
-    preworkout: 'Pre-entreno',
-    work_snack:
-      'Snack trabajo',
-    main_meal:
-      'Comida principal',
-    bedtime:
-      'Antes de dormir',
-    shake: 'Batido',
-  }
-
-function formatNumber(
-  value: number,
-) {
-  return new Intl.NumberFormat(
-    'es-ES',
-    {
-      maximumFractionDigits: 1,
-    },
-  ).format(value)
+function parseDateKey(dateKey: string) {
+  const [year, month, day] = dateKey.split('-').map(Number)
+  return new Date(year, month - 1, day, 12)
 }
 
-function parseOptionalNumber(
-  value: string,
-  label: string,
-) {
-  const normalized =
-    value
-      .replace(',', '.')
-      .trim()
-
-  if (!normalized) {
-    return null
-  }
-
-  const parsed =
-    Number(normalized)
-
-  if (
-    !Number.isFinite(parsed) ||
-    parsed < 0
-  ) {
-    throw new Error(
-      `${label} debe ser un número válido.`,
-    )
-  }
-
-  return parsed
+function shiftDate(dateKey: string, days: number) {
+  const date = parseDateKey(dateKey)
+  date.setDate(date.getDate() + days)
+  return getLocalDateKey(date)
 }
 
-function formatQuantity(
-  item: RecipeIngredient,
-) {
-  let amount: string
-
-  if (
-    item.quantity !== null &&
-    item.quantityMax !== null
-  ) {
-    amount =
-      `${formatNumber(
-        item.quantity,
-      )}–${formatNumber(
-        item.quantityMax,
-      )}`
-  } else if (
-    item.quantity !== null
-  ) {
-    amount =
-      formatNumber(
-        item.quantity,
-      )
-  } else {
-    amount =
-      'Cantidad necesaria'
-  }
-
-  if (item.unit) {
-    amount +=
-      ` ${item.unit}`
-  }
-
-  const state =
-    item.preparationState ===
-    'dry'
-      ? 'seco'
-      : item.preparationState ===
-          'cooked'
-        ? 'cocido'
-        : item.preparationState ===
-            'drained'
-          ? 'escurrido'
-          : null
-
-  if (state) {
-    amount +=
-      ` · ${state}`
-  }
-
-  return amount
+function formatDate(dateKey: string, withWeekday = true) {
+  return new Intl.DateTimeFormat('es-ES', {
+    weekday: withWeekday ? 'long' : undefined,
+    day: 'numeric',
+    month: 'long',
+  }).format(parseDateKey(dateKey))
 }
 
-function formatShoppingQuantity(
-  item: ShoppingItemView,
-) {
-  if (
-    item.item.quantity !== null &&
-    item.item.quantityMax !== null
-  ) {
-    return `${formatNumber(
-      item.item.quantity,
-    )}–${formatNumber(
-      item.item.quantityMax,
-    )}${
-      item.item.unit
-        ? ` ${item.item.unit}`
-        : ''
-    }`
-  }
-
-  if (
-    item.item.quantity !== null
-  ) {
-    return `${formatNumber(
-      item.item.quantity,
-    )}${
-      item.item.unit
-        ? ` ${item.item.unit}`
-        : ''
-    }`
-  }
-
-  return 'Cantidad pendiente'
+function shortDate(dateKey: string) {
+  return new Intl.DateTimeFormat('es-ES', {
+    weekday: 'short',
+    day: 'numeric',
+  }).format(parseDateKey(dateKey))
 }
 
-function blankRecipeIngredient():
-  EditableRecipeIngredient {
-  return {
-    key:
-      crypto.randomUUID(),
-    name: '',
-    category: 'other',
-    quantity: '',
-    quantityMax: '',
-    unit: '',
-    preparationState: '',
-    notes: '',
-  }
+function number(value: number) {
+  return new Intl.NumberFormat('es-ES', {
+    maximumFractionDigits: 1,
+  }).format(value)
 }
 
-function MacroSummary({
-  item,
+function macroText(value: number, unit: string) {
+  return `${number(value)} ${unit}`
+}
+
+function statusLabel(status: NutritionMealView['meal']['status']) {
+  if (status === 'completed') return 'Realizada'
+  if (status === 'skipped') return 'Omitida'
+  return 'Pendiente'
+}
+
+function roleTone(role: NutritionRole) {
+  if (role === 'preworkout') return 'pre'
+  if (role === 'postworkout') return 'post'
+  return 'default'
+}
+
+function MacroOverview({
+  consumed,
+  planned,
+  target,
 }: {
-  item: RecipeView
+  consumed: MacroSummary
+  planned: MacroSummary
+  target: NutritionDayView['goal']
 }) {
+  const caloriesTarget = target?.targetCalories ?? null
+  const proteinTarget = target?.targetProtein ?? null
+
+  const caloriePct = caloriesTarget
+    ? Math.min(100, Math.round((consumed.calories / caloriesTarget) * 100))
+    : 0
+  const proteinPct = proteinTarget
+    ? Math.min(100, Math.round((consumed.protein / proteinTarget) * 100))
+    : 0
+
   return (
-    <div className="nutrition-macros">
-      <div>
-        <strong>
-          {item.recipe
-            .estimatedCalories ??
-            '—'}
-        </strong>
-        <span>kcal</span>
+    <section className="nutrition-vnext-macros">
+      <div className="nutrition-vnext-macroHero">
+        <div>
+          <span>Consumido</span>
+          <strong>{number(consumed.calories)} kcal</strong>
+          <small>
+            de {caloriesTarget ? `${number(caloriesTarget)} kcal objetivo` : 'objetivo sin definir'}
+          </small>
+        </div>
+        <div className="nutrition-vnext-macroHero__planned">
+          <span>Planificado</span>
+          <strong>{number(planned.calories)}</strong>
+          <small>kcal</small>
+        </div>
       </div>
 
-      <div>
-        <strong>
-          {item.recipe
-            .estimatedProtein ??
-            '—'}
-        </strong>
-        <span>P</span>
+      <div className="nutrition-vnext-progressLine">
+        <span style={{ width: `${caloriePct}%` }} />
       </div>
 
-      <div>
-        <strong>
-          {item.recipe
-            .estimatedCarbs ??
-            '—'}
-        </strong>
-        <span>C</span>
+      <div className="nutrition-vnext-macroGrid">
+        <article>
+          <span>Proteína</span>
+          <strong>{macroText(consumed.protein, 'g')}</strong>
+          <small>{proteinTarget ? `de ${number(proteinTarget)} g` : 'sin objetivo'}</small>
+          <div className="nutrition-vnext-progressLine small">
+            <span style={{ width: `${proteinPct}%` }} />
+          </div>
+        </article>
+        <article>
+          <span>Carbohidratos</span>
+          <strong>{macroText(consumed.carbs, 'g')}</strong>
+          <small>plan {macroText(planned.carbs, 'g')}</small>
+        </article>
+        <article>
+          <span>Grasas</span>
+          <strong>{macroText(consumed.fat, 'g')}</strong>
+          <small>plan {macroText(planned.fat, 'g')}</small>
+        </article>
       </div>
 
-      <div>
-        <strong>
-          {item.recipe
-            .estimatedFat ??
-            '—'}
-        </strong>
-        <span>G</span>
-      </div>
-    </div>
+      {(consumed.hasUnknown || planned.hasUnknown) && (
+        <p className="nutrition-vnext-qualityNote">
+          Hay datos nutricionales parciales. FÉNIX no los interpreta como cero.
+        </p>
+      )}
+    </section>
   )
 }
 
-function RecipeCard({
+function MealCard({
   item,
-  onOpen,
-  onFavorite,
+  onComplete,
+  onSkip,
+  onUndo,
+  onReplace,
+  onPortion,
 }: {
-  item: RecipeView
-  onOpen: (
-    item: RecipeView,
-  ) => void
-  onFavorite: (
-    item: RecipeView,
-  ) => Promise<void>
+  item: NutritionMealView
+  onComplete: () => Promise<void>
+  onSkip: () => Promise<void>
+  onUndo: () => Promise<void>
+  onReplace: (recipeId: string) => Promise<void>
+  onPortion: (portion: number) => Promise<void>
 }) {
+  const [expanded, setExpanded] = useState(false)
+  const meal = item.meal
+  const disabled = meal.status !== 'pending'
+
   return (
-    <article className="nutrition-recipe-card">
-      <div className="nutrition-recipe-card__top">
-        <div>
-          <p className="nutrition-eyebrow">
-            {
-              recipeCategoryNames[
-                item.recipe.category
-              ]
-            }
-          </p>
-
-          <h2>
-            {item.recipe.name}
-          </h2>
-        </div>
-
-        <button
-          type="button"
-          className={`favorite-button ${
-            item.recipe.isFavorite
-              ? 'favorite-button--active'
-              : ''
-          }`}
-          onClick={() =>
-            void onFavorite(
-              item,
-            )
-          }
-        >
-          {item.recipe.isFavorite
-            ? '★'
-            : '☆'}
-        </button>
-      </div>
-
-      <MacroSummary
-        item={item}
-      />
-
-      <div className="recipe-card-footer">
-        <span>
-          {item.ingredients.length}{' '}
-          ingredientes
+    <article
+      className={`nutrition-vnext-meal nutrition-vnext-meal--${roleTone(meal.role)} nutrition-vnext-meal--${meal.status}`}
+    >
+      <button
+        className="nutrition-vnext-meal__head"
+        type="button"
+        onClick={() => setExpanded((value) => !value)}
+      >
+        <span className="nutrition-vnext-meal__order">{meal.order}</span>
+        <span className="nutrition-vnext-meal__title">
+          <small>{nutritionRoleLabel(meal.role)}</small>
+          <strong>{meal.name}</strong>
+          <em>{statusLabel(meal.status)}</em>
         </span>
+        <span className="nutrition-vnext-meal__kcal">
+          {meal.plannedCalories === null ? '—' : `${number(meal.plannedCalories)} kcal`}
+        </span>
+        <span className="nutrition-vnext-chevron">{expanded ? '−' : '+'}</span>
+      </button>
 
-        <button
-          type="button"
-          onClick={() =>
-            onOpen(item)
-          }
-        >
-          Ver receta
-        </button>
-      </div>
+      {expanded && (
+        <div className="nutrition-vnext-meal__body">
+          <div className="nutrition-vnext-meal__macroRow">
+            <span>P {meal.plannedProtein === null ? '—' : `${number(meal.plannedProtein)} g`}</span>
+            <span>C {meal.plannedCarbs === null ? '—' : `${number(meal.plannedCarbs)} g`}</span>
+            <span>G {meal.plannedFat === null ? '—' : `${number(meal.plannedFat)} g`}</span>
+          </div>
+
+          {meal.trainingSessionId && (
+            <p className="nutrition-vnext-linkNote">
+              Vinculada a la sesión de Training. Si se reprograma, las comidas pendientes asociadas se trasladan con ella.
+            </p>
+          )}
+
+          <div className="nutrition-vnext-portionGroup">
+            <span>Porción</span>
+            <div>
+              {portionOptions.map((portion) => (
+                <button
+                  key={portion}
+                  type="button"
+                  disabled={disabled}
+                  className={meal.portionMultiplier === portion ? 'active' : ''}
+                  onClick={() => void onPortion(portion)}
+                >
+                  {portion}×
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {item.alternatives.length > 0 && (
+            <label className="nutrition-vnext-selectLabel">
+              <span>Sustituir por</span>
+              <select
+                disabled={disabled}
+                value={meal.recipeId ?? ''}
+                onChange={(event) => {
+                  if (event.target.value) {
+                    void onReplace(event.target.value)
+                  }
+                }}
+              >
+                {meal.recipeId === null && <option value="">Sin receta</option>}
+                {item.alternatives.map((recipe) => (
+                  <option key={recipe.id} value={recipe.id}>
+                    {recipe.name}{recipe.isFavorite ? ' · ★' : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          <div className="nutrition-vnext-meal__actions">
+            {meal.status === 'pending' ? (
+              <>
+                <button className="primary" type="button" onClick={() => void onComplete()}>
+                  Confirmar realizada
+                </button>
+                <button type="button" onClick={() => void onSkip()}>
+                  Omitir
+                </button>
+              </>
+            ) : (
+              <button type="button" onClick={() => void onUndo()}>
+                Volver a pendiente
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </article>
   )
 }
 
-function RecipeEditor({
-  item,
-  catalog,
-  onCancel,
-  onSaved,
+function ImprovisedMealModal({
+  onClose,
+  onSave,
 }: {
-  item: RecipeView | null
-  catalog: Ingredient[]
-  onCancel: () => void
-  onSaved: (
-    recipeId: string,
-  ) => Promise<void>
+  onClose: () => void
+  onSave: (input: {
+    name: string
+    role: NutritionRole
+    calories: number | null
+    protein: number | null
+    carbs: number | null
+    fat: number | null
+  }) => Promise<void>
 }) {
-  const [
-    name,
-    setName,
-  ] = useState(
-    item?.recipe.name ?? '',
-  )
+  const [name, setName] = useState('')
+  const [role, setRole] = useState<NutritionRole>('extra')
+  const [calories, setCalories] = useState('')
+  const [protein, setProtein] = useState('')
+  const [carbs, setCarbs] = useState('')
+  const [fat, setFat] = useState('')
+  const [error, setError] = useState('')
 
-  const [
-    category,
-    setCategory,
-  ] =
-    useState<NutritionCategory>(
-      item?.recipe.category ??
-      'main_meal',
-    )
-
-  const [
-    calories,
-    setCalories,
-  ] = useState(
-    item?.recipe
-      .estimatedCalories
-      ?.toString() ?? '',
-  )
-
-  const [
-    protein,
-    setProtein,
-  ] = useState(
-    item?.recipe
-      .estimatedProtein
-      ?.toString() ?? '',
-  )
-
-  const [
-    carbs,
-    setCarbs,
-  ] = useState(
-    item?.recipe
-      .estimatedCarbs
-      ?.toString() ?? '',
-  )
-
-  const [
-    fat,
-    setFat,
-  ] = useState(
-    item?.recipe
-      .estimatedFat
-      ?.toString() ?? '',
-  )
-
-  const [
-    instructions,
-    setInstructions,
-  ] = useState(
-    item?.recipe.instructions ??
-      '',
-  )
-
-  const [
-    notes,
-    setNotes,
-  ] = useState(
-    item?.recipe.notes ?? '',
-  )
-
-  const [
-    ingredients,
-    setIngredients,
-  ] =
-    useState<
-      EditableRecipeIngredient[]
-    >(
-      item
-        ? item.ingredients.map(
-            ({
-              relation,
-              ingredient,
-            }) => ({
-              key:
-                crypto.randomUUID(),
-              name:
-                ingredient.name,
-              category:
-                ingredient.category,
-              quantity:
-                relation.quantity
-                  ?.toString() ??
-                '',
-              quantityMax:
-                relation.quantityMax
-                  ?.toString() ??
-                '',
-              unit:
-                relation.unit ?? '',
-              preparationState:
-                relation.preparationState ??
-                '',
-              notes:
-                relation.notes ??
-                '',
-            }),
-          )
-        : [
-            blankRecipeIngredient(),
-          ],
-    )
-
-  const [
-    error,
-    setError,
-  ] = useState('')
-
-  const [
-    saving,
-    setSaving,
-  ] = useState(false)
-
-  function changeIngredient(
-    key: string,
-    changes:
-      Partial<EditableRecipeIngredient>,
-  ) {
-    setIngredients(
-      (current) =>
-        current.map(
-          (ingredient) =>
-            ingredient.key === key
-              ? {
-                  ...ingredient,
-                  ...changes,
-                }
-              : ingredient,
-        ),
-    )
+  function optional(value: string) {
+    const trimmed = value.replace(',', '.').trim()
+    if (!trimmed) return null
+    const parsed = Number(trimmed)
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      throw new Error('Los macros deben ser números válidos.')
+    }
+    return parsed
   }
 
-  function removeIngredient(
-    key: string,
-  ) {
-    setIngredients(
-      (current) =>
-        current.filter(
-          (ingredient) =>
-            ingredient.key !==
-            key,
-        ),
-    )
-  }
-
-  async function handleSubmit(
-    event:
-      FormEvent<HTMLFormElement>,
-  ) {
+  async function submit(event: FormEvent) {
     event.preventDefault()
+    setError('')
 
     try {
-      setSaving(true)
-      setError('')
-
-      const recipeIngredients:
-        RecipeIngredientInput[] =
-        ingredients.map(
-          (
-            ingredient,
-            index,
-          ) => ({
-            name:
-              ingredient.name,
-            category:
-              ingredient.category,
-            quantity:
-              parseOptionalNumber(
-                ingredient.quantity,
-                `Cantidad ${index + 1}`,
-              ),
-            quantityMax:
-              parseOptionalNumber(
-                ingredient.quantityMax,
-                `Cantidad máxima ${index + 1}`,
-              ),
-            unit:
-              ingredient.unit
-                .trim() ||
-              null,
-            preparationState:
-              ingredient.preparationState ||
-              null,
-            notes:
-              ingredient.notes
-                .trim() ||
-              null,
-          }),
-        )
-
-      const input:
-        RecipeInput = {
+      await onSave({
         name,
-        category,
-        estimatedCalories:
-          parseOptionalNumber(
-            calories,
-            'Calorías',
-          ),
-        estimatedProtein:
-          parseOptionalNumber(
-            protein,
-            'Proteína',
-          ),
-        estimatedCarbs:
-          parseOptionalNumber(
-            carbs,
-            'Carbohidratos',
-          ),
-        estimatedFat:
-          parseOptionalNumber(
-            fat,
-            'Grasas',
-          ),
-        instructions:
-          instructions.trim() ||
-          null,
-        notes:
-          notes.trim() ||
-          null,
-        ingredients:
-          recipeIngredients,
-      }
-
-      const saved =
-        item
-          ? await updateRecipe(
-              item.recipe.id,
-              input,
-            )
-          : await createRecipe(
-              input,
-            )
-
-      await onSaved(
-        saved.id,
-      )
-    } catch (
-      saveError
-    ) {
-      setError(
-        saveError instanceof Error
-          ? saveError.message
-          : 'No se ha podido guardar.',
-      )
-    } finally {
-      setSaving(false)
+        role,
+        calories: optional(calories),
+        protein: optional(protein),
+        carbs: optional(carbs),
+        fat: optional(fat),
+      })
+      onClose()
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'No se ha podido guardar.')
     }
   }
 
   return (
-    <form
-      className="recipe-editor"
-      onSubmit={
-        handleSubmit
-      }
-    >
-      <button
-        type="button"
-        className="nutrition-back-button"
-        onClick={onCancel}
-      >
-        ← Cancelar
-      </button>
-
-      <header className="recipe-editor__header">
-        <p className="nutrition-eyebrow">
-          {item
-            ? 'EDITAR RECETA'
-            : 'NUEVA RECETA'}
-        </p>
-
-        <h1>
-          {item
-            ? item.recipe.name
-            : 'Crear receta'}
-        </h1>
-      </header>
-
-      {error && (
-        <div className="nutrition-error">
-          {error}
+    <div className="nutrition-vnext-modalBackdrop" role="presentation">
+      <form className="nutrition-vnext-modal" onSubmit={submit}>
+        <div className="nutrition-vnext-modal__head">
+          <div>
+            <small>REGISTRO MANUAL</small>
+            <h2>Comida improvisada</h2>
+          </div>
+          <button type="button" onClick={onClose}>×</button>
         </div>
-      )}
 
-      <section className="editor-card">
-        <label className="recipe-field">
-          <span>
-            Nombre
-          </span>
+        {error && <div className="nutrition-vnext-error">{error}</div>}
 
-          <input
-            value={name}
-            onChange={(
-              event,
-            ) =>
-              setName(
-                event.target.value,
-              )
-            }
-          />
+        <label>
+          <span>Nombre</span>
+          <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ej. Bocadillo de pavo" />
         </label>
 
-        <label className="recipe-field">
-          <span>
-            Categoría
-          </span>
-
-          <select
-            value={category}
-            onChange={(
-              event,
-            ) =>
-              setCategory(
-                event.target
-                  .value as
-                  NutritionCategory,
-              )
-            }
-          >
-            {recipeCategories.map(
-              (option) => (
-                <option
-                  key={
-                    option.id
-                  }
-                  value={
-                    option.id
-                  }
-                >
-                  {
-                    option.label
-                  }
-                </option>
-              ),
-            )}
+        <label>
+          <span>Momento</span>
+          <select value={role} onChange={(event) => setRole(event.target.value as NutritionRole)}>
+            {(['breakfast', 'preworkout', 'postworkout', 'main_meal', 'snack', 'dinner', 'extra'] as NutritionRole[]).map((item) => (
+              <option key={item} value={item}>{nutritionRoleLabel(item)}</option>
+            ))}
           </select>
         </label>
-      </section>
 
-      <section className="editor-card">
-        <h2>
-          Macros estimados
-        </h2>
-
-        <div className="recipe-macro-form">
-          <label>
-            <span>kcal</span>
-            <input
-              value={calories}
-              inputMode="decimal"
-              onChange={(
-                event,
-              ) =>
-                setCalories(
-                  event.target
-                    .value,
-                )
-              }
-            />
-          </label>
-
-          <label>
-            <span>Proteína</span>
-            <input
-              value={protein}
-              inputMode="decimal"
-              onChange={(
-                event,
-              ) =>
-                setProtein(
-                  event.target
-                    .value,
-                )
-              }
-            />
-          </label>
-
-          <label>
-            <span>Carbs</span>
-            <input
-              value={carbs}
-              inputMode="decimal"
-              onChange={(
-                event,
-              ) =>
-                setCarbs(
-                  event.target
-                    .value,
-                )
-              }
-            />
-          </label>
-
-          <label>
-            <span>Grasas</span>
-            <input
-              value={fat}
-              inputMode="decimal"
-              onChange={(
-                event,
-              ) =>
-                setFat(
-                  event.target
-                    .value,
-                )
-              }
-            />
-          </label>
-        </div>
-      </section>
-
-      <section className="editor-card">
-        <div className="section-title-row">
-          <h2>
-            Ingredientes
-          </h2>
-
-          <button
-            type="button"
-            onClick={() =>
-              setIngredients(
-                (current) => [
-                  ...current,
-                  blankRecipeIngredient(),
-                ],
-              )
-            }
-          >
-            + Ingrediente
-          </button>
+        <div className="nutrition-vnext-modal__macroInputs">
+          <label><span>kcal</span><input inputMode="decimal" value={calories} onChange={(event) => setCalories(event.target.value)} /></label>
+          <label><span>Proteína</span><input inputMode="decimal" value={protein} onChange={(event) => setProtein(event.target.value)} /></label>
+          <label><span>Carbos</span><input inputMode="decimal" value={carbs} onChange={(event) => setCarbs(event.target.value)} /></label>
+          <label><span>Grasas</span><input inputMode="decimal" value={fat} onChange={(event) => setFat(event.target.value)} /></label>
         </div>
 
-        <datalist id="fenix-ingredients">
-          {catalog.map(
-            (ingredient) => (
-              <option
-                key={
-                  ingredient.id
-                }
-                value={
-                  ingredient.name
-                }
-              />
-            ),
-          )}
-        </datalist>
-
-        <div className="recipe-editor-ingredients">
-          {ingredients.map(
-            (
-              ingredient,
-              index,
-            ) => (
-              <article
-                className="recipe-editor-ingredient"
-                key={
-                  ingredient.key
-                }
-              >
-                <div className="ingredient-editor-header">
-                  <strong>
-                    Ingrediente{' '}
-                    {index + 1}
-                  </strong>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      removeIngredient(
-                        ingredient.key,
-                      )
-                    }
-                  >
-                    ×
-                  </button>
-                </div>
-
-                <label className="recipe-field">
-                  <span>
-                    Nombre
-                  </span>
-
-                  <input
-                    list="fenix-ingredients"
-                    value={
-                      ingredient.name
-                    }
-                    onChange={(
-                      event,
-                    ) =>
-                      changeIngredient(
-                        ingredient.key,
-                        {
-                          name:
-                            event
-                              .target
-                              .value,
-                        },
-                      )
-                    }
-                  />
-                </label>
-
-                <label className="recipe-field">
-                  <span>
-                    Grupo
-                  </span>
-
-                  <select
-                    value={
-                      ingredient.category
-                    }
-                    onChange={(
-                      event,
-                    ) =>
-                      changeIngredient(
-                        ingredient.key,
-                        {
-                          category:
-                            event
-                              .target
-                              .value as
-                              IngredientCategory,
-                        },
-                      )
-                    }
-                  >
-                    {ingredientCategoryOrder.map(
-                      (
-                        group,
-                      ) => (
-                        <option
-                          key={
-                            group
-                          }
-                          value={
-                            group
-                          }
-                        >
-                          {
-                            ingredientCategoryNames[
-                              group
-                            ]
-                          }
-                        </option>
-                      ),
-                    )}
-                  </select>
-                </label>
-
-                <div className="ingredient-amount-grid">
-                  <label className="recipe-field">
-                    <span>
-                      Cantidad
-                    </span>
-
-                    <input
-                      inputMode="decimal"
-                      value={
-                        ingredient.quantity
-                      }
-                      onChange={(
-                        event,
-                      ) =>
-                        changeIngredient(
-                          ingredient.key,
-                          {
-                            quantity:
-                              event
-                                .target
-                                .value,
-                          },
-                        )
-                      }
-                    />
-                  </label>
-
-                  <label className="recipe-field">
-                    <span>
-                      Máx.
-                    </span>
-
-                    <input
-                      inputMode="decimal"
-                      value={
-                        ingredient.quantityMax
-                      }
-                      onChange={(
-                        event,
-                      ) =>
-                        changeIngredient(
-                          ingredient.key,
-                          {
-                            quantityMax:
-                              event
-                                .target
-                                .value,
-                          },
-                        )
-                      }
-                    />
-                  </label>
-
-                  <label className="recipe-field">
-                    <span>
-                      Unidad
-                    </span>
-
-                    <input
-                      value={
-                        ingredient.unit
-                      }
-                      onChange={(
-                        event,
-                      ) =>
-                        changeIngredient(
-                          ingredient.key,
-                          {
-                            unit:
-                              event
-                                .target
-                                .value,
-                          },
-                        )
-                      }
-                    />
-                  </label>
-                </div>
-
-                <label className="recipe-field">
-                  <span>
-                    Estado
-                  </span>
-
-                  <select
-                    value={
-                      ingredient.preparationState
-                    }
-                    onChange={(
-                      event,
-                    ) =>
-                      changeIngredient(
-                        ingredient.key,
-                        {
-                          preparationState:
-                            event
-                              .target
-                              .value as
-                              | ''
-                              | PreparationState,
-                        },
-                      )
-                    }
-                  >
-                    <option value="">
-                      Sin especificar
-                    </option>
-                    <option value="dry">
-                      Seco
-                    </option>
-                    <option value="cooked">
-                      Cocido
-                    </option>
-                    <option value="drained">
-                      Escurrido
-                    </option>
-                  </select>
-                </label>
-              </article>
-            ),
-          )}
-        </div>
-      </section>
-
-      <section className="editor-card">
-        <label className="recipe-field">
-          <span>
-            Preparación
-          </span>
-
-          <textarea
-            rows={5}
-            value={
-              instructions
-            }
-            onChange={(
-              event,
-            ) =>
-              setInstructions(
-                event.target
-                  .value,
-              )
-            }
-          />
-        </label>
-
-        <label className="recipe-field">
-          <span>
-            Notas
-          </span>
-
-          <textarea
-            rows={3}
-            value={notes}
-            onChange={(
-              event,
-            ) =>
-              setNotes(
-                event.target.value,
-              )
-            }
-          />
-        </label>
-      </section>
-
-      <button
-        type="submit"
-        className="nutrition-primary-button"
-        disabled={saving}
-      >
-        {saving
-          ? 'Guardando…'
-          : item
-            ? 'Guardar cambios'
-            : 'Crear receta'}
-      </button>
-    </form>
-  )
-}
-
-function CatalogEditor({
-  target,
-  onCancel,
-  onSaved,
-}: {
-  target:
-    Exclude<
-      CatalogEditorTarget,
-      null
-    >
-  onCancel: () => void
-  onSaved: () => Promise<void>
-}) {
-  const isEdit =
-    target.mode === 'edit'
-
-  const initialIngredient =
-    isEdit
-      ? target.ingredient
-      : null
-
-  const [
-    name,
-    setName,
-  ] = useState(
-    initialIngredient?.name ??
-      '',
-  )
-
-  const [
-    category,
-    setCategory,
-  ] =
-    useState<IngredientCategory>(
-      initialIngredient
-        ?.category ??
-      (target.mode === 'new'
-        ? target.category
-        : 'other'),
-    )
-
-  const [
-    unit,
-    setUnit,
-  ] = useState(
-    initialIngredient
-      ?.defaultUnit ??
-      '',
-  )
-
-  const [
-    notes,
-    setNotes,
-  ] = useState(
-    initialIngredient?.notes ??
-      '',
-  )
-
-  const [
-    error,
-    setError,
-  ] = useState('')
-
-  async function submit(
-    event:
-      FormEvent<HTMLFormElement>,
-  ) {
-    event.preventDefault()
-
-    try {
-      setError('')
-
-      const input:
-        CatalogIngredientInput = {
-        name,
-        category,
-        defaultUnit:
-          unit.trim() || null,
-        notes:
-          notes.trim() || null,
-      }
-
-      if (
-        target.mode === 'edit'
-      ) {
-        await updateCatalogIngredient(
-          target.ingredient.id,
-          input,
-        )
-      } else {
-        await createCatalogIngredient(
-          input,
-        )
-      }
-
-      await onSaved()
-    } catch (
-      saveError
-    ) {
-      setError(
-        saveError instanceof Error
-          ? saveError.message
-          : 'No se ha podido guardar.',
-      )
-    }
-  }
-
-  return (
-    <form
-      className="catalog-editor"
-      onSubmit={submit}
-    >
-      <div className="section-title-row">
-        <div>
-          <p className="nutrition-eyebrow">
-            CATÁLOGO
-          </p>
-          <h2>
-            {isEdit
-              ? 'Editar producto'
-              : 'Nuevo producto'}
-          </h2>
-        </div>
-
-        <button
-          type="button"
-          className="close-editor-button"
-          onClick={onCancel}
-        >
-          ×
-        </button>
-      </div>
-
-      {error && (
-        <div className="nutrition-error">
-          {error}
-        </div>
-      )}
-
-      <label className="recipe-field">
-        <span>
-          Producto
-        </span>
-        <input
-          value={name}
-          onChange={(
-            event,
-          ) =>
-            setName(
-              event.target.value,
-            )
-          }
-        />
-      </label>
-
-      <label className="recipe-field">
-        <span>
-          Grupo
-        </span>
-
-        <select
-          value={category}
-          onChange={(
-            event,
-          ) =>
-            setCategory(
-              event.target
-                .value as
-                IngredientCategory,
-            )
-          }
-        >
-          {ingredientCategoryOrder.map(
-            (group) => (
-              <option
-                key={group}
-                value={group}
-              >
-                {
-                  ingredientCategoryNames[
-                    group
-                  ]
-                }
-              </option>
-            ),
-          )}
-        </select>
-      </label>
-
-      <label className="recipe-field">
-  <span>
-    Unidad habitual
-  </span>
-
-  <input
-    value={unit}
-    placeholder="g, ml, ud..."
-    onChange={(
-      event,
-    ) =>
-      setUnit(
-        event.target.value,
-      )
-    }
-  />
-</label>
-
-<label className="recipe-field">
-  <span>
-    Notas
-  </span>
-
-  <textarea
-    rows={3}
-    value={notes}
-    placeholder="Notas opcionales..."
-    onChange={(
-      event,
-    ) =>
-      setNotes(
-        event.target.value,
-      )
-    }
-  />
-</label>
-
-<button
-  className="nutrition-primary-button compact"
-  type="submit"
->
-  Guardar producto
-</button>
-    </form>
-  )
-}
-
-function RecipeDetail({
-  item,
-  message,
-  onBack,
-  onFavorite,
-  onEdit,
-  onDuplicate,
-  onDelete,
-  onAddIngredient,
-}: {
-  item: RecipeView
-  message: string
-  onBack: () => void
-  onFavorite: (
-    item: RecipeView,
-  ) => Promise<void>
-  onEdit: () => void
-  onDuplicate:
-    () => Promise<void>
-  onDelete:
-    () => Promise<void>
-  onAddIngredient: (
-    relationId: string,
-  ) => Promise<void>
-}) {
-  return (
-    <div>
-      <button
-        type="button"
-        className="nutrition-back-button"
-        onClick={onBack}
-      >
-        ← Recetas
-      </button>
-
-      <header className="nutrition-detail__header">
-        <div>
-          <p className="nutrition-eyebrow">
-            {
-              recipeCategoryNames[
-                item.recipe.category
-              ]
-            }
-          </p>
-
-          <h1>
-            {item.recipe.name}
-          </h1>
-        </div>
-
-        <button
-          type="button"
-          className={`favorite-button ${
-            item.recipe.isFavorite
-              ? 'favorite-button--active'
-              : ''
-          }`}
-          onClick={() =>
-            void onFavorite(
-              item,
-            )
-          }
-        >
-          {item.recipe.isFavorite
-            ? '★'
-            : '☆'}
-        </button>
-      </header>
-
-      <div className="recipe-management-actions">
-        <button
-          type="button"
-          onClick={onEdit}
-        >
-          Editar
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            void onDuplicate()
-          }
-        >
-          Duplicar
-        </button>
-
-        <button
-          type="button"
-          className="danger"
-          onClick={() =>
-            void onDelete()
-          }
-        >
-          Eliminar
-        </button>
-      </div>
-
-      <MacroSummary
-        item={item}
-      />
-
-      <section className="nutrition-detail-section">
-        <h2>
-          Ingredientes
-        </h2>
-
-        <div className="ingredient-list">
-          {item.ingredients.map(
-            ({
-              relation,
-              ingredient,
-            }) => (
-              <div
-                className="ingredient-row"
-                key={
-                  relation.id
-                }
-              >
-                <div>
-                  <strong>
-                    {
-                      ingredient.name
-                    }
-                  </strong>
-
-                  {relation.notes && (
-                    <small>
-                      {
-                        relation.notes
-                      }
-                    </small>
-                  )}
-                </div>
-
-                <div className="ingredient-action-area">
-                  <span>
-                    {formatQuantity(
-                      relation,
-                    )}
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void onAddIngredient(
-                        relation.id,
-                      )
-                    }
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            ),
-          )}
-        </div>
-      </section>
-
-      {item.recipe.instructions && (
-        <section className="nutrition-detail-section">
-          <h2>
-            Preparación
-          </h2>
-
-          <p className="nutrition-instructions">
-            {
-              item.recipe
-                .instructions
-            }
-          </p>
-        </section>
-      )}
-
-      {message && (
-        <p className="nutrition-success">
-          {message}
+        <p className="nutrition-vnext-qualityNote">
+          Puedes dejar macros vacíos. FÉNIX los mantendrá como desconocidos, no como cero.
         </p>
-      )}
+
+        <div className="nutrition-vnext-modal__actions">
+          <button type="button" onClick={onClose}>Cancelar</button>
+          <button className="primary" type="submit">Guardar como realizada</button>
+        </div>
+      </form>
     </div>
   )
 }
 
-function BasketEditor({
-  item,
-  onCancel,
-  onSaved,
+function GoalEditor({
+  current,
+  onClose,
+  onSave,
 }: {
-  item: ShoppingItemView
-  onCancel: () => void
-  onSaved: () => Promise<void>
+  current: NutritionDayView['goal']
+  onClose: () => void
+  onSave: (input: NutritionGoalInput) => Promise<void>
 }) {
-  const [
-    quantity,
-    setQuantity,
-  ] = useState(
-    item.item.quantity
-      ?.toString() ?? '',
-  )
+  const [calories, setCalories] = useState(current?.targetCalories?.toString() ?? '')
+  const [protein, setProtein] = useState(current?.targetProtein?.toString() ?? '')
+  const [carbs, setCarbs] = useState(current?.targetCarbs?.toString() ?? '')
+  const [fat, setFat] = useState(current?.targetFat?.toString() ?? '')
+  const [rateMin, setRateMin] = useState(current?.targetWeightGainMinKgPerWeek?.toString() ?? '')
+  const [rateMax, setRateMax] = useState(current?.targetWeightGainMaxKgPerWeek?.toString() ?? '')
+  const [error, setError] = useState('')
 
-  const [
-    quantityMax,
-    setQuantityMax,
-  ] = useState(
-    item.item.quantityMax
-      ?.toString() ?? '',
-  )
+  function optional(value: string) {
+    const trimmed = value.replace(',', '.').trim()
+    if (!trimmed) return null
+    const parsed = Number(trimmed)
+    if (!Number.isFinite(parsed) || parsed < 0) throw new Error('Introduce valores válidos.')
+    return parsed
+  }
 
-  const [
-    unit,
-    setUnit,
-  ] = useState(
-    item.item.unit ?? '',
-  )
-
-  const [
-    error,
-    setError,
-  ] = useState('')
-
-  async function submit(
-    event:
-      FormEvent<HTMLFormElement>,
-  ) {
+  async function submit(event: FormEvent) {
     event.preventDefault()
-
+    setError('')
     try {
-      setError('')
-
-      const input:
-        ShoppingItemInput = {
-        quantity:
-          parseOptionalNumber(
-            quantity,
-            'Cantidad',
-          ),
-        quantityMax:
-          parseOptionalNumber(
-            quantityMax,
-            'Cantidad máxima',
-          ),
-        unit:
-          unit.trim() || null,
-      }
-
-      await updateShoppingItem(
-        item.item.id,
-        input,
-      )
-
-      await onSaved()
-    } catch (
-      saveError
-    ) {
-      setError(
-        saveError instanceof Error
-          ? saveError.message
-          : 'No se ha podido guardar.',
-      )
+      await onSave({
+        targetCalories: optional(calories),
+        targetProtein: optional(protein),
+        targetCarbs: optional(carbs),
+        targetFat: optional(fat),
+        targetWeightGainMinKgPerWeek: optional(rateMin),
+        targetWeightGainMaxKgPerWeek: optional(rateMax),
+      })
+      onClose()
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'No se ha podido guardar.')
     }
   }
 
   return (
-    <form
-      className="basket-editor"
-      onSubmit={submit}
-    >
-      <div className="section-title-row">
-        <h3>
-          {item.ingredient.name}
-        </h3>
+    <div className="nutrition-vnext-modalBackdrop" role="presentation">
+      <form className="nutrition-vnext-modal" onSubmit={submit}>
+        <div className="nutrition-vnext-modal__head">
+          <div>
+            <small>OBJETIVO ACTIVO</small>
+            <h2>Objetivos Nutrition</h2>
+          </div>
+          <button type="button" onClick={onClose}>×</button>
+        </div>
+        {error && <div className="nutrition-vnext-error">{error}</div>}
+        <div className="nutrition-vnext-modal__macroInputs two">
+          <label><span>kcal/día</span><input inputMode="decimal" value={calories} onChange={(event) => setCalories(event.target.value)} /></label>
+          <label><span>Proteína g/día</span><input inputMode="decimal" value={protein} onChange={(event) => setProtein(event.target.value)} /></label>
+          <label><span>Carbohidratos g/día</span><input inputMode="decimal" value={carbs} onChange={(event) => setCarbs(event.target.value)} placeholder="Opcional" /></label>
+          <label><span>Grasas g/día</span><input inputMode="decimal" value={fat} onChange={(event) => setFat(event.target.value)} placeholder="Opcional" /></label>
+          <label><span>Ganancia mín. kg/sem</span><input inputMode="decimal" value={rateMin} onChange={(event) => setRateMin(event.target.value)} placeholder="Sin definir" /></label>
+          <label><span>Ganancia máx. kg/sem</span><input inputMode="decimal" value={rateMax} onChange={(event) => setRateMax(event.target.value)} placeholder="Sin definir" /></label>
+        </div>
+        <p className="nutrition-vnext-qualityNote">
+          Guardar crea una nueva vigencia. El objetivo anterior se conserva como histórico.
+        </p>
+        <div className="nutrition-vnext-modal__actions">
+          <button type="button" onClick={onClose}>Cancelar</button>
+          <button className="primary" type="submit">Guardar objetivo</button>
+        </div>
+      </form>
+    </div>
+  )
+}
 
-        <button
-          type="button"
-          className="close-editor-button"
-          onClick={onCancel}
-        >
-          ×
+function WeekView({
+  week,
+  onPrevious,
+  onNext,
+  onCurrent,
+  onApply,
+}: {
+  week: NutritionWeekSuggestion
+  onPrevious: () => void
+  onNext: () => void
+  onCurrent: () => void
+  onApply: () => Promise<void>
+}) {
+  const [selectedDate, setSelectedDate] = useState(week.days[0]?.date ?? week.monday)
+  const selected = week.days.find((day) => day.date === selectedDate) ?? week.days[0]
+
+  return (
+    <div className="nutrition-vnext-week">
+      <div className="nutrition-vnext-week__toolbar">
+        <button type="button" onClick={onPrevious}>‹</button>
+        <button type="button" onClick={onCurrent}>
+          Semana de {formatDate(week.monday, false)}
         </button>
+        <button type="button" onClick={onNext}>›</button>
       </div>
 
-      {error && (
-        <div className="nutrition-error">
-          {error}
-        </div>
+      <div className="nutrition-vnext-week__days">
+        {week.days.map((day) => (
+          <button
+            type="button"
+            key={day.date}
+            className={day.date === selected?.date ? 'active' : ''}
+            onClick={() => setSelectedDate(day.date)}
+          >
+            <span>{shortDate(day.date).split(' ')[0]}</span>
+            <strong>{parseDateKey(day.date).getDate()}</strong>
+            <i className={day.trainingSession ? 'training' : ''} />
+          </button>
+        ))}
+      </div>
+
+      {selected && (
+        <section className="nutrition-vnext-week__selected">
+          <div className="nutrition-vnext-sectionHead">
+            <div>
+              <small>{selected.trainingSession ? 'DÍA DE ENTRENAMIENTO' : 'DÍA SIN TRAINING'}</small>
+              <h2>{formatDate(selected.date)}</h2>
+            </div>
+            <span>{number(selected.planned.calories)} kcal plan</span>
+          </div>
+
+          <div className="nutrition-vnext-week__mealList">
+            {selected.meals.map((meal) => (
+              <article key={`${selected.date}-${meal.role}`}>
+                <span>{nutritionRoleLabel(meal.role)}</span>
+                <strong>{meal.recipe?.name ?? 'Sin propuesta compatible'}</strong>
+                <small>
+                  {meal.recipe?.estimatedCalories === null || meal.recipe?.estimatedCalories === undefined
+                    ? 'Macros parciales'
+                    : `${number(meal.recipe.estimatedCalories)} kcal`}
+                </small>
+              </article>
+            ))}
+          </div>
+        </section>
       )}
 
-      <div className="basket-editor-grid">
-        <label className="recipe-field">
-          <span>
-            Cantidad
-          </span>
-          <input
-            inputMode="decimal"
-            value={quantity}
-            onChange={(
-              event,
-            ) =>
-              setQuantity(
-                event.target
-                  .value,
-              )
-            }
-          />
-        </label>
-
-        <label className="recipe-field">
-          <span>
-            Máx.
-          </span>
-          <input
-            inputMode="decimal"
-            value={quantityMax}
-            onChange={(
-              event,
-            ) =>
-              setQuantityMax(
-                event.target
-                  .value,
-              )
-            }
-          />
-        </label>
-
-        <label className="recipe-field">
-          <span>
-            Unidad
-          </span>
-          <input
-            value={unit}
-            onChange={(
-              event,
-            ) =>
-              setUnit(
-                event.target.value,
-              )
-            }
-          />
-        </label>
+      <div className="nutrition-vnext-week__apply">
+        <div>
+          <strong>Semana sugerida flexible</strong>
+          <span>Aplicar reemplaza solo comidas pendientes. Nunca reescribe realizadas u omitidas.</span>
+        </div>
+        <button className="primary" type="button" onClick={() => void onApply()}>
+          Aplicar semana
+        </button>
       </div>
-
-      <button
-        className="nutrition-primary-button compact"
-        type="submit"
-      >
-        Guardar
-      </button>
-    </form>
+    </div>
   )
 }
 
 export default function NutritionPage() {
-  const [
-    recipes,
-    setRecipes,
-  ] =
-    useState<RecipeView[]>([])
+  const [tab, setTab] = useState<NutritionTab>('today')
+  const [date, setDate] = useState(getLocalDateKey())
+  const [weekAnchor, setWeekAnchor] = useState(getLocalDateKey())
+  const [day, setDay] = useState<NutritionDayView | null>(null)
+  const [week, setWeek] = useState<NutritionWeekSuggestion | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+  const [showImprovised, setShowImprovised] = useState(false)
+  const [showGoal, setShowGoal] = useState(false)
 
-  const [
-    catalog,
-    setCatalog,
-  ] =
-    useState<Ingredient[]>([])
-
-  const [
-    basket,
-    setBasket,
-  ] =
-    useState<
-      ShoppingItemView[]
-    >([])
-
-  const [
-    selectedRecipe,
-    setSelectedRecipe,
-  ] =
-    useState<
-      RecipeView | null
-    >(null)
-
-  const [
-    recipeEditor,
-    setRecipeEditor,
-  ] =
-    useState<RecipeEditorTarget>(
-      null,
-    )
-
-  const [
-    catalogEditor,
-    setCatalogEditor,
-  ] =
-    useState<CatalogEditorTarget>(
-      null,
-    )
-
-  const [
-    basketEditor,
-    setBasketEditor,
-  ] =
-    useState<
-      ShoppingItemView | null
-    >(null)
-
-  const [
-    section,
-    setSection,
-  ] =
-    useState<NutritionSection>(
-      'recipes',
-    )
-
-  const [
-    shoppingView,
-    setShoppingView,
-  ] =
-    useState<ShoppingView>(
-      'catalog',
-    )
-
-  const [
-    category,
-    setCategory,
-  ] =
-    useState<CategoryFilter>(
-      'all',
-    )
-
-  const [
-    search,
-    setSearch,
-  ] = useState('')
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(true)
-
-  const [
-    error,
-    setError,
-  ] = useState('')
-
-  const [
-    message,
-    setMessage,
-  ] = useState('')
+  const nextPending = useMemo(
+    () => day?.meals.find((item) => item.meal.status === 'pending') ?? null,
+    [day],
+  )
 
   useEffect(() => {
+    if (tab !== 'today') return
     let active = true
-
-    Promise.all([
-      getNutritionRecipes(),
-      getIngredientCatalog(),
-      getShoppingList(),
-    ])
-      .then(
-        ([
-          loadedRecipes,
-          loadedCatalog,
-          loadedBasket,
-        ]) => {
-          if (!active) {
-            return
-          }
-
-          setRecipes(
-            loadedRecipes,
-          )
-          setCatalog(
-            loadedCatalog,
-          )
-          setBasket(
-            loadedBasket,
-          )
+    const timer = window.setTimeout(() => {
+      void getNutritionDay(date)
+        .then((value) => {
+          if (!active) return
+          setDay(value)
           setLoading(false)
-        },
-      )
-      .catch(
-        (
-          loadError: unknown,
-        ) => {
-          if (!active) {
-            return
-          }
-
-          setError(
-            loadError instanceof Error
-              ? loadError.message
-              : 'No se ha podido cargar Nutrition.',
-          )
+          setError('')
+        })
+        .catch((loadError: unknown) => {
+          if (!active) return
+          setError(loadError instanceof Error ? loadError.message : 'No se ha podido cargar Nutrition.')
           setLoading(false)
-        },
-      )
+        })
+    }, 0)
 
     return () => {
       active = false
+      window.clearTimeout(timer)
     }
-  }, [])
+  }, [date, tab])
 
-  const filteredRecipes =
-    useMemo(() => {
-      const query =
-        search
-          .trim()
-          .toLocaleLowerCase(
-            'es',
-          )
+  useEffect(() => {
+    if (tab !== 'week') return
+    let active = true
+    const timer = window.setTimeout(() => {
+      void getNutritionWeekSuggestion(weekAnchor)
+        .then((value) => {
+          if (!active) return
+          setWeek(value)
+          setLoading(false)
+          setError('')
+        })
+        .catch((loadError: unknown) => {
+          if (!active) return
+          setError(loadError instanceof Error ? loadError.message : 'No se ha podido cargar la semana.')
+          setLoading(false)
+        })
+    }, 0)
 
-      return recipes.filter(
-        (item) => {
-          if (
-            category ===
-              'favorites' &&
-            !item.recipe
-              .isFavorite
-          ) {
-            return false
-          }
+    return () => {
+      active = false
+      window.clearTimeout(timer)
+    }
+  }, [tab, weekAnchor])
 
-          if (
-            category !== 'all' &&
-            category !==
-              'favorites' &&
-            item.recipe.category !==
-              category
-          ) {
-            return false
-          }
-
-          if (!query) {
-            return true
-          }
-
-          return (
-            item.recipe.name
-              .toLocaleLowerCase(
-                'es',
-              )
-              .includes(query) ||
-            item.ingredients.some(
-              ({
-                ingredient,
-              }) =>
-                ingredient.name
-                  .toLocaleLowerCase(
-                    'es',
-                  )
-                  .includes(
-                    query,
-                  ),
-            )
-          )
-        },
-      )
-    }, [
-      recipes,
-      category,
-      search,
-    ])
-
-  async function refreshAll() {
-    const [
-      loadedRecipes,
-      loadedCatalog,
-      loadedBasket,
-    ] =
-      await Promise.all([
-        getNutritionRecipes(),
-        getIngredientCatalog(),
-        getShoppingList(),
-      ])
-
-    setRecipes(
-      loadedRecipes,
-    )
-    setCatalog(
-      loadedCatalog,
-    )
-    setBasket(
-      loadedBasket,
-    )
-
-    return loadedRecipes
+  async function refreshDay(action: () => Promise<NutritionDayView>, success?: string) {
+    try {
+      const value = await action()
+      setDay(value)
+      setError('')
+      if (success) setMessage(success)
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : 'No se ha podido completar la acción.')
+    }
   }
 
-  async function saveRecipe(
-    recipeId: string,
-  ) {
-    const loaded =
-      await refreshAll()
-
-    setRecipeEditor(null)
-
-    const saved =
-      loaded.find(
-        (item) =>
-          item.recipe.id ===
-          recipeId,
-      )
-
-    setSelectedRecipe(
-      saved ?? null,
-    )
+  function changeTab(next: NutritionTab) {
+    setLoading(next !== 'library')
+    setMessage('')
+    setError('')
+    setTab(next)
   }
 
-  async function toggleFavorite(
-    item: RecipeView,
-  ) {
-    const updated =
-      await toggleRecipeFavorite(
-        item.recipe.id,
-      )
-
-    setRecipes(
-      (current) =>
-        current.map(
-          (recipe) =>
-            recipe.recipe.id ===
-            updated.id
-              ? {
-                  ...recipe,
-                  recipe:
-                    updated,
-                }
-              : recipe,
-        ),
-    )
-
-    setSelectedRecipe(
-      (current) =>
-        current?.recipe.id ===
-        updated.id
-          ? {
-              ...current,
-              recipe:
-                updated,
-            }
-          : current,
-    )
-  }
-
-  if (loading) {
+  if (tab === 'library') {
     return (
-      <main className="nutrition-page">
-        Cargando Nutrition…
-      </main>
-    )
-  }
-
-  if (recipeEditor) {
-    return (
-      <main className="nutrition-page">
-        <RecipeEditor
-          key={
-            recipeEditor ===
-            'new'
-              ? 'new'
-              : recipeEditor
-                  .recipe.id
-          }
-          item={
-            recipeEditor ===
-            'new'
-              ? null
-              : recipeEditor
-          }
-          catalog={catalog}
-          onCancel={() =>
-            setRecipeEditor(
-              null,
-            )
-          }
-          onSaved={saveRecipe}
-        />
-      </main>
-    )
-  }
-
-  if (selectedRecipe) {
-    return (
-      <main className="nutrition-page">
-        {error && (
-          <div className="nutrition-error">
-            {error}
+      <div className="nutrition-vnext-shell nutrition-vnext-shell--library">
+        <header className="nutrition-vnext-topbar">
+          <div>
+            <small>FÉNIX</small>
+            <h1>Nutrition</h1>
           </div>
-        )}
-
-        <RecipeDetail
-          item={selectedRecipe}
-          message={message}
-          onBack={() => {
-            setSelectedRecipe(
-              null,
-            )
-            setMessage('')
-          }}
-          onFavorite={
-            toggleFavorite
-          }
-          onEdit={() =>
-            setRecipeEditor(
-              selectedRecipe,
-            )
-          }
-          onDuplicate={async () => {
-            const duplicated =
-              await duplicateRecipe(
-                selectedRecipe
-                  .recipe.id,
-              )
-
-            const loaded =
-              await refreshAll()
-
-            setSelectedRecipe(
-              loaded.find(
-                (item) =>
-                  item.recipe.id ===
-                  duplicated.id,
-              ) ?? null,
-            )
-          }}
-          onDelete={async () => {
-            if (
-              !window.confirm(
-                '¿Eliminar esta receta?',
-              )
-            ) {
-              return
-            }
-
-            await deleteRecipe(
-              selectedRecipe
-                .recipe.id,
-            )
-
-            await refreshAll()
-
-            setSelectedRecipe(
-              null,
-            )
-          }}
-          onAddIngredient={async (
-            relationId,
-          ) => {
-            await addRecipeIngredientToBasket(
-              relationId,
-            )
-
-            setBasket(
-              await getShoppingList(),
-            )
-
-            setMessage(
-              'Añadido al carrito.',
-            )
-          }}
-        />
-      </main>
+        </header>
+        <nav className="nutrition-vnext-tabs" aria-label="Secciones de Nutrition">
+          <button type="button" onClick={() => changeTab('today')}>Hoy</button>
+          <button type="button" onClick={() => changeTab('week')}>Semana</button>
+          <button type="button" className="active">Recetas · Compra</button>
+        </nav>
+        <NutritionLibrary />
+      </div>
     )
   }
 
   return (
-    <main className="nutrition-page">
-      <header className="nutrition-header">
-        <p className="nutrition-eyebrow">
-          FÉNIX
-        </p>
-        <h1>
-          Nutrition
-        </h1>
-        <p>
-          Recetas y compra bajo tu control.
-        </p>
+    <main className="nutrition-vnext-shell">
+      <header className="nutrition-vnext-topbar">
+        <div>
+          <small>FÉNIX</small>
+          <h1>Nutrition</h1>
+        </div>
+        <button className="nutrition-vnext-goalButton" type="button" onClick={() => setShowGoal(true)}>
+          Objetivos
+        </button>
       </header>
 
-      {error && (
-        <div className="nutrition-error">
-          {error}
-        </div>
-      )}
-
-      <nav className="nutrition-tabs">
-        <button
-          type="button"
-          className={
-            section ===
-            'recipes'
-              ? 'active'
-              : ''
-          }
-          onClick={() =>
-            setSection(
-              'recipes',
-            )
-          }
-        >
-          Recetas
-        </button>
-
-        <button
-          type="button"
-          className={
-            section ===
-            'shopping'
-              ? 'active'
-              : ''
-          }
-          onClick={() =>
-            setSection(
-              'shopping',
-            )
-          }
-        >
-          Compra
-        </button>
+      <nav className="nutrition-vnext-tabs" aria-label="Secciones de Nutrition">
+        <button type="button" className={tab === 'today' ? 'active' : ''} onClick={() => changeTab('today')}>Hoy</button>
+        <button type="button" className={tab === 'week' ? 'active' : ''} onClick={() => changeTab('week')}>Semana</button>
+        <button type="button" onClick={() => changeTab('library')}>Recetas · Compra</button>
       </nav>
 
-      {section === 'recipes' ? (
+      {error && <div className="nutrition-vnext-error">{error}</div>}
+      {message && <div className="nutrition-vnext-message">{message}</div>}
+
+      {loading && <div className="nutrition-vnext-loading">Preparando Nutrition…</div>}
+
+      {!loading && tab === 'today' && day && (
         <>
-          <div className="recipes-toolbar">
-            <label className="nutrition-search">
-              <span>
-                Buscar
-              </span>
+          <section className="nutrition-vnext-dayHeader">
+            <button type="button" onClick={() => { setLoading(true); setDate(shiftDate(date, -1)) }}>‹</button>
+            <div>
+              <small>{day.trainingSession ? `${day.trainingSession.templateName} · Training` : 'Día sin Training'}</small>
+              <h2>{formatDate(date)}</h2>
+            </div>
+            <button type="button" onClick={() => { setLoading(true); setDate(shiftDate(date, 1)) }}>›</button>
+          </section>
 
-              <input
-                type="search"
-                placeholder="Receta o ingrediente..."
-                value={search}
-                onChange={(
-                  event,
-                ) =>
-                  setSearch(
-                    event.target
-                      .value,
-                  )
-                }
-              />
-            </label>
+          <MacroOverview consumed={day.consumed} planned={day.planned} target={day.goal} />
 
-            <button
-              type="button"
-              className="new-recipe-button"
-              onClick={() =>
-                setRecipeEditor(
-                  'new',
-                )
-              }
-            >
-              + Nueva receta
-            </button>
-          </div>
-
-          <div className="nutrition-categories">
-            {filterCategories.map(
-              (filter) => (
+          <section className="nutrition-vnext-appetite">
+            <div>
+              <small>APETITO / VOLUMEN</small>
+              <strong>¿Cómo quieres comer hoy?</strong>
+            </div>
+            <div className="nutrition-vnext-appetite__options">
+              {appetiteOptions.map((option) => (
                 <button
+                  key={option.value}
                   type="button"
-                  key={
-                    filter.id
-                  }
-                  className={
-                    category ===
-                    filter.id
-                      ? 'active'
-                      : ''
-                  }
-                  onClick={() =>
-                    setCategory(
-                      filter.id,
-                    )
-                  }
+                  className={day.day.appetiteMode === option.value ? 'active' : ''}
+                  onClick={() => void refreshDay(
+                    () => setNutritionDayAppetite(day.date, option.value),
+                    `Modo ${option.label.toLowerCase()} activo.`,
+                  )}
                 >
-                  {
-                    filter.label
-                  }
+                  <strong>{option.label}</strong>
+                  <span>{option.detail}</span>
                 </button>
-              ),
-            )}
-          </div>
+              ))}
+            </div>
+          </section>
 
-          <div className="nutrition-results">
-            {
-              filteredRecipes.length
-            }{' '}
-            recetas
-          </div>
+          {nextPending && (
+            <section className="nutrition-vnext-nextMeal">
+              <div>
+                <small>SIGUIENTE</small>
+                <strong>{nutritionRoleLabel(nextPending.meal.role)}</strong>
+                <span>{nextPending.meal.name}</span>
+              </div>
+              <span className="nutrition-vnext-nextMeal__energy">
+                {nextPending.meal.plannedCalories === null ? '—' : `${number(nextPending.meal.plannedCalories)} kcal`}
+              </span>
+            </section>
+          )}
 
-          <section className="nutrition-recipe-grid">
-            {filteredRecipes.map(
-              (item) => (
-                <RecipeCard
-                  key={
-                    item.recipe.id
-                  }
+          <section className="nutrition-vnext-dayPlan">
+            <div className="nutrition-vnext-sectionHead">
+              <div>
+                <small>PLAN DEL DÍA</small>
+                <h2>Comidas</h2>
+              </div>
+              <button type="button" onClick={() => setShowImprovised(true)}>+ Improvisada</button>
+            </div>
+
+            <div className="nutrition-vnext-mealList">
+              {day.meals.map((item) => (
+                <MealCard
+                  key={item.meal.id}
                   item={item}
-                  onOpen={
-                    setSelectedRecipe
-                  }
-                  onFavorite={
-                    toggleFavorite
-                  }
+                  onComplete={() => refreshDay(() => setDailyMealStatus(item.meal.id, 'completed'))}
+                  onSkip={() => refreshDay(() => setDailyMealStatus(item.meal.id, 'skipped'))}
+                  onUndo={() => refreshDay(() => setDailyMealStatus(item.meal.id, 'pending'))}
+                  onReplace={(recipeId) => refreshDay(() => replaceDailyMealRecipe(item.meal.id, recipeId))}
+                  onPortion={(portion) => refreshDay(() => setDailyMealPortion(item.meal.id, portion))}
                 />
-              ),
-            )}
+              ))}
+            </div>
+          </section>
+
+          <section className="nutrition-vnext-shortcuts">
+            <button type="button" onClick={() => changeTab('week')}>
+              <span>SEMANA</span>
+              <strong>Planificar próximos días</strong>
+              <em>→</em>
+            </button>
+            <button type="button" onClick={() => changeTab('library')}>
+              <span>BIBLIOTECA</span>
+              <strong>Recetas y compra</strong>
+              <em>→</em>
+            </button>
           </section>
         </>
-      ) : shoppingView ===
-        'catalog' ? (
-        <>
-          <div className="shopping-catalog-header">
-            <div>
-              <p className="nutrition-eyebrow">
-                COMPRA
-              </p>
-              <h2>
-                Catálogo
-              </h2>
-              <p>
-                Tu lista permanente.
-              </p>
-            </div>
+      )}
 
-            <button
-              type="button"
-              className="cart-button"
-              onClick={() =>
-                setShoppingView(
-                  'basket',
-                )
-              }
-            >
-              <span>
-                🛒
-              </span>
-
-              {basket.length >
-                0 && (
-                <strong>
-                  {
-                    basket.length
-                  }
-                </strong>
-              )}
-            </button>
-          </div>
-
-          {catalogEditor && (
-            <CatalogEditor
-              key={
-                catalogEditor.mode ===
-                'new'
-                  ? `new-${catalogEditor.category}`
-                  : catalogEditor
-                      .ingredient.id
-              }
-              target={
-                catalogEditor
-              }
-              onCancel={() =>
-                setCatalogEditor(
-                  null,
-                )
-              }
-              onSaved={async () => {
-                await refreshAll()
-                setCatalogEditor(
-                  null,
-                )
-              }}
-            />
-          )}
-
-          <div className="catalog-sections">
-            {ingredientCategoryOrder.map(
-              (group) => {
-                const products =
-                  catalog.filter(
-                    (ingredient) =>
-                      ingredient.category ===
-                      group,
-                  )
-
-                return (
-                  <section
-                    className="catalog-section"
-                    key={group}
-                  >
-                    <div className="catalog-section-header">
-                      <h3>
-                        {
-                          ingredientCategoryNames[
-                            group
-                          ]
-                        }
-                      </h3>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setCatalogEditor(
-                            {
-                              mode: 'new',
-                              category:
-                                group,
-                            },
-                          )
-                        }
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    {products.map(
-                      (ingredient) => {
-                        const alreadyInBasket =
-                          basket.some(
-                            (item) =>
-                              item
-                                .ingredient
-                                .id ===
-                              ingredient.id,
-                          )
-
-                        return (
-                          <div
-                            className="catalog-product-row"
-                            key={
-                              ingredient.id
-                            }
-                          >
-                            <div>
-                              <strong>
-                                {
-                                  ingredient.name
-                                }
-                              </strong>
-
-                              {ingredient.defaultUnit && (
-                                <span>
-                                  {
-                                    ingredient.defaultUnit
-                                  }
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="catalog-row-actions">
-                              <button
-                                type="button"
-                                className="catalog-add"
-                                disabled={
-                                  alreadyInBasket
-                                }
-                                onClick={async () => {
-                                  await addCatalogIngredientToBasket(
-                                    ingredient.id,
-                                  )
-
-                                  setBasket(
-                                    await getShoppingList(),
-                                  )
-                                }}
-                              >
-                                {alreadyInBasket
-                                  ? '✓'
-                                  : '+'}
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setCatalogEditor(
-                                    {
-                                      mode: 'edit',
-                                      ingredient,
-                                    },
-                                  )
-                                }
-                              >
-                                ✎
-                              </button>
-
-                              <button
-                                type="button"
-                                className="catalog-delete"
-                                onClick={async () => {
-                                  if (
-                                    !window.confirm(
-                                      `¿Eliminar "${ingredient.name}" del catálogo?`,
-                                    )
-                                  ) {
-                                    return
-                                  }
-
-                                  try {
-                                    setError(
-                                      '',
-                                    )
-
-                                    await deleteCatalogIngredient(
-                                      ingredient.id,
-                                    )
-
-                                    await refreshAll()
-                                  } catch (
-                                    deleteError
-                                  ) {
-                                    setError(
-                                      deleteError instanceof Error
-                                        ? deleteError.message
-                                        : 'No se ha podido eliminar.',
-                                    )
-                                  }
-                                }}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      },
-                    )}
-                  </section>
-                )
-              },
-            )}
-          </div>
-        </>
-      ) : (
-        <>
-          <button
-            type="button"
-            className="nutrition-back-button"
-            onClick={() =>
-              setShoppingView(
-                'catalog',
-              )
+      {!loading && tab === 'week' && week && (
+        <WeekView
+          week={week}
+          onPrevious={() => { setLoading(true); setWeekAnchor(shiftDate(week.monday, -7)) }}
+          onNext={() => { setLoading(true); setWeekAnchor(shiftDate(week.monday, 7)) }}
+          onCurrent={() => { setLoading(true); setWeekAnchor(getLocalDateKey()) }}
+          onApply={async () => {
+            try {
+              const next = await applyNutritionWeek(week.monday)
+              setWeek(next)
+              setMessage('Semana aplicada. Se han reemplazado solo comidas pendientes.')
+            } catch (applyError) {
+              setError(applyError instanceof Error ? applyError.message : 'No se ha podido aplicar la semana.')
             }
-          >
-            ← Catálogo
-          </button>
+          }}
+        />
+      )}
 
-          <div className="shopping-basket-header">
-            <p className="nutrition-eyebrow">
-              COMPRA
-            </p>
-            <h2>
-              Carrito
-            </h2>
-            <p>
-              Lo que te falta comprar.
-            </p>
-          </div>
+      {showImprovised && day && (
+        <ImprovisedMealModal
+          onClose={() => setShowImprovised(false)}
+          onSave={(input) => refreshDay(() => addImprovisedMeal(day.date, input))}
+        />
+      )}
 
-          {basketEditor && (
-            <BasketEditor
-              key={
-                basketEditor
-                  .item.id
-              }
-              item={
-                basketEditor
-              }
-              onCancel={() =>
-                setBasketEditor(
-                  null,
-                )
-              }
-              onSaved={async () => {
-                setBasket(
-                  await getShoppingList(),
-                )
-                setBasketEditor(
-                  null,
-                )
-              }}
-            />
-          )}
-
-          {basket.length === 0 ? (
-            <div className="nutrition-empty-state">
-              Carrito vacío.
-            </div>
-          ) : (
-            <div className="shopping-list">
-              {basket.some(
-                (item) =>
-                  item.item.checked,
-              ) && (
-                <button
-                  type="button"
-                  className="clear-checked-button"
-                  onClick={async () => {
-                    await clearCheckedShoppingItems()
-
-                    setBasket(
-                      await getShoppingList(),
-                    )
-                  }}
-                >
-                  Limpiar comprados
-                </button>
-              )}
-
-              {basket.map(
-                (item) => (
-                  <div
-                    className={`shopping-row ${
-                      item.item.checked
-                        ? 'shopping-row--checked'
-                        : ''
-                    }`}
-                    key={
-                      item.item.id
-                    }
-                  >
-                    <button
-                      type="button"
-                      className="shopping-check"
-                      onClick={async () => {
-                        await toggleShoppingItemChecked(
-                          item.item.id,
-                        )
-
-                        setBasket(
-                          await getShoppingList(),
-                        )
-                      }}
-                    >
-                      {item.item.checked
-                        ? '✓'
-                        : '○'}
-                    </button>
-
-                    <div className="shopping-info">
-                      <strong>
-                        {
-                          item
-                            .ingredient
-                            .name
-                        }
-                      </strong>
-
-                      <span>
-                        {formatShoppingQuantity(
-                          item,
-                        )}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="shopping-edit"
-                      onClick={() =>
-                        setBasketEditor(
-                          item,
-                        )
-                      }
-                    >
-                      ✎
-                    </button>
-
-                    <button
-                      type="button"
-                      className="shopping-remove"
-                      onClick={async () => {
-                        await removeShoppingItem(
-                          item.item.id,
-                        )
-
-                        setBasket(
-                          await getShoppingList(),
-                        )
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ),
-              )}
-            </div>
-          )}
-        </>
+      {showGoal && (
+        <GoalEditor
+          current={day?.goal ?? week?.goal ?? null}
+          onClose={() => setShowGoal(false)}
+          onSave={async (input) => {
+            await updateNutritionGoal(input)
+            if (tab === 'today') {
+              setDay(await getNutritionDay(date))
+            } else if (tab === 'week') {
+              setWeek(await getNutritionWeekSuggestion(weekAnchor))
+            }
+          }}
+        />
       )}
     </main>
   )
