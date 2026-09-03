@@ -25,6 +25,8 @@ import TrainingPage from './features/training/TrainingPage'
 
 import NutritionPage from './features/nutrition/NutritionPage'
 
+import ProgressPlaceholder from './features/progress/ProgressPlaceholder'
+
 import './styles/app.css'
 
 type AppState =
@@ -43,7 +45,10 @@ function NavigationIcon({
 }: {
   section: AppSection
 }) {
-  if (section === 'today') {
+  if (
+    section ===
+    'today'
+  ) {
     return (
       <svg
         viewBox="0 0 24 24"
@@ -117,36 +122,11 @@ function NavigationIcon({
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="M4 19V9" />
-      <path d="M10 19V5" />
-      <path d="M16 19v-7" />
-      <path d="M22 19V3" />
+      <path d="M12 3.5c-2.9 1.5-5.2 4-5.8 7.2-.6 3.5 1.1 7.2 5.8 9.8" />
+      <path d="M12 3.5c2.9 1.5 5.2 4 5.8 7.2.6 3.5-1.1 7.2-5.8 9.8" />
+      <path d="M8.4 8.3 12 11l3.6-2.7" />
+      <path d="M9.2 14.4 12 12l2.8 2.4" />
     </svg>
-  )
-}
-
-function ProgressPlaceholder() {
-  return (
-    <main className="fenix-placeholder-page">
-      <div className="fenix-placeholder-page__inner">
-        <span className="fenix-placeholder-page__brand">
-          FÉNIX
-        </span>
-
-        <h1>
-          Progreso
-        </h1>
-
-        <p>
-          El módulo está reservado en
-          la navegación, pero todavía
-          no dispone de su
-          implementación técnica.
-          No se mostrarán métricas
-          inventadas.
-        </p>
-      </div>
-    </main>
   )
 }
 
@@ -182,20 +162,26 @@ function App() {
 
     initializeApp()
       .then(() => {
-        if (active) {
+        if (
+          active
+        ) {
           setAppState(
             'ready',
           )
         }
       })
       .catch(
-        (error: unknown) => {
+        (
+          error: unknown,
+        ) => {
           console.error(
             'Error inicializando FÉNIX:',
             error,
           )
 
-          if (active) {
+          if (
+            active
+          ) {
             setAppState(
               'error',
             )
