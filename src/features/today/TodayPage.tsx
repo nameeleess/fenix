@@ -26,7 +26,6 @@ import {
 import {
   getTodayIntegrationSummary,
   type TodayIntegrationSummary,
-  type TodayTrainingSummary,
 } from './todayIntegrationService'
 
 import './today.css'
@@ -83,23 +82,6 @@ function getTaskStatusSymbol(status: TodayTaskStatus) {
   return ''
 }
 
-function trainingStatusLabel(training: TodayTrainingSummary) {
-  if (training.status === 'rest') return 'Descanso programado'
-  if (training.status === 'pending') return 'Pendiente'
-  if (training.status === 'in_progress') return 'En curso'
-  if (training.status === 'omitted') return 'Omitida'
-
-  if (training.status === 'completed') {
-    return training.durationMinutes !== null
-      ? `Completada · ${training.durationMinutes} min`
-      : 'Completada'
-  }
-
-  return training.durationMinutes !== null
-    ? `Incompleta · ${training.durationMinutes} min`
-    : 'Incompleta'
-}
-
 function progressColor(progress: number) {
   if (progress >= 80) return 'var(--fenix-success)'
   if (progress >= 45) return '#e9952e'
@@ -116,15 +98,6 @@ function weightPrimary(summary: TodayIntegrationSummary['progress']) {
   }
 
   return '—'
-}
-
-function weightDetail(summary: TodayIntegrationSummary['progress']) {
-  if (summary.weight.status !== 'ready' || summary.weight.deltaKg === null) {
-    return 'Tendencia: datos insuficientes'
-  }
-
-  const sign = summary.weight.deltaKg > 0 ? '+' : ''
-  return `${sign}${formatNumber(summary.weight.deltaKg, 2)} kg vs. 7 días previos`
 }
 
 function TodayPage({
@@ -655,88 +628,51 @@ function TodayPage({
               </div>
             </section>
 
-            <section className="today-module-grid today-module-grid--integrated">
-              <article className="today-module-card today-module-card--training">
-                <div className="today-module-card__heading">
-                  <span className="today-module-card__icon">T</span>
-                  <span>TRAINING</span>
-                </div>
-                <h3>{integration.training.title}</h3>
-                <p>{trainingStatusLabel(integration.training)}</p>
-                <div className="today-module-meta">
-                  <span>{integration.training.completedThisWeek}/{integration.training.plannedThisWeek} semana</span>
-                  <span>
-                    Racha {integration.training.streak}{integration.training.streakPending ? ' · pendiente' : ''}
-                  </span>
-                </div>
-                <button type="button" className="today-card-link" onClick={onOpenTraining}>
-                  {integration.training.status === 'in_progress' ? 'Continuar' : 'Abrir Training'}
-                  <span>›</span>
-                </button>
-              </article>
+            <section className="today-dashboard-grid" aria-label="Resumen de módulos">
+              <button
+                type="button"
+                className="today-dashboard-card today-dashboard-card--training"
+                onClick={onOpenTraining}
+              >
+                <span className="today-dashboard-card__eyebrow">TRAINING</span>
+                <strong>{integration.training.title}</strong>
+                <small>
+                  {integration.training.completedThisWeek}/{integration.training.plannedThisWeek} semana
+                  {' · '}racha {integration.training.streak}
+                  {integration.training.streakPending ? ' pendiente' : ''}
+                </small>
+                <b>{integration.training.status === 'in_progress' ? 'Continuar' : 'Abrir'} ›</b>
+              </button>
 
-              <article className="today-module-card today-module-card--nutrition">
-                <div className="today-module-card__heading">
-                  <span className="today-module-card__icon">N</span>
-                  <span>NUTRITION</span>
-                </div>
-                <h3>{nutritionMeal ? nutritionMeal.roleLabel : 'Plan del día resuelto'}</h3>
-                <p>{nutritionMeal ? nutritionMeal.name : 'No quedan comidas pendientes.'}</p>
-                <div className="today-module-meta">
-                  <span>
-                    {formatNumber(integration.nutrition.consumed.calories)}
-                    {integration.nutrition.targetCalories !== null
-                      ? ` / ${formatNumber(integration.nutrition.targetCalories)} kcal`
-                      : ' kcal'}
-                  </span>
-                  <span>
-                    P {formatNumber(integration.nutrition.consumed.protein)}
-                    {integration.nutrition.targetProtein !== null
-                      ? ` / ${formatNumber(integration.nutrition.targetProtein)} g`
-                      : ' g'}
-                  </span>
-                </div>
-                <button type="button" className="today-card-link" onClick={onOpenNutrition}>
-                  Abrir Nutrition <span>›</span>
-                </button>
-              </article>
-            </section>
+              <button
+                type="button"
+                className="today-dashboard-card today-dashboard-card--nutrition"
+                onClick={onOpenNutrition}
+              >
+                <span className="today-dashboard-card__eyebrow">NUTRITION</span>
+                <strong>{nutritionMeal ? nutritionMeal.roleLabel : 'Día resuelto'}</strong>
+                <small>
+                  {formatNumber(integration.nutrition.consumed.calories)} kcal
+                  {' · '}P {formatNumber(integration.nutrition.consumed.protein)} g
+                </small>
+                <b>Abrir ›</b>
+              </button>
 
-            <section className="today-progress-card today-progress-card--integrated">
-              <div className="today-progress-card__heading">
-                <div>
-                  <span className="today-eyebrow">PROGRESO</span>
-                  <h2>Estado reciente</h2>
-                </div>
-                <button
-                  type="button"
-                  className="today-card-link today-card-link--inline"
-                  onClick={onOpenProgress}
-                >
-                  Ver <span>›</span>
-                </button>
-              </div>
-
-              <div className="today-progress-placeholder-grid today-progress-live-grid">
-                <div>
-                  <span>Peso</span>
-                  <strong>{weightPrimary(integration.progress)}</strong>
-                  <small>{weightDetail(integration.progress)}</small>
-                </div>
-                <div>
-                  <span>Rutina · 7 días</span>
-                  <strong>
-                    {integration.progress.routine.adherencePercent === null
-                      ? '—'
-                      : `${integration.progress.routine.adherencePercent}%`}
-                  </strong>
-                  <small>
-                    {integration.progress.routine.known > 0
-                      ? `${integration.progress.routine.completed}/${integration.progress.routine.known} registros conocidos`
-                      : 'Sin historial suficiente'}
-                  </small>
-                </div>
-              </div>
+              <button
+                type="button"
+                className="today-dashboard-card today-dashboard-card--progress"
+                onClick={onOpenProgress}
+              >
+                <span className="today-dashboard-card__eyebrow">PROGRESO</span>
+                <strong>{weightPrimary(integration.progress)}</strong>
+                <small>
+                  Rutina{' '}
+                  {integration.progress.routine.adherencePercent === null
+                    ? '—'
+                    : `${integration.progress.routine.adherencePercent}%`}
+                </small>
+                <b>Ver ›</b>
+              </button>
             </section>
 
             {remainingBlocks.length > 0 && (
