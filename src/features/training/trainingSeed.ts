@@ -1,13 +1,22 @@
 import { db } from '../../db/database'
 import type {
   Exercise,
+  WorkoutSessionExercise,
   WorkoutTemplate,
   WorkoutTemplateExercise,
 } from '../../types/training'
 
-const now = '2026-08-30T00:00:00.000Z'
+const PROGRAM_VERSION = '2'
+const PROGRAM_MIGRATION_KEY = 'trainingProgramVersion'
+const PLANNING_START_KEY = 'trainingPlanningStartDate'
 
-function base(id: string) {
+function nowIso() {
+  return new Date().toISOString()
+}
+
+function entityBase(id: string) {
+  const now = nowIso()
+
   return {
     id,
     createdAt: now,
@@ -17,9 +26,151 @@ function base(id: string) {
   }
 }
 
-const exercises: Exercise[] = [
+function getLocalDateKey(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function parseDateKey(dateKey: string) {
+  const [year, month, day] = dateKey.split('-').map(Number)
+  return new Date(year, month - 1, day, 12, 0, 0, 0)
+}
+
+function shiftDateKey(dateKey: string, amount: number) {
+  const date = parseDateKey(dateKey)
+  date.setDate(date.getDate() + amount)
+  return getLocalDateKey(date)
+}
+
+function targetRirRange(config: WorkoutTemplateExercise | undefined) {
+  if (!config) {
+    return {
+      min: null,
+      max: null,
+    }
+  }
+
+  return {
+    min: config.targetRirMin ?? config.targetRir ?? null,
+    max: config.targetRirMax ?? config.targetRir ?? null,
+  }
+}
+
+async function preserveLegacySessionsBeforeProgramChange() {
+  await db.transaction(
+    'rw',
+    db.workoutSessions,
+    db.workoutTemplateExercises,
+    db.workoutSessionExercises,
+    db.exerciseSets,
+    async () => {
+      const [sessions, templateConfigs] = await Promise.all([
+        db.workoutSessions.toArray(),
+        db.workoutTemplateExercises.toArray(),
+      ])
+
+      for (const session of sessions) {
+        if (session.deletedAt !== null) {
+          continue
+        }
+
+        const sets = (await db.exerciseSets
+          .where('workoutSessionId')
+          .equals(session.id)
+          .toArray())
+          .filter((set) => set.deletedAt === null)
+
+        if (sets.length === 0) {
+          continue
+        }
+
+        const snapshots = await db.workoutSessionExercises
+          .where('workoutSessionId')
+          .equals(session.id)
+          .toArray()
+
+        const snapshotsByExerciseId = new Map(
+          snapshots
+            .filter((item) => item.deletedAt === null)
+            .map((item) => [item.exerciseId, item]),
+        )
+
+        const exerciseIds: string[] = []
+
+        for (const set of sets) {
+          if (!exerciseIds.includes(set.exerciseId)) {
+            exerciseIds.push(set.exerciseId)
+          }
+        }
+
+        for (const exerciseId of exerciseIds) {
+          let snapshot = snapshotsByExerciseId.get(exerciseId)
+
+          if (!snapshot) {
+            const matchingSets = sets
+              .filter((set) => set.exerciseId === exerciseId)
+              .sort((a, b) => a.order - b.order)
+
+            const config = templateConfigs.find(
+              (item) =>
+                item.deletedAt === null &&
+                item.workoutTemplateId === session.workoutTemplateId &&
+                item.exerciseId === exerciseId,
+            )
+
+            const rir = targetRirRange(config)
+            const firstSet = matchingSets[0]
+
+            const next: WorkoutSessionExercise = {
+              ...entityBase(crypto.randomUUID()),
+              workoutSessionId: session.id,
+              sourceTemplateExerciseId: config?.id ?? null,
+              exerciseId,
+              exerciseName: firstSet?.exerciseName ?? exerciseId,
+              order: config?.order ?? exerciseIds.indexOf(exerciseId) + 1,
+              targetSets:
+                config?.targetSets ??
+                matchingSets.filter((set) => set.setType === 'working').length,
+              minReps: config?.minReps ?? 0,
+              maxReps: config?.maxReps ?? 0,
+              targetRirMin: rir.min,
+              targetRirMax: rir.max,
+              restSeconds: config?.restSeconds ?? 90,
+              substitutedFromExerciseId: null,
+              notes: null,
+              targetSeconds: config?.targetSeconds ?? null,
+            }
+
+            await db.workoutSessionExercises.add(next)
+            snapshot = next
+            snapshotsByExerciseId.set(exerciseId, next)
+          }
+
+          for (const set of sets.filter((item) => item.exerciseId === exerciseId)) {
+            if (set.workoutSessionExerciseId === snapshot.id) {
+              continue
+            }
+
+            await db.exerciseSets.update(set.id, {
+              workoutSessionExerciseId: snapshot.id,
+              updatedAt: nowIso(),
+              version: set.version + 1,
+            })
+          }
+        }
+      }
+    },
+  )
+}
+
+const exerciseDefinitions: Array<
+  Omit<Exercise, 'createdAt' | 'updatedAt' | 'deletedAt' | 'version'>
+> = [
   {
-    ...base('ex-bench-press'),
+    id: 'ex-bench-press',
     name: 'Press banca',
     primaryMuscle: 'Pecho',
     secondaryMuscles: ['Tríceps', 'Deltoides anteriores'],
@@ -27,12 +178,12 @@ const exercises: Exercise[] = [
     exerciseType: 'compound',
     spineLoad: 'moderate',
     techniqueNotes:
-      'Mantén una posición estable y utiliza un rango de movimiento cómodo y controlado.',
+      'Estabiliza la posición, utiliza un recorrido cómodo y controlado y evita perder tensión al final de la bajada.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-incline-dumbbell-press'),
+    id: 'ex-incline-dumbbell-press',
     name: 'Press inclinado con mancuernas',
     primaryMuscle: 'Pecho',
     secondaryMuscles: ['Tríceps', 'Deltoides anteriores'],
@@ -40,12 +191,12 @@ const exercises: Exercise[] = [
     exerciseType: 'compound',
     spineLoad: 'moderate',
     techniqueNotes:
-      'Controla la bajada y alcanza una posición suficientemente elongada.',
+      'Controla la bajada y alcanza una posición suficientemente elongada sin forzar el hombro.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-cable-fly'),
+    id: 'ex-cable-fly',
     name: 'Aperturas en polea',
     primaryMuscle: 'Pecho',
     secondaryMuscles: [],
@@ -53,24 +204,25 @@ const exercises: Exercise[] = [
     exerciseType: 'isolation',
     spineLoad: 'low',
     techniqueNotes:
-      'Mantén el control y evita acortar innecesariamente la posición de estiramiento.',
+      'Mantén el control y conserva una posición elongada útil sin convertir el movimiento en un press.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-pull-up'),
+    id: 'ex-pull-up',
     name: 'Dominadas',
     primaryMuscle: 'Espalda',
     secondaryMuscles: ['Bíceps'],
     equipment: 'Peso corporal',
     exerciseType: 'compound',
     spineLoad: 'low',
-    techniqueNotes: 'Utiliza un recorrido amplio y controlado.',
+    techniqueNotes:
+      'Usa un recorrido amplio y controlado y adapta el agarre a una posición cómoda.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-lat-pulldown'),
+    id: 'ex-lat-pulldown',
     name: 'Jalón al pecho',
     primaryMuscle: 'Espalda',
     secondaryMuscles: ['Bíceps'],
@@ -78,36 +230,38 @@ const exercises: Exercise[] = [
     exerciseType: 'compound',
     spineLoad: 'low',
     techniqueNotes:
-      'Permite una extensión controlada arriba y dirige los codos hacia abajo.',
+      'Permite una extensión controlada arriba y dirige los codos hacia abajo sin impulso excesivo.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-chest-supported-row'),
+    id: 'ex-chest-supported-row',
     name: 'Remo con pecho apoyado',
     primaryMuscle: 'Espalda',
     secondaryMuscles: ['Bíceps', 'Deltoides posteriores'],
-    equipment: 'Mancuernas',
+    equipment: 'Mancuernas / máquina',
     exerciseType: 'compound',
     spineLoad: 'low',
-    techniqueNotes: 'Mantén el pecho apoyado y controla todo el recorrido.',
+    techniqueNotes:
+      'Mantén el pecho apoyado, deja que la escápula se mueva con control y evita convertirlo en un tirón corporal.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-chest-supported-tbar-row'),
+    id: 'ex-chest-supported-tbar-row',
     name: 'Remo T con pecho apoyado',
     primaryMuscle: 'Espalda',
     secondaryMuscles: ['Bíceps', 'Deltoides posteriores'],
     equipment: 'Máquina / T-Bar',
     exerciseType: 'compound',
     spineLoad: 'low',
-    techniqueNotes: 'Mantén el torso apoyado y evita convertirlo en un tirón corporal.',
+    techniqueNotes:
+      'Mantén el torso apoyado y utiliza un recorrido cómodo sin buscar inmovilidad absoluta.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-seated-cable-row'),
+    id: 'ex-seated-cable-row',
     name: 'Remo sentado en polea',
     primaryMuscle: 'Espalda',
     secondaryMuscles: ['Bíceps'],
@@ -115,37 +269,38 @@ const exercises: Exercise[] = [
     exerciseType: 'compound',
     spineLoad: 'low',
     techniqueNotes:
-      'Permite una extensión controlada al inicio y rema sin impulso excesivo.',
+      'Permite una extensión controlada al inicio y rema evitando un impulso que desplace el trabajo fuera de la espalda.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-lateral-raise'),
+    id: 'ex-lateral-raise',
     name: 'Elevaciones laterales',
     primaryMuscle: 'Hombros',
     secondaryMuscles: [],
-    equipment: 'Mancuernas',
+    equipment: 'Mancuernas / polea',
     exerciseType: 'isolation',
     spineLoad: 'low',
     techniqueNotes:
-      'Eleva de forma controlada. No es necesario mantener el torso completamente inmóvil a cualquier coste.',
+      'Eleva de forma controlada. Una pequeña ayuda corporal no invalida automáticamente la serie si conserva el estímulo y el control.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-face-pull'),
+    id: 'ex-face-pull',
     name: 'Face Pull',
     primaryMuscle: 'Hombros',
     secondaryMuscles: ['Espalda'],
     equipment: 'Polea',
     exerciseType: 'isolation',
     spineLoad: 'low',
-    techniqueNotes: 'Controla el movimiento y adapta la trayectoria a una posición cómoda.',
+    techniqueNotes:
+      'Controla el movimiento y adapta la trayectoria a una posición cómoda del hombro.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-bayesian-curl'),
+    id: 'ex-bayesian-curl',
     name: 'Curl Bayesian en polea',
     primaryMuscle: 'Bíceps',
     secondaryMuscles: [],
@@ -153,24 +308,25 @@ const exercises: Exercise[] = [
     exerciseType: 'isolation',
     spineLoad: 'low',
     techniqueNotes:
-      'Coloca el brazo ligeramente detrás del torso y conserva la posición elongada.',
+      'Coloca el brazo ligeramente detrás del torso y conserva una posición elongada cómoda.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-incline-dumbbell-curl'),
+    id: 'ex-incline-dumbbell-curl',
     name: 'Curl inclinado con mancuernas',
     primaryMuscle: 'Bíceps',
     secondaryMuscles: [],
     equipment: 'Mancuernas',
     exerciseType: 'isolation',
     spineLoad: 'low',
-    techniqueNotes: 'Mantén una posición elongada del bíceps y controla la repetición.',
+    techniqueNotes:
+      'Mantén una posición elongada del bíceps y controla la repetición.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-hammer-curl'),
+    id: 'ex-hammer-curl',
     name: 'Curl martillo',
     primaryMuscle: 'Bíceps',
     secondaryMuscles: ['Antebrazo'],
@@ -182,7 +338,7 @@ const exercises: Exercise[] = [
     mediaType: null,
   },
   {
-    ...base('ex-ez-bar-curl'),
+    id: 'ex-ez-bar-curl',
     name: 'Curl con barra EZ',
     primaryMuscle: 'Bíceps',
     secondaryMuscles: [],
@@ -194,7 +350,7 @@ const exercises: Exercise[] = [
     mediaType: null,
   },
   {
-    ...base('ex-triceps-pushdown'),
+    id: 'ex-triceps-pushdown',
     name: 'Extensión de tríceps en polea',
     primaryMuscle: 'Tríceps',
     secondaryMuscles: [],
@@ -206,7 +362,7 @@ const exercises: Exercise[] = [
     mediaType: null,
   },
   {
-    ...base('ex-overhead-triceps-extension'),
+    id: 'ex-overhead-triceps-extension',
     name: 'Extensión de tríceps sobre la cabeza',
     primaryMuscle: 'Tríceps',
     secondaryMuscles: [],
@@ -219,7 +375,7 @@ const exercises: Exercise[] = [
     mediaType: null,
   },
   {
-    ...base('ex-hack-squat'),
+    id: 'ex-hack-squat',
     name: 'Hack Squat',
     primaryMuscle: 'Cuádriceps',
     secondaryMuscles: ['Glúteos'],
@@ -227,12 +383,12 @@ const exercises: Exercise[] = [
     exerciseType: 'compound',
     spineLoad: 'moderate',
     techniqueNotes:
-      'Desciende hasta un rango cómodo manteniendo una trayectoria estable.',
+      'Desciende hasta un rango cómodo y controlable manteniendo una trayectoria estable.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-leg-press'),
+    id: 'ex-leg-press',
     name: 'Prensa de piernas',
     primaryMuscle: 'Cuádriceps',
     secondaryMuscles: ['Glúteos'],
@@ -240,12 +396,12 @@ const exercises: Exercise[] = [
     exerciseType: 'compound',
     spineLoad: 'moderate',
     techniqueNotes:
-      'Utiliza un rango profundo que puedas controlar sin perder una posición estable.',
+      'Utiliza el rango profundo que puedas controlar sin perder una posición estable.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-leg-extension'),
+    id: 'ex-leg-extension',
     name: 'Extensión de cuádriceps',
     primaryMuscle: 'Cuádriceps',
     secondaryMuscles: [],
@@ -257,7 +413,7 @@ const exercises: Exercise[] = [
     mediaType: null,
   },
   {
-    ...base('ex-leg-curl'),
+    id: 'ex-leg-curl',
     name: 'Curl femoral',
     primaryMuscle: 'Isquiosurales',
     secondaryMuscles: [],
@@ -270,7 +426,19 @@ const exercises: Exercise[] = [
     mediaType: null,
   },
   {
-    ...base('ex-rdl'),
+    id: 'ex-hip-thrust',
+    name: 'Hip Thrust',
+    primaryMuscle: 'Glúteos',
+    secondaryMuscles: ['Isquiosurales'],
+    equipment: 'Barra / máquina',
+    exerciseType: 'compound',
+    spineLoad: 'low',
+    techniqueNotes: 'Extiende la cadera sin buscar hiperextensión lumbar.',
+    mediaPath: null,
+    mediaType: null,
+  },
+  {
+    id: 'ex-rdl',
     name: 'Peso muerto rumano',
     primaryMuscle: 'Isquiosurales',
     secondaryMuscles: ['Glúteos'],
@@ -283,19 +451,19 @@ const exercises: Exercise[] = [
     mediaType: null,
   },
   {
-    ...base('ex-hip-thrust'),
-    name: 'Hip Thrust',
-    primaryMuscle: 'Glúteos',
-    secondaryMuscles: ['Isquiosurales'],
-    equipment: 'Barra',
-    exerciseType: 'compound',
+    id: 'ex-seated-calf-raise',
+    name: 'Elevación de gemelos sentado',
+    primaryMuscle: 'Gemelos',
+    secondaryMuscles: [],
+    equipment: 'Máquina',
+    exerciseType: 'isolation',
     spineLoad: 'low',
-    techniqueNotes: 'Extiende la cadera sin buscar hiperextensión lumbar.',
+    techniqueNotes: 'Utiliza un recorrido amplio y controlado.',
     mediaPath: null,
     mediaType: null,
   },
   {
-    ...base('ex-standing-calf-raise'),
+    id: 'ex-standing-calf-raise',
     name: 'Elevación de gemelos de pie',
     primaryMuscle: 'Gemelos',
     secondaryMuscles: [],
@@ -307,387 +475,465 @@ const exercises: Exercise[] = [
     mediaType: null,
   },
   {
-    ...base('ex-seated-calf-raise'),
-    name: 'Elevación de gemelos sentado',
-    primaryMuscle: 'Gemelos',
-    secondaryMuscles: [],
-    equipment: 'Máquina',
-    exerciseType: 'isolation',
+    id: 'ex-cat-cow',
+    name: 'Cat Cow',
+    primaryMuscle: 'Movilidad',
+    secondaryMuscles: ['Columna'],
+    equipment: 'Suelo',
+    exerciseType: 'mobility',
     spineLoad: 'low',
-    techniqueNotes: 'Utiliza un recorrido amplio y controlado.',
+    techniqueNotes: 'Alterna las posiciones con respiración tranquila y sin forzar el final del recorrido.',
+    mediaPath: null,
+    mediaType: null,
+  },
+  {
+    id: 'ex-open-book',
+    name: 'Open Book',
+    primaryMuscle: 'Movilidad',
+    secondaryMuscles: ['Tórax', 'Hombros'],
+    equipment: 'Suelo',
+    exerciseType: 'mobility',
+    spineLoad: 'low',
+    techniqueNotes: 'Rota de forma cómoda siguiendo la mano con la mirada.',
+    mediaPath: null,
+    mediaType: null,
+  },
+  {
+    id: 'ex-90-90-hip-switch',
+    name: '90/90 Hip Switch',
+    primaryMuscle: 'Cadera',
+    secondaryMuscles: ['Glúteos'],
+    equipment: 'Suelo',
+    exerciseType: 'mobility',
+    spineLoad: 'low',
+    techniqueNotes: 'Cambia de lado con control y usa apoyo de manos si mejora la calidad del movimiento.',
+    mediaPath: null,
+    mediaType: null,
+  },
+  {
+    id: 'ex-hip-flexor-stretch',
+    name: 'Estiramiento flexor de cadera',
+    primaryMuscle: 'Cadera',
+    secondaryMuscles: ['Cuádriceps'],
+    equipment: 'Suelo',
+    exerciseType: 'mobility',
+    spineLoad: 'low',
+    techniqueNotes: 'Busca una tensión cómoda en la parte anterior de la cadera sin arquear en exceso la zona lumbar.',
+    mediaPath: null,
+    mediaType: null,
+  },
+  {
+    id: 'ex-wall-slides',
+    name: 'Wall Slides',
+    primaryMuscle: 'Hombros',
+    secondaryMuscles: ['Espalda'],
+    equipment: 'Pared',
+    exerciseType: 'mobility',
+    spineLoad: 'low',
+    techniqueNotes: 'Desliza los brazos manteniendo un rango cómodo y sin forzar la posición.',
+    mediaPath: null,
+    mediaType: null,
+  },
+  {
+    id: 'ex-bird-dog',
+    name: 'Bird Dog',
+    primaryMuscle: 'Core',
+    secondaryMuscles: ['Glúteos', 'Espalda'],
+    equipment: 'Suelo',
+    exerciseType: 'core',
+    spineLoad: 'low',
+    techniqueNotes: 'Extiende brazo y pierna contrarios conservando una posición estable y respiración normal.',
+    mediaPath: null,
+    mediaType: null,
+  },
+  {
+    id: 'ex-dead-bug',
+    name: 'Dead Bug',
+    primaryMuscle: 'Core',
+    secondaryMuscles: [],
+    equipment: 'Suelo',
+    exerciseType: 'core',
+    spineLoad: 'low',
+    techniqueNotes: 'Mueve las extremidades sin perder el control de la posición del tronco.',
+    mediaPath: null,
+    mediaType: null,
+  },
+  {
+    id: 'ex-side-plank',
+    name: 'Plancha lateral',
+    primaryMuscle: 'Core',
+    secondaryMuscles: ['Glúteos'],
+    equipment: 'Suelo',
+    exerciseType: 'core',
+    spineLoad: 'low',
+    techniqueNotes: 'Mantén una posición firme y detén la serie si la técnica se degrada claramente.',
+    mediaPath: null,
+    mediaType: null,
+  },
+  {
+    id: 'ex-breathing-reset',
+    name: 'Respiración y movilidad suave',
+    primaryMuscle: 'Recuperación',
+    secondaryMuscles: [],
+    equipment: 'Suelo',
+    exerciseType: 'mobility',
+    spineLoad: 'low',
+    techniqueNotes: 'Respira de forma relajada y utiliza movimientos suaves, sin buscar intensidad.',
     mediaPath: null,
     mediaType: null,
   },
 ]
 
-const workoutTemplates: WorkoutTemplate[] = [
+const templateDefinitions: Array<
+  Omit<WorkoutTemplate, 'createdAt' | 'updatedAt' | 'deletedAt' | 'version'>
+> = [
   {
-    ...base('workout-upper-a'),
+    id: 'workout-upper-a',
     name: 'Upper A',
     dayOfWeek: 1,
     type: 'upper',
-    description: 'Torso con énfasis de empuje.',
+    description: 'Torso A · hipertrofia con empuje y tirón equilibrados.',
+    estimatedDurationMinutes: 65,
+    isFormalStrength: true,
   },
   {
-    ...base('workout-lower-a'),
+    id: 'workout-lower-a',
     name: 'Lower A',
     dayOfWeek: 2,
     type: 'lower',
-    description: 'Pierna con énfasis en cuádriceps.',
+    description: 'Pierna A · énfasis en cuádriceps con trabajo posterior complementario.',
+    estimatedDurationMinutes: 60,
+    isFormalStrength: true,
   },
   {
-    ...base('workout-upper-b'),
+    id: 'workout-upper-b',
     name: 'Upper B',
     dayOfWeek: 4,
     type: 'upper',
-    description: 'Torso con énfasis de tirón.',
+    description: 'Torso B · segunda exposición semanal de empuje y tirón.',
+    estimatedDurationMinutes: 60,
+    isFormalStrength: true,
   },
   {
-    ...base('workout-lower-b'),
+    id: 'workout-lower-b',
     name: 'Lower B',
     dayOfWeek: 5,
     type: 'lower',
-    description: 'Pierna con énfasis en cadena posterior.',
+    description: 'Pierna B · cuádriceps, femoral, glúteo y gemelo sin RDL obligatorio.',
+    estimatedDurationMinutes: 60,
+    isFormalStrength: true,
+  },
+  {
+    id: 'workout-mobility-daily',
+    name: 'Movilidad diaria',
+    dayOfWeek: null,
+    type: 'mobility',
+    description: 'Rutina breve de movilidad · objetivo 5–8 min, máximo aproximado 10 min.',
+    estimatedDurationMinutes: 8,
+    isFormalStrength: false,
+  },
+  {
+    id: 'workout-recovery-weekly',
+    name: 'Recovery semanal',
+    dayOfWeek: 3,
+    type: 'recovery',
+    description: 'Sesión de baja fatiga para el miércoles · aproximadamente 15–20 min.',
+    estimatedDurationMinutes: 18,
+    isFormalStrength: false,
   },
 ]
 
-function templateExercise(
-  id: string,
-  workoutTemplateId: string,
-  exerciseId: string,
-  order: number,
-  targetSets: number,
-  minReps: number,
-  maxReps: number,
-  restSeconds: number,
-  referenceWeight: number | null,
-): WorkoutTemplateExercise {
-  return {
-    ...base(id),
-    workoutTemplateId,
-    exerciseId,
-    order,
-    targetSets,
-    minReps,
-    maxReps,
-    targetRir: 2,
-    restSeconds,
-    referenceWeight,
+interface ProgramConfig {
+  id: string
+  workoutTemplateId: string
+  exerciseId: string
+  order: number
+  targetSets: number
+  minReps: number
+  maxReps: number
+  targetRirMin: number | null
+  targetRirMax: number | null
+  restSeconds: number
+  alternativeExerciseIds?: string[]
+  targetSeconds?: number | null
+}
+
+const programConfigs: ProgramConfig[] = [
+  { id: 'vnext-uta-01', workoutTemplateId: 'workout-upper-a', exerciseId: 'ex-incline-dumbbell-press', order: 1, targetSets: 3, minReps: 6, maxReps: 10, targetRirMin: 2, targetRirMax: 2, restSeconds: 180 },
+  { id: 'vnext-uta-02', workoutTemplateId: 'workout-upper-a', exerciseId: 'ex-lat-pulldown', order: 2, targetSets: 3, minReps: 8, maxReps: 12, targetRirMin: 2, targetRirMax: 2, restSeconds: 120, alternativeExerciseIds: ['ex-pull-up'] },
+  { id: 'vnext-uta-03', workoutTemplateId: 'workout-upper-a', exerciseId: 'ex-chest-supported-row', order: 3, targetSets: 2, minReps: 8, maxReps: 12, targetRirMin: 2, targetRirMax: 2, restSeconds: 120, alternativeExerciseIds: ['ex-chest-supported-tbar-row', 'ex-seated-cable-row'] },
+  { id: 'vnext-uta-04', workoutTemplateId: 'workout-upper-a', exerciseId: 'ex-cable-fly', order: 4, targetSets: 2, minReps: 10, maxReps: 15, targetRirMin: 1, targetRirMax: 2, restSeconds: 90 },
+  { id: 'vnext-uta-05', workoutTemplateId: 'workout-upper-a', exerciseId: 'ex-lateral-raise', order: 5, targetSets: 3, minReps: 12, maxReps: 20, targetRirMin: 1, targetRirMax: 2, restSeconds: 75 },
+  { id: 'vnext-uta-06', workoutTemplateId: 'workout-upper-a', exerciseId: 'ex-bayesian-curl', order: 6, targetSets: 2, minReps: 10, maxReps: 15, targetRirMin: 1, targetRirMax: 2, restSeconds: 90 },
+  { id: 'vnext-uta-07', workoutTemplateId: 'workout-upper-a', exerciseId: 'ex-triceps-pushdown', order: 7, targetSets: 2, minReps: 10, maxReps: 15, targetRirMin: 1, targetRirMax: 2, restSeconds: 90 },
+
+  { id: 'vnext-lta-01', workoutTemplateId: 'workout-lower-a', exerciseId: 'ex-hack-squat', order: 1, targetSets: 3, minReps: 6, maxReps: 10, targetRirMin: 2, targetRirMax: 3, restSeconds: 180 },
+  { id: 'vnext-lta-02', workoutTemplateId: 'workout-lower-a', exerciseId: 'ex-leg-press', order: 2, targetSets: 2, minReps: 10, maxReps: 15, targetRirMin: 2, targetRirMax: 2, restSeconds: 120 },
+  { id: 'vnext-lta-03', workoutTemplateId: 'workout-lower-a', exerciseId: 'ex-leg-curl', order: 3, targetSets: 3, minReps: 8, maxReps: 12, targetRirMin: 1, targetRirMax: 2, restSeconds: 105 },
+  { id: 'vnext-lta-04', workoutTemplateId: 'workout-lower-a', exerciseId: 'ex-hip-thrust', order: 4, targetSets: 2, minReps: 8, maxReps: 12, targetRirMin: 1, targetRirMax: 2, restSeconds: 120 },
+  { id: 'vnext-lta-05', workoutTemplateId: 'workout-lower-a', exerciseId: 'ex-seated-calf-raise', order: 5, targetSets: 3, minReps: 10, maxReps: 15, targetRirMin: 1, targetRirMax: 2, restSeconds: 90, alternativeExerciseIds: ['ex-standing-calf-raise'] },
+
+  { id: 'vnext-utb-01', workoutTemplateId: 'workout-upper-b', exerciseId: 'ex-bench-press', order: 1, targetSets: 3, minReps: 6, maxReps: 10, targetRirMin: 2, targetRirMax: 2, restSeconds: 180 },
+  { id: 'vnext-utb-02', workoutTemplateId: 'workout-upper-b', exerciseId: 'ex-pull-up', order: 2, targetSets: 3, minReps: 6, maxReps: 10, targetRirMin: 2, targetRirMax: 2, restSeconds: 150, alternativeExerciseIds: ['ex-lat-pulldown'] },
+  { id: 'vnext-utb-03', workoutTemplateId: 'workout-upper-b', exerciseId: 'ex-chest-supported-row', order: 3, targetSets: 2, minReps: 10, maxReps: 15, targetRirMin: 2, targetRirMax: 2, restSeconds: 120, alternativeExerciseIds: ['ex-chest-supported-tbar-row', 'ex-seated-cable-row'] },
+  { id: 'vnext-utb-04', workoutTemplateId: 'workout-upper-b', exerciseId: 'ex-lateral-raise', order: 4, targetSets: 3, minReps: 12, maxReps: 20, targetRirMin: 1, targetRirMax: 2, restSeconds: 75 },
+  { id: 'vnext-utb-05', workoutTemplateId: 'workout-upper-b', exerciseId: 'ex-hammer-curl', order: 5, targetSets: 2, minReps: 8, maxReps: 12, targetRirMin: 1, targetRirMax: 2, restSeconds: 90 },
+  { id: 'vnext-utb-06', workoutTemplateId: 'workout-upper-b', exerciseId: 'ex-overhead-triceps-extension', order: 6, targetSets: 2, minReps: 10, maxReps: 15, targetRirMin: 1, targetRirMax: 2, restSeconds: 90 },
+
+  { id: 'vnext-ltb-01', workoutTemplateId: 'workout-lower-b', exerciseId: 'ex-leg-press', order: 1, targetSets: 3, minReps: 8, maxReps: 12, targetRirMin: 2, targetRirMax: 2, restSeconds: 150 },
+  { id: 'vnext-ltb-02', workoutTemplateId: 'workout-lower-b', exerciseId: 'ex-leg-extension', order: 2, targetSets: 3, minReps: 10, maxReps: 15, targetRirMin: 1, targetRirMax: 2, restSeconds: 90 },
+  { id: 'vnext-ltb-03', workoutTemplateId: 'workout-lower-b', exerciseId: 'ex-leg-curl', order: 3, targetSets: 3, minReps: 10, maxReps: 15, targetRirMin: 1, targetRirMax: 2, restSeconds: 105 },
+  { id: 'vnext-ltb-04', workoutTemplateId: 'workout-lower-b', exerciseId: 'ex-hip-thrust', order: 4, targetSets: 2, minReps: 10, maxReps: 15, targetRirMin: 1, targetRirMax: 2, restSeconds: 120 },
+  { id: 'vnext-ltb-05', workoutTemplateId: 'workout-lower-b', exerciseId: 'ex-seated-calf-raise', order: 5, targetSets: 3, minReps: 10, maxReps: 15, targetRirMin: 1, targetRirMax: 2, restSeconds: 90, alternativeExerciseIds: ['ex-standing-calf-raise'] },
+
+  { id: 'vnext-mob-01', workoutTemplateId: 'workout-mobility-daily', exerciseId: 'ex-cat-cow', order: 1, targetSets: 1, minReps: 6, maxReps: 8, targetRirMin: null, targetRirMax: null, restSeconds: 0 },
+  { id: 'vnext-mob-02', workoutTemplateId: 'workout-mobility-daily', exerciseId: 'ex-open-book', order: 2, targetSets: 1, minReps: 6, maxReps: 6, targetRirMin: null, targetRirMax: null, restSeconds: 0 },
+  { id: 'vnext-mob-03', workoutTemplateId: 'workout-mobility-daily', exerciseId: 'ex-90-90-hip-switch', order: 3, targetSets: 1, minReps: 6, maxReps: 8, targetRirMin: null, targetRirMax: null, restSeconds: 0 },
+  { id: 'vnext-mob-04', workoutTemplateId: 'workout-mobility-daily', exerciseId: 'ex-hip-flexor-stretch', order: 4, targetSets: 1, minReps: 1, maxReps: 1, targetRirMin: null, targetRirMax: null, restSeconds: 0, targetSeconds: 30 },
+  { id: 'vnext-mob-05', workoutTemplateId: 'workout-mobility-daily', exerciseId: 'ex-wall-slides', order: 5, targetSets: 1, minReps: 8, maxReps: 10, targetRirMin: null, targetRirMax: null, restSeconds: 0 },
+
+  { id: 'vnext-rec-01', workoutTemplateId: 'workout-recovery-weekly', exerciseId: 'ex-bird-dog', order: 1, targetSets: 2, minReps: 6, maxReps: 8, targetRirMin: null, targetRirMax: null, restSeconds: 30 },
+  { id: 'vnext-rec-02', workoutTemplateId: 'workout-recovery-weekly', exerciseId: 'ex-dead-bug', order: 2, targetSets: 2, minReps: 6, maxReps: 8, targetRirMin: null, targetRirMax: null, restSeconds: 30 },
+  { id: 'vnext-rec-03', workoutTemplateId: 'workout-recovery-weekly', exerciseId: 'ex-side-plank', order: 3, targetSets: 2, minReps: 1, maxReps: 1, targetRirMin: null, targetRirMax: null, restSeconds: 30, targetSeconds: 25 },
+  { id: 'vnext-rec-04', workoutTemplateId: 'workout-recovery-weekly', exerciseId: 'ex-open-book', order: 4, targetSets: 1, minReps: 6, maxReps: 6, targetRirMin: null, targetRirMax: null, restSeconds: 0 },
+  { id: 'vnext-rec-05', workoutTemplateId: 'workout-recovery-weekly', exerciseId: 'ex-90-90-hip-switch', order: 5, targetSets: 1, minReps: 6, maxReps: 8, targetRirMin: null, targetRirMax: null, restSeconds: 0 },
+  { id: 'vnext-rec-06', workoutTemplateId: 'workout-recovery-weekly', exerciseId: 'ex-breathing-reset', order: 6, targetSets: 1, minReps: 1, maxReps: 1, targetRirMin: null, targetRirMax: null, restSeconds: 0, targetSeconds: 150 },
+]
+
+async function upsertExercises() {
+  for (const definition of exerciseDefinitions) {
+    const current = await db.exercises.get(definition.id)
+
+    if (!current) {
+      await db.exercises.add({
+        ...entityBase(definition.id),
+        ...definition,
+      })
+      continue
+    }
+
+    await db.exercises.update(current.id, {
+      name: definition.name,
+      primaryMuscle: definition.primaryMuscle,
+      secondaryMuscles: definition.secondaryMuscles,
+      equipment: definition.equipment,
+      exerciseType: definition.exerciseType,
+      techniqueNotes: definition.techniqueNotes,
+      deletedAt: null,
+      updatedAt: nowIso(),
+      version: current.version + 1,
+    })
   }
 }
 
-const templateExercises: WorkoutTemplateExercise[] = [
-  // UPPER A
-  templateExercise(
-    'uta-1',
-    'workout-upper-a',
-    'ex-bench-press',
-    1,
-    3,
-    6,
-    8,
-    180,
-    25,
-  ),
-  templateExercise(
-    'uta-2',
-    'workout-upper-a',
-    'ex-chest-supported-row',
-    2,
-    3,
-    8,
-    12,
-    120,
-    null,
-  ),
-  templateExercise(
-    'uta-3',
-    'workout-upper-a',
-    'ex-incline-dumbbell-press',
-    3,
-    3,
-    8,
-    12,
-    120,
-    24,
-  ),
-  templateExercise(
-    'uta-4',
-    'workout-upper-a',
-    'ex-lat-pulldown',
-    4,
-    3,
-    8,
-    12,
-    120,
-    50,
-  ),
-  templateExercise(
-    'uta-5',
-    'workout-upper-a',
-    'ex-lateral-raise',
-    5,
-    3,
-    12,
-    20,
-    60,
-    5,
-  ),
-  templateExercise(
-    'uta-6',
-    'workout-upper-a',
-    'ex-bayesian-curl',
-    6,
-    3,
-    8,
-    15,
-    90,
-    8,
-  ),
-  templateExercise(
-    'uta-7',
-    'workout-upper-a',
-    'ex-triceps-pushdown',
-    7,
-    3,
-    8,
-    15,
-    90,
-    20,
-  ),
+async function upsertTemplates() {
+  for (const definition of templateDefinitions) {
+    const current = await db.workoutTemplates.get(definition.id)
 
-  // LOWER A
-  templateExercise(
-    'lta-1',
-    'workout-lower-a',
-    'ex-hack-squat',
-    1,
-    4,
-    8,
-    10,
-    180,
-    30,
-  ),
-  templateExercise(
-    'lta-2',
-    'workout-lower-a',
-    'ex-leg-press',
-    2,
-    3,
-    10,
-    15,
-    120,
-    120,
-  ),
-  templateExercise(
-    'lta-3',
-    'workout-lower-a',
-    'ex-leg-curl',
-    3,
-    3,
-    10,
-    15,
-    90,
-    30,
-  ),
-  templateExercise(
-    'lta-4',
-    'workout-lower-a',
-    'ex-hip-thrust',
-    4,
-    3,
-    8,
-    12,
-    120,
-    null,
-  ),
-  templateExercise(
-    'lta-5',
-    'workout-lower-a',
-    'ex-leg-extension',
-    5,
-    3,
-    10,
-    15,
-    90,
-    null,
-  ),
-  templateExercise(
-    'lta-6',
-    'workout-lower-a',
-    'ex-standing-calf-raise',
-    6,
-    3,
-    10,
-    15,
-    60,
-    null,
-  ),
+    if (!current) {
+      await db.workoutTemplates.add({
+        ...entityBase(definition.id),
+        ...definition,
+      })
+      continue
+    }
 
-  // UPPER B
-  templateExercise(
-    'utb-1',
-    'workout-upper-b',
-    'ex-pull-up',
-    1,
-    3,
-    6,
-    10,
-    180,
-    null,
-  ),
-  templateExercise(
-    'utb-2',
-    'workout-upper-b',
-    'ex-cable-fly',
-    2,
-    3,
-    10,
-    15,
-    90,
-    25,
-  ),
-  templateExercise(
-    'utb-3',
-    'workout-upper-b',
-    'ex-chest-supported-tbar-row',
-    3,
-    3,
-    8,
-    12,
-    120,
-    25,
-  ),
-  templateExercise(
-    'utb-4',
-    'workout-upper-b',
-    'ex-seated-cable-row',
-    4,
-    3,
-    10,
-    15,
-    90,
-    35,
-  ),
-  templateExercise(
-    'utb-5',
-    'workout-upper-b',
-    'ex-lateral-raise',
-    5,
-    3,
-    12,
-    20,
-    60,
-    5,
-  ),
-  templateExercise(
-    'utb-6',
-    'workout-upper-b',
-    'ex-hammer-curl',
-    6,
-    3,
-    8,
-    15,
-    90,
-    10,
-  ),
-  templateExercise(
-    'utb-7',
-    'workout-upper-b',
-    'ex-overhead-triceps-extension',
-    7,
-    3,
-    8,
-    15,
-    90,
-    20,
-  ),
+    await db.workoutTemplates.update(current.id, {
+      name: definition.name,
+      dayOfWeek: definition.dayOfWeek,
+      type: definition.type,
+      description: definition.description,
+      estimatedDurationMinutes: definition.estimatedDurationMinutes,
+      isFormalStrength: definition.isFormalStrength,
+      deletedAt: null,
+      updatedAt: nowIso(),
+      version: current.version + 1,
+    })
+  }
+}
 
-  // LOWER B
-  templateExercise(
-    'ltb-1',
-    'workout-lower-b',
-    'ex-rdl',
-    1,
-    3,
-    8,
-    10,
-    120,
-    null,
-  ),
-  templateExercise(
-    'ltb-2',
-    'workout-lower-b',
-    'ex-leg-press',
-    2,
-    3,
-    10,
-    15,
-    120,
-    120,
-  ),
-  templateExercise(
-    'ltb-3',
-    'workout-lower-b',
-    'ex-leg-curl',
-    3,
-    4,
-    10,
-    12,
-    90,
-    30,
-  ),
-  templateExercise(
-    'ltb-4',
-    'workout-lower-b',
-    'ex-hip-thrust',
-    4,
-    3,
-    10,
-    15,
-    90,
-    null,
-  ),
-  templateExercise(
-    'ltb-5',
-    'workout-lower-b',
-    'ex-leg-extension',
-    5,
-    3,
-    12,
-    15,
-    90,
-    null,
-  ),
-  templateExercise(
-    'ltb-6',
-    'workout-lower-b',
-    'ex-seated-calf-raise',
-    6,
-    3,
-    12,
-    20,
-    60,
-    null,
-  ),
-]
+async function applyApprovedProgram() {
+  const meta = await db.appMeta.get(PROGRAM_MIGRATION_KEY)
 
-export async function ensureTrainingSeed() {
-  const existingTemplates = await db.workoutTemplates.count()
-
-  if (existingTemplates > 0) {
+  if (meta?.value === PROGRAM_VERSION) {
     return
   }
 
+  await preserveLegacySessionsBeforeProgramChange()
+
   await db.transaction(
     'rw',
+    db.appMeta,
     db.exercises,
     db.workoutTemplates,
     db.workoutTemplateExercises,
     async () => {
-      await db.exercises.bulkPut(exercises)
-      await db.workoutTemplates.bulkPut(workoutTemplates)
-      await db.workoutTemplateExercises.bulkPut(templateExercises)
+      await upsertExercises()
+      await upsertTemplates()
+
+      const formalTemplateIds = new Set([
+        'workout-upper-a',
+        'workout-lower-a',
+        'workout-upper-b',
+        'workout-lower-b',
+        'workout-mobility-daily',
+        'workout-recovery-weekly',
+      ])
+
+      const existingConfigs = await db.workoutTemplateExercises.toArray()
+      const approvedIds = new Set(programConfigs.map((item) => item.id))
+      const referenceByTemplateAndExercise = new Map<string, number | null>()
+
+      for (const config of existingConfigs) {
+        if (config.deletedAt === null) {
+          referenceByTemplateAndExercise.set(
+            `${config.workoutTemplateId}:${config.exerciseId}`,
+            config.referenceWeight,
+          )
+        }
+      }
+
+      for (const config of existingConfigs) {
+        if (
+          config.deletedAt === null &&
+          formalTemplateIds.has(config.workoutTemplateId) &&
+          !approvedIds.has(config.id)
+        ) {
+          await db.workoutTemplateExercises.update(config.id, {
+            deletedAt: nowIso(),
+            updatedAt: nowIso(),
+            version: config.version + 1,
+          })
+        }
+      }
+
+      for (const definition of programConfigs) {
+        const current = await db.workoutTemplateExercises.get(definition.id)
+        const referenceWeight =
+          current?.referenceWeight ??
+          referenceByTemplateAndExercise.get(
+            `${definition.workoutTemplateId}:${definition.exerciseId}`,
+          ) ??
+          null
+
+        const next = {
+          workoutTemplateId: definition.workoutTemplateId,
+          exerciseId: definition.exerciseId,
+          order: definition.order,
+          targetSets: definition.targetSets,
+          minReps: definition.minReps,
+          maxReps: definition.maxReps,
+          targetRir: definition.targetRirMin,
+          targetRirMin: definition.targetRirMin,
+          targetRirMax: definition.targetRirMax,
+          restSeconds: definition.restSeconds,
+          referenceWeight,
+          alternativeExerciseIds: definition.alternativeExerciseIds ?? [],
+          supersetGroupId: null,
+          targetSeconds: definition.targetSeconds ?? null,
+          deletedAt: null,
+          updatedAt: nowIso(),
+        }
+
+        if (current) {
+          await db.workoutTemplateExercises.update(current.id, {
+            ...next,
+            version: current.version + 1,
+          })
+        } else {
+          await db.workoutTemplateExercises.add({
+            ...entityBase(definition.id),
+            ...next,
+          })
+        }
+      }
+
+      await db.appMeta.put({
+        key: PROGRAM_MIGRATION_KEY,
+        value: PROGRAM_VERSION,
+        updatedAt: nowIso(),
+      })
     },
   )
+}
+
+async function ensurePlanningWindow() {
+  let planningStart = await db.appMeta.get(PLANNING_START_KEY)
+
+  if (!planningStart) {
+    planningStart = {
+      key: PLANNING_START_KEY,
+      value: getLocalDateKey(),
+      updatedAt: nowIso(),
+    }
+
+    await db.appMeta.put(planningStart)
+  }
+
+  const today = getLocalDateKey()
+  const start = planningStart.value > today ? planningStart.value : today
+  const end = shiftDateKey(today, 42)
+
+  const templates = (await db.workoutTemplates.toArray())
+    .filter(
+      (template) =>
+        template.deletedAt === null &&
+        template.isFormalStrength === true &&
+        template.dayOfWeek !== null,
+    )
+
+  const existing = (await db.plannedWorkoutSessions.toArray())
+    .filter((session) => session.deletedAt === null)
+
+  const keys = new Set(
+    existing.map(
+      (session) =>
+        `${session.workoutTemplateId}:${session.originalScheduledDate}`,
+    ),
+  )
+
+  const additions = []
+
+  for (let cursor = start; cursor <= end; cursor = shiftDateKey(cursor, 1)) {
+    const weekday = parseDateKey(cursor).getDay()
+
+    for (const template of templates) {
+      if (template.dayOfWeek !== weekday) {
+        continue
+      }
+
+      const key = `${template.id}:${cursor}`
+
+      if (keys.has(key)) {
+        continue
+      }
+
+      additions.push({
+        ...entityBase(crypto.randomUUID()),
+        workoutTemplateId: template.id,
+        templateName: template.name,
+        originalScheduledDate: cursor,
+        scheduledDate: cursor,
+        status: 'pending' as const,
+        executionSessionId: null,
+        isFormalStrength: true,
+        isExtra: false,
+        estimatedDurationMinutes: template.estimatedDurationMinutes ?? null,
+        rescheduleCount: 0,
+        resolvedAt: null,
+        notes: null,
+      })
+
+      keys.add(key)
+    }
+  }
+
+  if (additions.length > 0) {
+    await db.plannedWorkoutSessions.bulkAdd(additions)
+  }
+}
+
+export async function ensureTrainingSeed() {
+  await applyApprovedProgram()
+  await ensurePlanningWindow()
 }
