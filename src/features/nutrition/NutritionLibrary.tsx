@@ -2377,8 +2377,23 @@ export default function NutritionLibrary({
                   'basket',
                 )
               }
+              aria-label={`Abrir carrito de compra · ${pendingBasketCount} pendientes`}
+              title="Carrito de compra"
             >
-              <span>Lista</span>
+              <span className="cart-button__icon" aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3.5 4.5h2l1.7 9.1a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4l1.4-5.3H7.1" />
+                  <circle cx="9.5" cy="19" r="1.2" />
+                  <circle cx="18" cy="19" r="1.2" />
+                </svg>
+              </span>
               <strong>{pendingBasketCount}</strong>
             </button>
           </div>
@@ -2584,7 +2599,7 @@ export default function NutritionLibrary({
               LISTA ACTIVA
             </p>
             <h2>
-              Compra
+              Carrito de compra
             </h2>
             <p>
               {pendingBasketCount} pendiente{pendingBasketCount === 1 ? '' : 's'} · {basket.length - pendingBasketCount} comprado{basket.length - pendingBasketCount === 1 ? '' : 's'}

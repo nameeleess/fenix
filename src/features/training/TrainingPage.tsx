@@ -825,7 +825,7 @@ function HomeView({
           <MuscleMap template={template} />
 
           <div className="training-session-preview">
-            {template.exercises.map((item, index) => (
+            {template.exercises.slice(0, 4).map((item, index) => (
               <div key={item.config.id}>
                 <span>{index + 1}</span>
                 <div>
@@ -836,6 +836,11 @@ function HomeView({
                 </div>
               </div>
             ))}
+            {template.exercises.length > 4 && (
+              <p className="training-session-preview__more">
+                + {template.exercises.length - 4} ejercicios más al iniciar la sesión
+              </p>
+            )}
           </div>
 
           <button

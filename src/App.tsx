@@ -37,6 +37,8 @@ import {
 
 import './styles/app.css'
 
+import './styles/mobile-density.css'
+
 type AppState =
   | 'checking'
   | 'ready'
