@@ -11,6 +11,7 @@ import type {
 } from '../../types/nutrition'
 
 import NutritionLibrary from './NutritionLibrary'
+import RecipeVisual from './RecipeVisual'
 
 import {
   addImprovisedMeal,
@@ -109,25 +110,6 @@ function roleTone(role: NutritionRole) {
   if (role === 'preworkout') return 'pre'
   if (role === 'postworkout') return 'post'
   return 'default'
-}
-
-function MealVisual({ role }: { role: NutritionRole }) {
-  const tone = roleTone(role)
-
-  return (
-    <span
-      className={`nutrition-vnext-mealVisual nutrition-vnext-mealVisual--${tone}`}
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 64 64" focusable="false">
-        <circle className="mealVisual__plate" cx="32" cy="34" r="20" />
-        <circle className="mealVisual__food" cx="25" cy="33" r="7" />
-        <path className="mealVisual__food mealVisual__food--line" d="M34 27c8 2 12 7 12 14" />
-        <path className="mealVisual__steam" d="M24 16c-4-5 4-6 0-11" />
-        <path className="mealVisual__steam mealVisual__steam--delay" d="M36 16c-4-5 4-6 0-11" />
-      </svg>
-    </span>
-  )
 }
 
 function MacroOverview({
@@ -229,7 +211,7 @@ function MealCard({
         onClick={() => setExpanded((value) => !value)}
       >
         <span className="nutrition-vnext-meal__order">{meal.order}</span>
-        <MealVisual role={meal.role} />
+        <RecipeVisual recipe={item.recipe} role={meal.role} name={meal.name} />
         <span className="nutrition-vnext-meal__title">
           <small>{nutritionRoleLabel(meal.role)}</small>
           <strong>{meal.name}</strong>
@@ -541,7 +523,12 @@ function WeekView({
 
           <div className="nutrition-vnext-week__mealList">
             {selected.meals.map((meal) => (
-              <article key={`${selected.date}-${meal.role}`}>
+              <article key={`${selected.date}-${meal.role}`} className="nutrition-vnext-weekMeal">
+                <RecipeVisual
+                  recipe={meal.recipe}
+                  role={meal.role}
+                  name={meal.recipe?.name ?? nutritionRoleLabel(meal.role)}
+                />
                 <span>{nutritionRoleLabel(meal.role)}</span>
                 <strong>{meal.recipe?.name ?? 'Sin propuesta compatible'}</strong>
                 <small>
@@ -730,9 +717,15 @@ export default function NutritionPage() {
           </section>
 
           {nextPending && (
-            <section className="nutrition-vnext-nextMeal">
-              <div>
-                <small>SIGUIENTE</small>
+            <section className="nutrition-vnext-nextMeal nutrition-vnext-nextMeal--visual">
+              <RecipeVisual
+                recipe={nextPending.recipe}
+                role={nextPending.meal.role}
+                name={nextPending.meal.name}
+                variant="hero"
+              />
+              <div className="nutrition-vnext-nextMeal__copy">
+                <small>TE TOCA AHORA</small>
                 <strong>{nutritionRoleLabel(nextPending.meal.role)}</strong>
                 <span>{nextPending.meal.name}</span>
               </div>

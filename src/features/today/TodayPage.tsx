@@ -16,6 +16,7 @@ import type {
 import {
   addOneOffTask,
   deleteOneOffTask,
+  promoteOneOffTaskToRoutine,
   ensureDailyRoutine,
   getDailyRoutineView,
   getLocalDateKey,
@@ -23,6 +24,8 @@ import {
   startDay,
   type DailyRoutineView,
 } from './todayService'
+import RoutineEditor from './RoutineEditor'
+
 import {
   getTodayIntegrationSummary,
   type TodayIntegrationSummary,
@@ -117,6 +120,7 @@ function TodayPage({
   const [addingTask, setAddingTask] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [newTaskBlock, setNewTaskBlock] = useState<TodayBlock>('development')
+  const [editingRoutine, setEditingRoutine] = useState(false)
 
   const loadDay = useCallback(async () => {
     try {
@@ -264,6 +268,16 @@ function TodayPage({
     }
   }
 
+  async function handlePromoteOneOff(task: DailyRoutineTask) {
+    try {
+      await promoteOneOffTaskToRoutine(task.id)
+      setTaskMenuId(null)
+    } catch (taskError) {
+      console.error(taskError)
+      setError('No se ha podido guardar la tarea en la rutina.')
+    }
+  }
+
   async function handleAddTask() {
     const title = newTaskTitle.trim()
     if (!title || !integration) return
@@ -408,13 +422,21 @@ function TodayPage({
                         No aplica
                       </button>
                       {task.kind === 'one_off' && (
-                        <button
-                          type="button"
-                          className="danger"
-                          onClick={() => void handleDeleteOneOff(task)}
-                        >
-                          Eliminar
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => void handlePromoteOneOff(task)}
+                          >
+                            Guardar en rutina
+                          </button>
+                          <button
+                            type="button"
+                            className="danger"
+                            onClick={() => void handleDeleteOneOff(task)}
+                          >
+                            Eliminar
+                          </button>
+                        </>
                       )}
                     </div>
                   )}
@@ -580,13 +602,22 @@ function TodayPage({
                   <span className="today-eyebrow">RUTINA · BLOQUE ACTUAL</span>
                   <h2>{BLOCKS.find((item) => item.key === currentBlockKey)?.label ?? 'Tu día'}</h2>
                 </div>
-                <button
-                  type="button"
-                  className="today-text-button"
-                  onClick={() => setAddingTask((current) => !current)}
-                >
-                  + Añadir para hoy
-                </button>
+                <div className="today-section-heading__actions">
+                  <button
+                    type="button"
+                    className="today-text-button"
+                    onClick={() => setEditingRoutine(true)}
+                  >
+                    Editar rutina
+                  </button>
+                  <button
+                    type="button"
+                    className="today-text-button"
+                    onClick={() => setAddingTask((current) => !current)}
+                  >
+                    + Añadir para hoy
+                  </button>
+                </div>
               </div>
 
               {addingTask && (
@@ -689,6 +720,20 @@ function TodayPage({
               </section>
             )}
           </>
+        )}
+
+        {editingRoutine && (
+          <RoutineEditor
+            dateKey={dateKey}
+            context={{
+              isTrainingDay:
+                integration.training.status !== 'rest' &&
+                integration.training.status !== 'omitted',
+              isWorkDay: Boolean(workShift?.isWorking),
+            }}
+            onClose={() => setEditingRoutine(false)}
+            onSaved={refresh}
+          />
         )}
       </div>
     </main>

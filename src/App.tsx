@@ -43,6 +43,8 @@ import './styles/render-parity.css'
 
 import './styles/visual-polish.css'
 
+import './styles/final-v1.css'
+
 type AppState =
   | 'checking'
   | 'ready'
@@ -127,20 +129,12 @@ function NavigationIcon({
   }
 
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+    <img
+      className="fenix-phoenix-icon"
+      src="/fenix-icon-32.png"
+      alt=""
       aria-hidden="true"
-    >
-      <path d="M12 3.5c-2.9 1.5-5.2 4-5.8 7.2-.6 3.5 1.1 7.2 5.8 9.8" />
-      <path d="M12 3.5c2.9 1.5 5.2 4 5.8 7.2.6 3.5-1.1 7.2-5.8 9.8" />
-      <path d="M8.4 8.3 12 11l3.6-2.7" />
-      <path d="M9.2 14.4 12 12l2.8 2.4" />
-    </svg>
+    />
   )
 }
 

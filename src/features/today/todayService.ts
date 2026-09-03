@@ -75,7 +75,7 @@ function nowIso() {
 }
 
 function createBase(
-  id = crypto.randomUUID(),
+  id: string = crypto.randomUUID(),
 ): BaseEntity {
   const now = nowIso()
 
@@ -1048,4 +1048,306 @@ export async function setWorkShiftStatus(
         shift.version + 1,
     },
   )
+}
+export interface RoutineTemplateEditorView {
+  template: DailyRoutineTemplate
+  items: DailyRoutineTemplateItem[]
+}
+
+export interface RoutineTemplateItemInput {
+  id?: string
+  block: TodayBlock
+  order: number
+  title: string
+  description: string | null
+  applicability: TodayApplicability
+  targetTime: string | null
+  latestTime: string | null
+  timingDays: number[] | null
+}
+
+export interface SaveRoutineTemplateOptions {
+  applyToDate?: string | null
+  context?: DailyRoutineContext | null
+}
+
+export async function getRoutineTemplateEditorView(): Promise<RoutineTemplateEditorView> {
+  const template = await getActiveTemplate()
+
+  if (!template) {
+    throw new Error('No existe una plantilla activa de Hoy.')
+  }
+
+  const items = await getActiveTemplateItems(template.id)
+
+  return {
+    template,
+    items,
+  }
+}
+
+function validateRoutineTemplateItemInput(input: RoutineTemplateItemInput) {
+  if (!input.title.trim()) {
+    throw new Error('Todos los pasos de la rutina necesitan un nombre.')
+  }
+
+  if (input.order < 0 || !Number.isFinite(input.order)) {
+    throw new Error('El orden de la rutina no es válido.')
+  }
+}
+
+function normalizeOptionalText(value: string | null) {
+  const normalized = value?.trim() ?? ''
+  return normalized.length > 0 ? normalized : null
+}
+
+async function applyTemplateSnapshotToDate(
+  dateKey: string,
+  context: DailyRoutineContext,
+  activeItems: DailyRoutineTemplateItem[],
+  archivedItemIds: Set<string>,
+) {
+  const routine = await db.dailyRoutines.where('date').equals(dateKey).first()
+
+  if (!routine || routine.deletedAt !== null) {
+    return
+  }
+
+  const currentTasks = await db.dailyRoutineTasks
+    .where('dailyRoutineId')
+    .equals(routine.id)
+    .toArray()
+
+  const taskBySource = new Map(
+    currentTasks
+      .filter((task) => task.deletedAt === null && task.sourceTemplateItemId)
+      .map((task) => [task.sourceTemplateItemId as string, task]),
+  )
+
+  const now = nowIso()
+  const changes: DailyRoutineTask[] = []
+  const additions: DailyRoutineTask[] = []
+
+  for (const item of activeItems) {
+    const existing = taskBySource.get(item.id)
+
+    if (!existing) {
+      additions.push(createDailyTask(routine, item, context))
+      continue
+    }
+
+    if (existing.status === 'completed' || existing.status === 'skipped') {
+      continue
+    }
+
+    const nextApplicable = isApplicable(item.applicability, context)
+    const nextStatus: TodayTaskStatus = nextApplicable ? 'pending' : 'not_applicable'
+
+    changes.push({
+      ...existing,
+      block: item.block,
+      order: item.order,
+      title: item.title,
+      description: item.description,
+      applicability: item.applicability,
+      targetTime: item.targetTime,
+      latestTime: item.latestTime,
+      timingApplies: isTimingApplicable(item, dateKey),
+      status: nextStatus,
+      statusChangedAt:
+        nextStatus !== existing.status ? now : existing.statusChangedAt,
+      updatedAt: now,
+      version: existing.version + 1,
+    })
+  }
+
+  for (const task of currentTasks) {
+    if (
+      task.deletedAt !== null ||
+      !task.sourceTemplateItemId ||
+      !archivedItemIds.has(task.sourceTemplateItemId)
+    ) {
+      continue
+    }
+
+    /*
+     * Al aplicar una nueva plantilla al día actual solo retiramos pasos
+     * que todavía no representan una acción histórica confirmada.
+     * Completadas/omitidas se conservan para no reescribir lo ocurrido.
+     */
+    if (task.status === 'pending' || task.status === 'not_applicable') {
+      changes.push({
+        ...task,
+        deletedAt: now,
+        updatedAt: now,
+        version: task.version + 1,
+      })
+    }
+  }
+
+  if (changes.length > 0) {
+    await db.dailyRoutineTasks.bulkPut(changes)
+  }
+
+  if (additions.length > 0) {
+    await db.dailyRoutineTasks.bulkAdd(additions)
+  }
+}
+
+export async function saveRoutineTemplate(
+  inputs: RoutineTemplateItemInput[],
+  options: SaveRoutineTemplateOptions = {},
+): Promise<RoutineTemplateEditorView> {
+  for (const input of inputs) {
+    validateRoutineTemplateItemInput(input)
+  }
+
+  const template = await getActiveTemplate()
+
+  if (!template) {
+    throw new Error('No existe una plantilla activa de Hoy.')
+  }
+
+  const existingItems = await getActiveTemplateItems(template.id)
+  const existingById = new Map(existingItems.map((item) => [item.id, item]))
+  const incomingIds = new Set(inputs.flatMap((input) => (input.id ? [input.id] : [])))
+  const now = nowIso()
+
+  const savedItems: DailyRoutineTemplateItem[] = inputs.map((input) => {
+    const existing = input.id ? existingById.get(input.id) : undefined
+
+    if (existing) {
+      return {
+        ...existing,
+        block: input.block,
+        order: input.order,
+        title: input.title.trim(),
+        description: normalizeOptionalText(input.description),
+        applicability: input.applicability,
+        targetTime: normalizeOptionalText(input.targetTime),
+        latestTime: normalizeOptionalText(input.latestTime),
+        timingDays: input.timingDays,
+        deletedAt: null,
+        updatedAt: now,
+        version: existing.version + 1,
+      }
+    }
+
+    return {
+      ...createBase(input.id ?? crypto.randomUUID()),
+      templateId: template.id,
+      block: input.block,
+      order: input.order,
+      title: input.title.trim(),
+      description: normalizeOptionalText(input.description),
+      applicability: input.applicability,
+      targetTime: normalizeOptionalText(input.targetTime),
+      latestTime: normalizeOptionalText(input.latestTime),
+      timingDays: input.timingDays,
+    }
+  })
+
+  const archivedItems = existingItems
+    .filter((item) => !incomingIds.has(item.id))
+    .map((item) => ({
+      ...item,
+      deletedAt: now,
+      updatedAt: now,
+      version: item.version + 1,
+    }))
+
+  const archivedItemIds = new Set(archivedItems.map((item) => item.id))
+
+  await db.transaction(
+    'rw',
+    db.dailyRoutineTemplates,
+    db.dailyRoutineTemplateItems,
+    db.dailyRoutines,
+    db.dailyRoutineTasks,
+    async () => {
+      if (savedItems.length > 0) {
+        await db.dailyRoutineTemplateItems.bulkPut(savedItems)
+      }
+
+      if (archivedItems.length > 0) {
+        await db.dailyRoutineTemplateItems.bulkPut(archivedItems)
+      }
+
+      await db.dailyRoutineTemplates.update(template.id, {
+        updatedAt: now,
+        version: template.version + 1,
+      })
+
+      if (options.applyToDate && options.context) {
+        await applyTemplateSnapshotToDate(
+          options.applyToDate,
+          options.context,
+          savedItems,
+          archivedItemIds,
+        )
+      }
+    },
+  )
+
+  return getRoutineTemplateEditorView()
+}
+
+export async function promoteOneOffTaskToRoutine(
+  taskId: string,
+): Promise<DailyRoutineTemplateItem> {
+  const task = await db.dailyRoutineTasks.get(taskId)
+
+  if (!task || task.deletedAt !== null) {
+    throw new Error('La tarea indicada no existe.')
+  }
+
+  if (task.kind !== 'one_off') {
+    throw new Error('Esta tarea ya pertenece a la rutina.')
+  }
+
+  const template = await getActiveTemplate()
+
+  if (!template) {
+    throw new Error('No existe una plantilla activa de Hoy.')
+  }
+
+  const items = await getActiveTemplateItems(template.id)
+  const sameBlock = items.filter((item) => item.block === task.block)
+  const nextOrder = sameBlock.length === 0
+    ? 10
+    : Math.max(...sameBlock.map((item) => item.order)) + 10
+
+  const now = nowIso()
+  const item: DailyRoutineTemplateItem = {
+    ...createBase(),
+    templateId: template.id,
+    block: task.block,
+    order: nextOrder,
+    title: task.title,
+    description: task.description,
+    applicability:
+      task.block === 'work'
+        ? 'work_day'
+        : task.block === 'postworkout'
+          ? 'training_day'
+          : 'always',
+    targetTime: task.targetTime,
+    latestTime: task.latestTime,
+    timingDays: null,
+  }
+
+  await db.transaction(
+    'rw',
+    db.dailyRoutineTemplates,
+    db.dailyRoutineTemplateItems,
+    async () => {
+      await db.dailyRoutineTemplateItems.add(item)
+      await db.dailyRoutineTemplates.update(template.id, {
+        updatedAt: now,
+        version: template.version + 1,
+      })
+    },
+  )
+
+  return item
 }

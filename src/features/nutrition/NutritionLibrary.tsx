@@ -39,6 +39,8 @@ import {
   type ShoppingItemView,
 } from './nutritionService'
 
+import RecipeVisual from './RecipeVisual'
+
 import './nutrition.css'
 import './nutrition-library-vnext.css'
 
@@ -373,60 +375,40 @@ function RecipeCard({
   ) => Promise<void>
 }) {
   return (
-    <article className="nutrition-recipe-card">
-      <div className="nutrition-recipe-card__top">
-        <div>
-          <p className="nutrition-eyebrow">
-            {
-              recipeCategoryNames[
-                item.recipe.category
-              ]
-            }
-          </p>
+    <article className="nutrition-recipe-card nutrition-recipe-card--visual">
+      <button
+        type="button"
+        className="nutrition-recipe-card__open"
+        onClick={() => onOpen(item)}
+        aria-label={`Abrir ${item.recipe.name}`}
+      >
+        <RecipeVisual recipe={item.recipe} name={item.recipe.name} variant="card" />
 
-          <h2>
-            {item.recipe.name}
-          </h2>
-        </div>
-
-        <button
-          type="button"
-          className={`favorite-button ${
-            item.recipe.isFavorite
-              ? 'favorite-button--active'
-              : ''
-          }`}
-          onClick={() =>
-            void onFavorite(
-              item,
-            )
-          }
-        >
-          {item.recipe.isFavorite
-            ? '★'
-            : '☆'}
-        </button>
-      </div>
-
-      <MacroSummary
-        item={item}
-      />
-
-      <div className="recipe-card-footer">
-        <span>
-          {item.ingredients.length}{' '}
-          ingredientes
+        <span className="nutrition-recipe-card__copy">
+          <span className="nutrition-eyebrow">
+            {recipeCategoryNames[item.recipe.category]}
+          </span>
+          <strong>{item.recipe.name}</strong>
+          <span className="nutrition-recipe-card__ingredientCount">
+            {item.ingredients.length} ingredientes
+          </span>
         </span>
+      </button>
 
-        <button
-          type="button"
-          onClick={() =>
-            onOpen(item)
-          }
-        >
-          Ver receta
-        </button>
-      </div>
+      <button
+        type="button"
+        className={`favorite-button ${
+          item.recipe.isFavorite
+            ? 'favorite-button--active'
+            : ''
+        }`}
+        onClick={() => void onFavorite(item)}
+        aria-label={item.recipe.isFavorite ? 'Quitar de favoritas' : 'Añadir a favoritas'}
+      >
+        {item.recipe.isFavorite ? '★' : '☆'}
+      </button>
+
+      <MacroSummary item={item} />
     </article>
   )
 }

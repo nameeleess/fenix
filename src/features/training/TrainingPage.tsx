@@ -41,6 +41,11 @@ import {
   type TrainingTemplateView,
 } from './trainingService'
 
+import {
+  ExerciseVisual,
+  RoutineMuscleMap,
+} from './TrainingVisuals'
+
 import './training.css'
 
 type TrainingTab =
@@ -102,94 +107,6 @@ function statusClass(status: PlannedWorkoutSession['status']) {
   if (status === 'incomplete' || status === 'omitted') return 'is-danger'
   if (status === 'in_progress') return 'is-active'
   return 'is-pending'
-}
-
-function routineMuscles(view: TrainingTemplateView | null) {
-  if (!view) {
-    return []
-  }
-
-  const counts = new Map<string, number>()
-
-  for (const item of view.exercises) {
-    counts.set(
-      item.exercise.primaryMuscle,
-      (counts.get(item.exercise.primaryMuscle) ?? 0) + item.config.targetSets,
-    )
-  }
-
-  return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([name]) => name)
-    .slice(0, 5)
-}
-
-function MuscleMap({
-  template,
-}: {
-  template: TrainingTemplateView | null
-}) {
-  const muscles = routineMuscles(template)
-  const lower = template?.template.type === 'lower'
-
-  return (
-    <div className="training-muscle-map" aria-label="Grupos musculares principales">
-      <div className="training-muscle-map__figure" aria-hidden="true">
-        <svg viewBox="0 0 120 180" role="img">
-          <circle cx="60" cy="21" r="14" />
-          <path d="M44 40c-8 12-10 30-8 48l8 32 6 47h12l-1-53h-2V82h2v32l-1 53h12l6-47 8-32c2-18 0-36-8-48L68 35H52L44 40Z" />
-          <path
-            className={lower ? '' : 'is-highlight'}
-            d="M45 43 35 58l7 32 18-8 18 8 7-32-10-15-13-7H58l-13 7Z"
-          />
-          <path
-            className={lower ? 'is-highlight' : ''}
-            d="M45 95 50 120l2 46h10l-1-52h-2V93Zm30 0-5 25-2 46H58l1-52h2V93Z"
-          />
-        </svg>
-      </div>
-
-      <div className="training-muscle-map__content">
-        <span className="training-kicker">MÚSCULOS HOY</span>
-        <strong>{muscles.length > 0 ? muscles.join(' · ') : 'Sin sesión formal'}</strong>
-        <small>Visual funcional · no representa una medición anatómica.</small>
-      </div>
-    </div>
-  )
-}
-
-
-function ExerciseMotion({
-  guided,
-  label,
-}: {
-  guided: boolean
-  label: string
-}) {
-  return (
-    <div
-      className={`training-exercise-motion ${guided ? 'is-guided' : 'is-strength'}`}
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 92 92" focusable="false">
-        <circle className="training-motion__halo" cx="46" cy="46" r="37" />
-        <circle className="training-motion__head" cx="46" cy="24" r="7" />
-        <path className="training-motion__body" d="M46 31v25M34 42h24M39 56l-8 19M53 56l8 19" />
-        {guided ? (
-          <g className="training-motion__guided-arm">
-            <path d="M34 42 22 29" />
-            <path d="M58 42 70 29" />
-          </g>
-        ) : (
-          <g className="training-motion__barbell">
-            <path d="M20 39h52" />
-            <path d="M16 33v12M76 33v12M12 35v8M80 35v8" />
-          </g>
-        )}
-      </svg>
-      <span>{guided ? 'MOV' : label.slice(0, 3).toUpperCase()}</span>
-    </div>
-  )
 }
 
 function SetRow({
@@ -573,9 +490,9 @@ function ActiveTraining({
             </p>
           </div>
 
-          <ExerciseMotion
+          <ExerciseVisual
             guided={isGuidedSession}
-            label={item.exercise.primaryMuscle}
+            exercise={item.exercise}
           />
         </div>
 
@@ -882,7 +799,7 @@ function HomeView({
             </span>
           </div>
 
-          <MuscleMap template={template} />
+          <RoutineMuscleMap template={template} />
 
           <div className="training-session-preview">
             {template.exercises.slice(0, 4).map((item, index) => (
@@ -1004,6 +921,8 @@ function RoutinesView({
             </div>
             <strong>{view.totalSets} series</strong>
           </div>
+
+          <RoutineMuscleMap template={view} compact />
 
           {view.exercises.map((item) => (
             <RoutineExerciseEditor
