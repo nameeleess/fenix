@@ -111,6 +111,25 @@ function roleTone(role: NutritionRole) {
   return 'default'
 }
 
+function MealVisual({ role }: { role: NutritionRole }) {
+  const tone = roleTone(role)
+
+  return (
+    <span
+      className={`nutrition-vnext-mealVisual nutrition-vnext-mealVisual--${tone}`}
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 64 64" focusable="false">
+        <circle className="mealVisual__plate" cx="32" cy="34" r="20" />
+        <circle className="mealVisual__food" cx="25" cy="33" r="7" />
+        <path className="mealVisual__food mealVisual__food--line" d="M34 27c8 2 12 7 12 14" />
+        <path className="mealVisual__steam" d="M24 16c-4-5 4-6 0-11" />
+        <path className="mealVisual__steam mealVisual__steam--delay" d="M36 16c-4-5 4-6 0-11" />
+      </svg>
+    </span>
+  )
+}
+
 function MacroOverview({
   consumed,
   planned,
@@ -210,6 +229,7 @@ function MealCard({
         onClick={() => setExpanded((value) => !value)}
       >
         <span className="nutrition-vnext-meal__order">{meal.order}</span>
+        <MealVisual role={meal.role} />
         <span className="nutrition-vnext-meal__title">
           <small>{nutritionRoleLabel(meal.role)}</small>
           <strong>{meal.name}</strong>

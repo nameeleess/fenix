@@ -39,6 +39,10 @@ import './styles/app.css'
 
 import './styles/mobile-density.css'
 
+import './styles/render-parity.css'
+
+import './styles/visual-polish.css'
+
 type AppState =
   | 'checking'
   | 'ready'

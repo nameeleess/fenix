@@ -158,14 +158,50 @@ function MuscleMap({
   )
 }
 
+
+function ExerciseMotion({
+  guided,
+  label,
+}: {
+  guided: boolean
+  label: string
+}) {
+  return (
+    <div
+      className={`training-exercise-motion ${guided ? 'is-guided' : 'is-strength'}`}
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 92 92" focusable="false">
+        <circle className="training-motion__halo" cx="46" cy="46" r="37" />
+        <circle className="training-motion__head" cx="46" cy="24" r="7" />
+        <path className="training-motion__body" d="M46 31v25M34 42h24M39 56l-8 19M53 56l8 19" />
+        {guided ? (
+          <g className="training-motion__guided-arm">
+            <path d="M34 42 22 29" />
+            <path d="M58 42 70 29" />
+          </g>
+        ) : (
+          <g className="training-motion__barbell">
+            <path d="M20 39h52" />
+            <path d="M16 33v12M76 33v12M12 35v8M80 35v8" />
+          </g>
+        )}
+      </svg>
+      <span>{guided ? 'MOV' : label.slice(0, 3).toUpperCase()}</span>
+    </div>
+  )
+}
+
 function SetRow({
   set,
   targetRir,
+  simpleText = null,
   onChanged,
   onCompleted,
 }: {
   set: ExerciseSet
   targetRir: string
+  simpleText?: string | null
   onChanged: () => Promise<void>
   onCompleted: (seconds: number) => Promise<void>
 }) {
@@ -234,54 +270,63 @@ function SetRow({
 
   return (
     <div
-      className={`training-set-row ${set.completedAt ? 'is-completed' : ''} ${set.setType === 'warmup' ? 'is-warmup' : ''}`}
+      className={`training-set-row ${set.completedAt ? 'is-completed' : ''} ${set.setType === 'warmup' ? 'is-warmup' : ''} ${simpleText ? 'is-simple' : ''}`}
     >
       <div className="training-set-row__index">
         <span>{set.setType === 'warmup' ? 'C' : set.order}</span>
         {set.setType === 'warmup' ? <small>calent.</small> : null}
       </div>
 
-      <label>
-        <span>kg</span>
-        <input
-          type="number"
-          inputMode="decimal"
-          min="0"
-          step="0.5"
-          value={weight}
-          onChange={(event) => setWeight(event.target.value)}
-          onBlur={() => void save()}
-        />
-      </label>
+      {simpleText ? (
+        <div className="training-set-row__simple">
+          <span>OBJETIVO</span>
+          <strong>{simpleText}</strong>
+        </div>
+      ) : (
+        <>
+          <label>
+            <span>kg</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.5"
+              value={weight}
+              onChange={(event) => setWeight(event.target.value)}
+              onBlur={() => void save()}
+            />
+          </label>
 
-      <label>
-        <span>Reps</span>
-        <input
-          type="number"
-          inputMode="numeric"
-          min="0"
-          step="1"
-          value={reps}
-          onChange={(event) => setReps(event.target.value)}
-          onBlur={() => void save()}
-        />
-      </label>
+          <label>
+            <span>Reps</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min="0"
+              step="1"
+              value={reps}
+              onChange={(event) => setReps(event.target.value)}
+              onBlur={() => void save()}
+            />
+          </label>
 
-      <label>
-        <span>{set.setType === 'warmup' ? 'RIR —' : `RIR ${targetRir}`}</span>
-        <input
-          type="number"
-          inputMode="decimal"
-          min="0"
-          max="10"
-          step="0.5"
-          value={set.setType === 'warmup' ? '' : rir}
-          disabled={set.setType === 'warmup'}
-          placeholder={set.setType === 'warmup' ? '—' : targetRir}
-          onChange={(event) => setRir(event.target.value)}
-          onBlur={() => void save()}
-        />
-      </label>
+          <label>
+            <span>{set.setType === 'warmup' ? 'RIR —' : `RIR ${targetRir}`}</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              max="10"
+              step="0.5"
+              value={set.setType === 'warmup' ? '' : rir}
+              disabled={set.setType === 'warmup'}
+              placeholder={set.setType === 'warmup' ? '—' : targetRir}
+              onChange={(event) => setRir(event.target.value)}
+              onBlur={() => void save()}
+            />
+          </label>
+        </>
+      )}
 
       <button
         type="button"
@@ -485,6 +530,10 @@ function ActiveTraining({
 
   const warmups = item.sets.filter((set) => set.setType === 'warmup')
   const working = item.sets.filter((set) => set.setType === 'working')
+  const isGuidedSession = view.template.isFormalStrength === false
+  const simpleTarget = item.snapshot.targetSeconds
+    ? `${item.snapshot.targetSeconds} s`
+    : `${item.snapshot.minReps}–${item.snapshot.maxReps} repeticiones`
 
   return (
     <main className="training-page training-page--active">
@@ -497,7 +546,7 @@ function ActiveTraining({
           <span className="training-kicker">TRAINING · EN CURSO</span>
           <h1>{view.template.name}</h1>
           <p>
-            {view.completedWorkingSets}/{view.totalWorkingSets} series de trabajo · iniciado {formatDateTime(view.session.startedAt)}
+            {view.completedWorkingSets}/{view.totalWorkingSets} {isGuidedSession ? 'pasos completados' : 'series de trabajo'} · iniciado {formatDateTime(view.session.startedAt)}
           </p>
         </div>
 
@@ -518,31 +567,39 @@ function ActiveTraining({
             <span className="training-kicker">EJERCICIO {boundedIndex + 1} DE {view.exercises.length}</span>
             <h2>{item.exercise.name}</h2>
             <p>
-              {item.snapshot.targetSets} × {item.snapshot.minReps}–{item.snapshot.maxReps} · RIR {targetRir} · {formatRest(item.snapshot.restSeconds)}
+              {isGuidedSession
+                ? `${item.snapshot.targetSets} × ${simpleTarget}`
+                : `${item.snapshot.targetSets} × ${item.snapshot.minReps}–${item.snapshot.maxReps} · RIR ${targetRir} · ${formatRest(item.snapshot.restSeconds)}`}
             </p>
           </div>
 
-          <div className="training-exercise-orb" aria-hidden="true">
-            <span>{item.exercise.primaryMuscle.slice(0, 3).toUpperCase()}</span>
-          </div>
+          <ExerciseMotion
+            guided={isGuidedSession}
+            label={item.exercise.primaryMuscle}
+          />
         </div>
 
-        <div className="training-reference-grid">
-          <div>
-            <span>ÚLTIMA VEZ</span>
-            <strong>{previousText}</strong>
+        {!isGuidedSession ? (
+          <div className="training-reference-grid">
+            <div>
+              <span>ÚLTIMA VEZ</span>
+              <strong>{previousText}</strong>
+            </div>
+            <div>
+              <span>SUGERENCIA</span>
+              <strong>{item.progressionHint}</strong>
+            </div>
           </div>
-          <div>
-            <span>SUGERENCIA</span>
-            <strong>{item.progressionHint}</strong>
-          </div>
-        </div>
+        ) : null}
 
         {item.exercise.techniqueNotes ? (
-          <div className="training-technique-note">
-            <span>TÉCNICA</span>
+          <details className="training-technique-note training-technique-note--disclosure">
+            <summary>
+              <span>TÉCNICA</span>
+              <b>Ver indicación</b>
+            </summary>
             <p>{item.exercise.techniqueNotes}</p>
-          </div>
+          </details>
         ) : null}
 
         {warmups.length > 0 ? (
@@ -566,8 +623,8 @@ function ActiveTraining({
 
         <div className="training-set-section">
           <div className="training-set-section__title">
-            <span>SERIES DE TRABAJO</span>
-            <small>Peso · repeticiones · RIR real</small>
+            <span>{isGuidedSession ? 'MOVIMIENTOS' : 'SERIES DE TRABAJO'}</span>
+            <small>{isGuidedSession ? 'Completa cada paso con control.' : 'Peso · repeticiones · RIR real'}</small>
           </div>
 
           {working.map((set) => (
@@ -575,21 +632,24 @@ function ActiveTraining({
               key={`${set.id}-${set.updatedAt}`}
               set={set}
               targetRir={targetRir}
+              simpleText={isGuidedSession ? simpleTarget : null}
               onChanged={onReload}
               onCompleted={completeSet}
             />
           ))}
 
-          <button
-            type="button"
-            className="training-secondary-button"
-            onClick={async () => {
-              await addExerciseSet(item.snapshot.id, 'working')
-              await onReload()
-            }}
-          >
-            + Añadir serie
-          </button>
+          {!isGuidedSession ? (
+            <button
+              type="button"
+              className="training-secondary-button"
+              onClick={async () => {
+                await addExerciseSet(item.snapshot.id, 'working')
+                await onReload()
+              }}
+            >
+              + Añadir serie
+            </button>
+          ) : null}
         </div>
 
         <div className="training-current-actions">
