@@ -1,4 +1,5 @@
 import { db } from '../../db/database'
+import { publishCommittedMutation } from '../../app/freshnessEvents'
 import type {
   Exercise,
   ExerciseSet,
@@ -10,6 +11,18 @@ import type {
   WorkoutTemplate,
   WorkoutTemplateExercise,
 } from '../../types/training'
+
+import {
+  getCanonicalTrainingStreak,
+} from '../progress/trainingStreak'
+import {
+  assertPlannedCanStart,
+  assertPlannedPending,
+  assertValidTrainingDateKey,
+  comparePlannedWorkoutSessions,
+  validateSetValues,
+  type TrainingSetValues,
+} from './trainingIntegrityPolicy'
 
 export interface TemplateExerciseView {
   config: WorkoutTemplateExercise
@@ -26,6 +39,7 @@ export interface TrainingWeekDayView {
   date: string
   weekdayLabel: string
   dayNumber: number
+  sessions: PlannedWorkoutSession[]
   session: PlannedWorkoutSession | null
 }
 
@@ -34,6 +48,7 @@ export interface TrainingHomeView {
   week: TrainingWeekDayView[]
   focusSession: PlannedWorkoutSession | null
   nextSession: PlannedWorkoutSession | null
+  actionableSessions: PlannedWorkoutSession[]
   focusTemplate: TrainingTemplateView | null
   completedThisWeek: number
   plannedThisWeek: number
@@ -73,11 +88,7 @@ export interface TrainingHistoryView {
   sessions: HistorySessionView[]
 }
 
-export interface SetValues {
-  weight: number | null
-  reps: number | null
-  rir: number | null
-}
+export type SetValues = TrainingSetValues
 
 function nowIso() {
   return new Date().toISOString()
@@ -199,46 +210,16 @@ export async function getTrainingTemplates(): Promise<TrainingTemplateView[]> {
   return result
 }
 
-async function getTrainingStreak() {
-  const sessions = (await db.plannedWorkoutSessions.toArray())
-    .filter(
-      (session) =>
-        session.deletedAt === null &&
-        session.isFormalStrength &&
-        !session.isExtra &&
-        session.scheduledDate <= getLocalDateKey(),
-    )
-    .sort((a, b) => {
-      if (a.scheduledDate === b.scheduledDate) {
-        return a.createdAt.localeCompare(b.createdAt)
-      }
 
-      return a.scheduledDate.localeCompare(b.scheduledDate)
-    })
+export async function getPlannedWorkoutSessionsForDate(dateKey: string) {
+  assertValidTrainingDateKey(dateKey)
 
-  let streak = 0
-  let pending = false
-
-  for (let index = sessions.length - 1; index >= 0; index -= 1) {
-    const session = sessions[index]
-
-    if (session.status === 'pending' || session.status === 'in_progress') {
-      pending = true
-      continue
-    }
-
-    if (session.status === 'completed') {
-      streak += 1
-      continue
-    }
-
-    break
-  }
-
-  return {
-    streak,
-    pending,
-  }
+  return (await db.plannedWorkoutSessions
+    .where('scheduledDate')
+    .equals(dateKey)
+    .toArray())
+    .filter((session) => session.deletedAt === null)
+    .sort(comparePlannedWorkoutSessions)
 }
 
 export async function getTrainingHome(
@@ -247,7 +228,7 @@ export async function getTrainingHome(
   const [templates, planned, streakInfo] = await Promise.all([
     getTrainingTemplates(),
     db.plannedWorkoutSessions.toArray(),
-    getTrainingStreak(),
+    getCanonicalTrainingStreak(todayKey),
   ])
 
   const activePlanned = planned
@@ -257,7 +238,7 @@ export async function getTrainingHome(
         session.isFormalStrength &&
         !session.isExtra,
     )
-    .sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate))
+    .sort(comparePlannedWorkoutSessions)
 
   const monday = startOfWeek(todayKey)
   const weekDates = Array.from({ length: 7 }, (_, index) =>
@@ -265,14 +246,16 @@ export async function getTrainingHome(
   )
 
   const week: TrainingWeekDayView[] = weekDates.map((date) => {
-    const session =
-      activePlanned.find((item) => item.scheduledDate === date) ?? null
+    const sessions = activePlanned
+      .filter((item) => item.scheduledDate === date)
+      .sort(comparePlannedWorkoutSessions)
 
     return {
       date,
       weekdayLabel: formatWeekday(date),
       dayNumber: parseDateKey(date).getDate(),
-      session,
+      sessions,
+      session: sessions[0] ?? null,
     }
   })
 
@@ -282,27 +265,34 @@ export async function getTrainingHome(
         session.scheduledDate < todayKey &&
         (session.status === 'pending' || session.status === 'in_progress'),
     )
-    .sort((a, b) => b.scheduledDate.localeCompare(a.scheduledDate))
+    .sort((a, b) =>
+      b.scheduledDate.localeCompare(a.scheduledDate) || comparePlannedWorkoutSessions(a, b),
+    )
 
-  const todaySession = activePlanned.find(
-    (session) =>
-      session.scheduledDate === todayKey &&
-      (session.status === 'pending' || session.status === 'in_progress'),
-  )
+  const todayActionable = activePlanned
+    .filter(
+      (session) =>
+        session.scheduledDate === todayKey &&
+        (session.status === 'pending' || session.status === 'in_progress'),
+    )
+    .sort(comparePlannedWorkoutSessions)
 
-  const futurePending = activePlanned.find(
-    (session) =>
-      session.scheduledDate > todayKey &&
-      session.status === 'pending',
-  )
+  const futurePending = activePlanned
+    .filter(
+      (session) =>
+        session.scheduledDate > todayKey &&
+        session.status === 'pending',
+    )
+    .sort(comparePlannedWorkoutSessions)
 
-  const focusSession = overdue[0] ?? todaySession ?? futurePending ?? null
-  const nextSession = activePlanned.find(
-    (session) =>
-      session.status === 'pending' &&
-      (!focusSession || session.id !== focusSession.id) &&
-      session.scheduledDate >= todayKey,
-  ) ?? null
+  const actionableSessions = [
+    ...overdue,
+    ...todayActionable,
+    ...futurePending,
+  ]
+
+  const focusSession = actionableSessions[0] ?? null
+  const nextSession = actionableSessions[1] ?? null
 
   const focusTemplate = focusSession
     ? templates.find(
@@ -319,6 +309,7 @@ export async function getTrainingHome(
     week,
     focusSession,
     nextSession,
+    actionableSessions,
     focusTemplate,
     completedThisWeek: weekSessions.filter(
       (session) => session.status === 'completed',
@@ -432,11 +423,20 @@ async function getRestEndsAt(sessionId: string) {
 }
 
 export async function getActiveWorkout(): Promise<ActiveSessionView | null> {
-  const session = (await db.workoutSessions
+  const activeSessions = (await db.workoutSessions
     .where('status')
     .equals('active')
     .toArray())
-    .find((item) => item.deletedAt === null)
+    .filter((item) => item.deletedAt === null)
+    .sort((a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id))
+
+  if (activeSessions.length > 1) {
+    throw new TrainingIntegrityError(
+      'Integridad Training: existen varias ejecuciones activas simultáneas.',
+    )
+  }
+
+  const session = activeSessions[0]
 
   if (!session) {
     return null
@@ -549,16 +549,17 @@ async function warmupSetsFor(
   }))
 }
 
-async function createSessionFromTemplate(
-  template: WorkoutTemplate,
-  planned: PlannedWorkoutSession | null,
-) {
-  const existing = await getActiveWorkout()
-
-  if (existing) {
-    return existing
+class TrainingIntegrityError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'TrainingIntegrityError'
   }
+}
 
+async function buildSessionFromTemplate(
+  template: WorkoutTemplate,
+  plannedWorkoutId: string | null,
+) {
   const templateExercises = await getTemplateExercises(template.id)
   const startedAt = nowIso()
 
@@ -567,7 +568,7 @@ async function createSessionFromTemplate(
     workoutTemplateId: template.id,
     templateName: template.name,
     status: 'active',
-    plannedWorkoutId: planned?.id ?? null,
+    plannedWorkoutId,
     startedAt,
     completedAt: null,
     endedAt: null,
@@ -640,32 +641,152 @@ async function createSessionFromTemplate(
     }
   }
 
-  await db.transaction(
+  return {
+    session,
+    snapshots,
+    sets,
+  }
+}
+
+async function createSessionFromTemplate(
+  template: WorkoutTemplate,
+  plannedWorkoutId: string | null,
+) {
+  const prepared = await buildSessionFromTemplate(template, plannedWorkoutId)
+
+  const outcome = await db.transaction(
     'rw',
     db.workoutSessions,
     db.workoutSessionExercises,
     db.exerciseSets,
     db.plannedWorkoutSessions,
     async () => {
-      await db.workoutSessions.add(session)
-      await db.workoutSessionExercises.bulkAdd(snapshots)
-      await db.exerciseSets.bulkAdd(sets)
+      const activeSessions = (await db.workoutSessions
+        .where('status')
+        .equals('active')
+        .toArray())
+        .filter((session) => session.deletedAt === null)
+        .sort((a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id))
 
-      if (planned) {
-        await db.plannedWorkoutSessions.update(planned.id, {
+      if (activeSessions.length > 1) {
+        throw new TrainingIntegrityError(
+          'Integridad Training: existen varias ejecuciones activas simultáneas.',
+        )
+      }
+
+      if (plannedWorkoutId) {
+        const planned = await db.plannedWorkoutSessions.get(plannedWorkoutId)
+
+        if (!planned || planned.deletedAt !== null) {
+          throw new Error('La sesión planificada no existe.')
+        }
+
+        assertPlannedCanStart(planned.status)
+
+        if (planned.workoutTemplateId !== template.id) {
+          throw new TrainingIntegrityError(
+            'Integridad Training: la planificación ya no corresponde a la plantilla solicitada.',
+          )
+        }
+
+        if (planned.status === 'in_progress') {
+          if (!planned.executionSessionId) {
+            throw new TrainingIntegrityError(
+              'Integridad Training: la planificación en curso no tiene ejecución asociada.',
+            )
+          }
+
+          const execution = await db.workoutSessions.get(planned.executionSessionId)
+
+          if (
+            !execution ||
+            execution.deletedAt !== null ||
+            execution.status !== 'active' ||
+            execution.plannedWorkoutId !== planned.id ||
+            execution.workoutTemplateId !== planned.workoutTemplateId
+          ) {
+            throw new TrainingIntegrityError(
+              'Integridad Training: la ejecución asociada a la planificación en curso no es válida.',
+            )
+          }
+
+          if (activeSessions.length !== 1 || activeSessions[0].id !== execution.id) {
+            throw new TrainingIntegrityError(
+              'Integridad Training: la ejecución asociada no coincide con la única sesión activa.',
+            )
+          }
+
+          return {
+            sessionId: execution.id,
+            created: false,
+          }
+        }
+
+        if (activeSessions.length === 1) {
+          if (activeSessions[0].plannedWorkoutId === planned.id) {
+            throw new TrainingIntegrityError(
+              'Integridad Training: existe una ejecución activa para una planificación que sigue pendiente.',
+            )
+          }
+
+          return {
+            sessionId: activeSessions[0].id,
+            created: false,
+          }
+        }
+
+        await db.workoutSessions.add(prepared.session)
+        await db.workoutSessionExercises.bulkAdd(prepared.snapshots)
+        await db.exerciseSets.bulkAdd(prepared.sets)
+
+        const updated = await db.plannedWorkoutSessions.update(planned.id, {
           status: 'in_progress',
-          executionSessionId: session.id,
+          executionSessionId: prepared.session.id,
+          resolvedAt: null,
           updatedAt: nowIso(),
           version: planned.version + 1,
         })
+
+        if (updated !== 1) {
+          throw new TrainingIntegrityError(
+            'Integridad Training: no se ha podido vincular la ejecución a la planificación.',
+          )
+        }
+
+        return {
+          sessionId: prepared.session.id,
+          created: true,
+        }
+      }
+
+      if (activeSessions.length === 1) {
+        return {
+          sessionId: activeSessions[0].id,
+          created: false,
+        }
+      }
+
+      await db.workoutSessions.add(prepared.session)
+      await db.workoutSessionExercises.bulkAdd(prepared.snapshots)
+      await db.exerciseSets.bulkAdd(prepared.sets)
+
+      return {
+        sessionId: prepared.session.id,
+        created: true,
       }
     },
   )
 
+  if (outcome.created) {
+    publishCommittedMutation('training')
+  }
+
   const active = await getActiveWorkout()
 
-  if (!active) {
-    throw new Error('No se ha podido iniciar la sesión.')
+  if (!active || active.session.id !== outcome.sessionId) {
+    throw new TrainingIntegrityError(
+      'Integridad Training: no se ha podido recuperar la ejecución activa esperada.',
+    )
   }
 
   return active
@@ -678,9 +799,7 @@ export async function startPlannedWorkout(plannedWorkoutId: string) {
     throw new Error('La sesión planificada no existe.')
   }
 
-  if (planned.status !== 'pending' && planned.status !== 'in_progress') {
-    throw new Error('Esta sesión ya está resuelta.')
-  }
+  assertPlannedCanStart(planned.status)
 
   const template = await db.workoutTemplates.get(planned.workoutTemplateId)
 
@@ -688,7 +807,7 @@ export async function startPlannedWorkout(plannedWorkoutId: string) {
     throw new Error('No se encuentra la rutina asociada.')
   }
 
-  return createSessionFromTemplate(template, planned)
+  return createSessionFromTemplate(template, planned.id)
 }
 
 export async function startTemplateWorkout(workoutTemplateId: string) {
@@ -702,17 +821,30 @@ export async function startTemplateWorkout(workoutTemplateId: string) {
 }
 
 export async function saveSetDraft(setId: string, values: SetValues) {
-  const set = await db.exerciseSets.get(setId)
+  await db.transaction('rw', db.exerciseSets, async () => {
+    const set = await db.exerciseSets.get(setId)
 
-  if (!set || set.deletedAt !== null) {
-    throw new Error('Serie no encontrada.')
-  }
+    if (!set || set.deletedAt !== null) {
+      throw new Error('Serie no encontrada.')
+    }
 
-  await db.exerciseSets.update(setId, {
-    ...values,
-    updatedAt: nowIso(),
-    version: set.version + 1,
+    const validationMode = set.completedAt === null ? 'draft' : 'complete'
+    validateSetValues(values, set.setType, validationMode)
+
+    const updated = await db.exerciseSets.update(setId, {
+      ...values,
+      updatedAt: nowIso(),
+      version: set.version + 1,
+    })
+
+    if (updated !== 1) {
+      throw new TrainingIntegrityError(
+        'Integridad Training: no se ha podido guardar la serie.',
+      )
+    }
   })
+
+  publishCommittedMutation('training')
 }
 
 export async function toggleSetCompletion(
@@ -722,102 +854,249 @@ export async function toggleSetCompletion(
   completed: boolean
   restSeconds: number
 }> {
-  const set = await db.exerciseSets.get(setId)
+  const outcome = await db.transaction(
+    'rw',
+    db.workoutSessions,
+    db.workoutSessionExercises,
+    db.exerciseSets,
+    async () => {
+      const set = await db.exerciseSets.get(setId)
 
-  if (!set || set.deletedAt !== null) {
-    throw new Error('Serie no encontrada.')
-  }
+      if (!set || set.deletedAt !== null) {
+        throw new Error('Serie no encontrada.')
+      }
 
-  if (set.completedAt !== null) {
-    await db.exerciseSets.update(setId, {
-      ...values,
-      completedAt: null,
-      updatedAt: nowIso(),
-      version: set.version + 1,
-    })
+      const session = await db.workoutSessions.get(set.workoutSessionId)
 
-    return {
-      completed: false,
-      restSeconds: 0,
-    }
-  }
+      if (!session || session.deletedAt !== null) {
+        throw new TrainingIntegrityError(
+          'Integridad Training: la sesión de la serie ya no está disponible.',
+        )
+      }
 
-  if (values.reps === null || values.reps <= 0) {
-    throw new Error('Introduce las repeticiones antes de completar la serie.')
-  }
+      if (session.status !== 'active') {
+        throw new TrainingIntegrityError(
+          'Integridad Training: solo se puede cambiar el estado de una serie durante una sesión activa.',
+        )
+      }
 
-  const snapshot = set.workoutSessionExerciseId
-    ? await db.workoutSessionExercises.get(set.workoutSessionExerciseId)
-    : undefined
+      const snapshot = set.workoutSessionExerciseId
+        ? await db.workoutSessionExercises.get(set.workoutSessionExerciseId)
+        : undefined
 
-  const timestamp = nowIso()
+      if (set.workoutSessionExerciseId) {
+        if (!snapshot || snapshot.deletedAt !== null) {
+          throw new TrainingIntegrityError(
+            'Integridad Training: el ejercicio de sesión de la serie ya no está disponible.',
+          )
+        }
 
-  await db.exerciseSets.update(setId, {
-    ...values,
-    completedAt: timestamp,
-    updatedAt: timestamp,
-    version: set.version + 1,
-  })
+        if (snapshot.workoutSessionId !== session.id) {
+          throw new TrainingIntegrityError(
+            'Integridad Training: la serie no pertenece al ejercicio de la ejecución indicada.',
+          )
+        }
+      }
 
-  return {
-    completed: true,
-    restSeconds: set.setType === 'working' ? snapshot?.restSeconds ?? 0 : 0,
-  }
+      if (set.completedAt !== null) {
+        validateSetValues(values, set.setType, 'draft')
+
+        const updated = await db.exerciseSets.update(setId, {
+          ...values,
+          completedAt: null,
+          updatedAt: nowIso(),
+          version: set.version + 1,
+        })
+
+        if (updated !== 1) {
+          throw new TrainingIntegrityError(
+            'Integridad Training: no se ha podido desmarcar la serie.',
+          )
+        }
+
+        return {
+          completed: false,
+          restSeconds: 0,
+        }
+      }
+
+      validateSetValues(values, set.setType, 'complete')
+
+      const timestamp = nowIso()
+      const updated = await db.exerciseSets.update(setId, {
+        ...values,
+        completedAt: timestamp,
+        updatedAt: timestamp,
+        version: set.version + 1,
+      })
+
+      if (updated !== 1) {
+        throw new TrainingIntegrityError(
+          'Integridad Training: no se ha podido completar la serie.',
+        )
+      }
+
+      return {
+        completed: true,
+        restSeconds: set.setType === 'working' ? snapshot?.restSeconds ?? 0 : 0,
+      }
+    },
+  )
+
+  publishCommittedMutation('training')
+
+  return outcome
 }
 
 export async function addExerciseSet(
   workoutSessionExerciseId: string,
   setType: SetType,
 ) {
-  const snapshot = await db.workoutSessionExercises.get(workoutSessionExerciseId)
+  await db.transaction(
+    'rw',
+    db.workoutSessions,
+    db.workoutSessionExercises,
+    db.exerciseSets,
+    async () => {
+      const snapshot = await db.workoutSessionExercises.get(
+        workoutSessionExerciseId,
+      )
 
-  if (!snapshot || snapshot.deletedAt !== null) {
-    throw new Error('Ejercicio de sesión no encontrado.')
-  }
+      if (!snapshot || snapshot.deletedAt !== null) {
+        throw new Error('Ejercicio de sesión no encontrado.')
+      }
 
-  const currentSets = (await db.exerciseSets
-    .where('workoutSessionId')
-    .equals(snapshot.workoutSessionId)
-    .toArray())
-    .filter(
-      (set) =>
-        set.deletedAt === null &&
-        set.workoutSessionExerciseId === snapshot.id &&
-        set.setType === setType,
-    )
+      const session = await db.workoutSessions.get(snapshot.workoutSessionId)
 
-  const nextOrder =
-    currentSets.reduce((highest, set) => Math.max(highest, set.order), 0) + 1
+      if (!session || session.deletedAt !== null) {
+        throw new TrainingIntegrityError(
+          'Integridad Training: la sesión del ejercicio ya no está disponible.',
+        )
+      }
 
-  await db.exerciseSets.add({
-    ...createEntityBase(),
-    workoutSessionId: snapshot.workoutSessionId,
-    workoutSessionExerciseId: snapshot.id,
-    exerciseId: snapshot.exerciseId,
-    exerciseName: snapshot.exerciseName,
-    order: nextOrder,
-    setType,
-    weight: null,
-    reps: null,
-    rir: null,
-    completedAt: null,
-  })
+      if (session.status !== 'active') {
+        throw new TrainingIntegrityError(
+          'Integridad Training: solo se pueden añadir series a una sesión activa.',
+        )
+      }
+
+      if (snapshot.workoutSessionId !== session.id) {
+        throw new TrainingIntegrityError(
+          'Integridad Training: el ejercicio de sesión no pertenece a la ejecución indicada.',
+        )
+      }
+
+      const currentSets = (await db.exerciseSets
+        .where('workoutSessionId')
+        .equals(session.id)
+        .toArray())
+        .filter(
+          (set) =>
+            set.deletedAt === null &&
+            set.workoutSessionExerciseId === snapshot.id &&
+            set.setType === setType,
+        )
+
+      const nextOrder =
+        currentSets.reduce((highest, set) => Math.max(highest, set.order), 0) + 1
+
+      await db.exerciseSets.add({
+        ...createEntityBase(),
+        workoutSessionId: session.id,
+        workoutSessionExerciseId: snapshot.id,
+        exerciseId: snapshot.exerciseId,
+        exerciseName: snapshot.exerciseName,
+        order: nextOrder,
+        setType,
+        weight: null,
+        reps: null,
+        rir: null,
+        completedAt: null,
+      })
+    },
+  )
+
+  publishCommittedMutation('training')
 }
 
 export async function removeExerciseSet(setId: string) {
-  const set = await db.exerciseSets.get(setId)
+  const removed = await db.transaction(
+    'rw',
+    db.workoutSessions,
+    db.workoutSessionExercises,
+    db.exerciseSets,
+    async () => {
+      const set = await db.exerciseSets.get(setId)
 
-  if (!set || set.deletedAt !== null) {
-    return
+      if (!set || set.deletedAt !== null) {
+        return false
+      }
+
+      if (set.completedAt !== null) {
+        throw new TrainingIntegrityError(
+          'Desmarca la serie antes de eliminarla.',
+        )
+      }
+
+      if (!set.workoutSessionExerciseId) {
+        throw new TrainingIntegrityError(
+          'Integridad Training: la serie no está vinculada a un ejercicio de sesión válido.',
+        )
+      }
+
+      const snapshot = await db.workoutSessionExercises.get(
+        set.workoutSessionExerciseId,
+      )
+
+      if (!snapshot || snapshot.deletedAt !== null) {
+        throw new TrainingIntegrityError(
+          'Integridad Training: el ejercicio de sesión ya no está disponible.',
+        )
+      }
+
+      const session = await db.workoutSessions.get(set.workoutSessionId)
+
+      if (!session || session.deletedAt !== null) {
+        throw new TrainingIntegrityError(
+          'Integridad Training: la sesión de la serie ya no está disponible.',
+        )
+      }
+
+      if (session.status !== 'active') {
+        throw new TrainingIntegrityError(
+          'Integridad Training: solo se pueden eliminar series de una sesión activa.',
+        )
+      }
+
+      if (
+        snapshot.workoutSessionId !== session.id ||
+        snapshot.id !== set.workoutSessionExerciseId
+      ) {
+        throw new TrainingIntegrityError(
+          'Integridad Training: la serie no pertenece al ejercicio de la sesión indicada.',
+        )
+      }
+
+      const now = nowIso()
+      const updated = await db.exerciseSets.update(set.id, {
+        deletedAt: now,
+        updatedAt: now,
+        version: set.version + 1,
+      })
+
+      if (updated !== 1) {
+        throw new TrainingIntegrityError(
+          'Integridad Training: no se ha podido eliminar la serie.',
+        )
+      }
+
+      return true
+    },
+  )
+
+  if (removed) {
+    publishCommittedMutation('training')
   }
-
-  const now = nowIso()
-
-  await db.exerciseSets.update(set.id, {
-    deletedAt: now,
-    updatedAt: now,
-    version: set.version + 1,
-  })
 }
 
 export async function startRestTimer(sessionId: string, seconds: number) {
@@ -844,39 +1123,62 @@ export async function finishWorkout(
   workoutSessionId: string,
   result: 'completed' | 'incomplete',
 ) {
-  const session = await db.workoutSessions.get(workoutSessionId)
-
-  if (!session || session.deletedAt !== null) {
-    throw new Error('Entrenamiento no encontrado.')
-  }
-
-  const sets = (await db.exerciseSets
-    .where('workoutSessionId')
-    .equals(workoutSessionId)
-    .toArray())
-    .filter((set) => set.deletedAt === null)
-
-  const completedWorkingSets = sets.filter(
-    (set) => set.setType === 'working' && set.completedAt !== null,
-  )
-
-  if (completedWorkingSets.length === 0) {
-    throw new Error(
-      'No hay trabajo registrado. Descarta la sesión si se abrió por accidente.',
-    )
+  if (result !== 'completed' && result !== 'incomplete') {
+    throw new Error('Resultado de entrenamiento no válido.')
   }
 
   const endedAt = nowIso()
-  const planned = session.plannedWorkoutId
-    ? await db.plannedWorkoutSessions.get(session.plannedWorkoutId)
-    : undefined
 
   await db.transaction(
     'rw',
     db.workoutSessions,
     db.plannedWorkoutSessions,
+    db.exerciseSets,
     db.appMeta,
     async () => {
+      const session = await db.workoutSessions.get(workoutSessionId)
+
+      if (!session || session.deletedAt !== null) {
+        throw new Error('Entrenamiento no encontrado.')
+      }
+
+      if (session.status !== 'active') {
+        throw new Error('Solo se puede finalizar una sesión activa.')
+      }
+
+      const sets = (await db.exerciseSets
+        .where('workoutSessionId')
+        .equals(workoutSessionId)
+        .toArray())
+        .filter((set) => set.deletedAt === null)
+
+      const completedWorkingSets = sets.filter(
+        (set) => set.setType === 'working' && set.completedAt !== null,
+      )
+
+      if (completedWorkingSets.length === 0) {
+        throw new Error(
+          'No hay trabajo registrado. Descarta la sesión si se abrió por accidente.',
+        )
+      }
+
+      let planned: PlannedWorkoutSession | undefined
+
+      if (session.plannedWorkoutId) {
+        planned = await db.plannedWorkoutSessions.get(session.plannedWorkoutId)
+
+        if (
+          !planned ||
+          planned.deletedAt !== null ||
+          planned.status !== 'in_progress' ||
+          planned.executionSessionId !== session.id
+        ) {
+          throw new TrainingIntegrityError(
+            'Integridad Training: la planificación vinculada no coincide con la ejecución activa.',
+          )
+        }
+      }
+
       await db.workoutSessions.update(session.id, {
         status: result,
         completedAt: result === 'completed' ? endedAt : null,
@@ -898,37 +1200,11 @@ export async function finishWorkout(
       await db.appMeta.delete(restTimerKey(session.id))
     },
   )
+
+  publishCommittedMutation('training')
 }
 
 export async function discardEmptyWorkout(workoutSessionId: string) {
-  const session = await db.workoutSessions.get(workoutSessionId)
-
-  if (!session || session.deletedAt !== null) {
-    throw new Error('Entrenamiento no encontrado.')
-  }
-
-  const sets = (await db.exerciseSets
-    .where('workoutSessionId')
-    .equals(workoutSessionId)
-    .toArray())
-    .filter((set) => set.deletedAt === null)
-
-  if (sets.some((set) => set.setType === 'working' && set.completedAt !== null)) {
-    throw new Error(
-      'La sesión ya contiene trabajo real. Finalízala como completada o incompleta.',
-    )
-  }
-
-  const snapshots = (await db.workoutSessionExercises
-    .where('workoutSessionId')
-    .equals(workoutSessionId)
-    .toArray())
-    .filter((item) => item.deletedAt === null)
-
-  const planned = session.plannedWorkoutId
-    ? await db.plannedWorkoutSessions.get(session.plannedWorkoutId)
-    : undefined
-
   const now = nowIso()
 
   await db.transaction(
@@ -939,6 +1215,51 @@ export async function discardEmptyWorkout(workoutSessionId: string) {
     db.plannedWorkoutSessions,
     db.appMeta,
     async () => {
+      const session = await db.workoutSessions.get(workoutSessionId)
+
+      if (!session || session.deletedAt !== null) {
+        throw new Error('Entrenamiento no encontrado.')
+      }
+
+      if (session.status !== 'active') {
+        throw new Error('Solo se puede descartar una sesión activa.')
+      }
+
+      const sets = (await db.exerciseSets
+        .where('workoutSessionId')
+        .equals(workoutSessionId)
+        .toArray())
+        .filter((set) => set.deletedAt === null)
+
+      if (sets.some((set) => set.setType === 'working' && set.completedAt !== null)) {
+        throw new Error(
+          'La sesión ya contiene trabajo real. Finalízala como completada o incompleta.',
+        )
+      }
+
+      const snapshots = (await db.workoutSessionExercises
+        .where('workoutSessionId')
+        .equals(workoutSessionId)
+        .toArray())
+        .filter((item) => item.deletedAt === null)
+
+      let planned: PlannedWorkoutSession | undefined
+
+      if (session.plannedWorkoutId) {
+        planned = await db.plannedWorkoutSessions.get(session.plannedWorkoutId)
+
+        if (
+          !planned ||
+          planned.deletedAt !== null ||
+          planned.status !== 'in_progress' ||
+          planned.executionSessionId !== session.id
+        ) {
+          throw new TrainingIntegrityError(
+            'Integridad Training: la planificación vinculada no coincide con la ejecución activa.',
+          )
+        }
+      }
+
       await db.workoutSessions.update(session.id, {
         deletedAt: now,
         updatedAt: now,
@@ -974,53 +1295,65 @@ export async function discardEmptyWorkout(workoutSessionId: string) {
       await db.appMeta.delete(restTimerKey(session.id))
     },
   )
+
+  publishCommittedMutation('training')
 }
 
 export async function omitPlannedWorkout(plannedWorkoutId: string) {
-  const planned = await db.plannedWorkoutSessions.get(plannedWorkoutId)
-
-  if (!planned || planned.deletedAt !== null) {
-    throw new Error('Sesión planificada no encontrada.')
-  }
-
-  if (planned.status !== 'pending') {
-    throw new Error('Solo se puede omitir una sesión pendiente.')
-  }
-
   const now = nowIso()
 
-  await db.plannedWorkoutSessions.update(planned.id, {
-    status: 'omitted',
-    resolvedAt: now,
-    updatedAt: now,
-    version: planned.version + 1,
+  await db.transaction('rw', db.plannedWorkoutSessions, async () => {
+    const planned = await db.plannedWorkoutSessions.get(plannedWorkoutId)
+
+    if (!planned || planned.deletedAt !== null) {
+      throw new Error('Sesión planificada no encontrada.')
+    }
+
+    assertPlannedPending(planned.status, 'omit')
+
+    await db.plannedWorkoutSessions.update(planned.id, {
+      status: 'omitted',
+      resolvedAt: now,
+      updatedAt: now,
+      version: planned.version + 1,
+    })
   })
+
+  publishCommittedMutation('training')
 }
 
 export async function reprogramPlannedWorkout(
   plannedWorkoutId: string,
   newDate: string,
 ) {
-  const planned = await db.plannedWorkoutSessions.get(plannedWorkoutId)
+  assertValidTrainingDateKey(newDate)
 
-  if (!planned || planned.deletedAt !== null) {
-    throw new Error('Sesión planificada no encontrada.')
-  }
+  const changed = await db.transaction('rw', db.plannedWorkoutSessions, async () => {
+    const planned = await db.plannedWorkoutSessions.get(plannedWorkoutId)
 
-  if (planned.status !== 'pending') {
-    throw new Error('Solo se puede reprogramar una sesión pendiente.')
-  }
+    if (!planned || planned.deletedAt !== null) {
+      throw new Error('Sesión planificada no encontrada.')
+    }
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
-    throw new Error('Fecha no válida.')
-  }
+    assertPlannedPending(planned.status, 'reprogram')
 
-  await db.plannedWorkoutSessions.update(planned.id, {
-    scheduledDate: newDate,
-    rescheduleCount: planned.rescheduleCount + 1,
-    updatedAt: nowIso(),
-    version: planned.version + 1,
+    if (planned.scheduledDate === newDate) {
+      return false
+    }
+
+    await db.plannedWorkoutSessions.update(planned.id, {
+      scheduledDate: newDate,
+      rescheduleCount: planned.rescheduleCount + 1,
+      updatedAt: nowIso(),
+      version: planned.version + 1,
+    })
+
+    return true
   })
+
+  if (changed) {
+    publishCommittedMutation('training')
+  }
 }
 
 export async function substituteSessionExercise(
@@ -1028,48 +1361,93 @@ export async function substituteSessionExercise(
   newExerciseId: string,
   updateRoutine: boolean,
 ) {
-  const [snapshot, nextExercise] = await Promise.all([
-    db.workoutSessionExercises.get(workoutSessionExerciseId),
-    db.exercises.get(newExerciseId),
-  ])
-
-  if (!snapshot || snapshot.deletedAt !== null) {
-    throw new Error('Ejercicio de sesión no encontrado.')
-  }
-
-  if (!nextExercise || nextExercise.deletedAt !== null) {
-    throw new Error('Ejercicio alternativo no encontrado.')
-  }
-
-  const sets = (await db.exerciseSets
-    .where('workoutSessionId')
-    .equals(snapshot.workoutSessionId)
-    .toArray())
-    .filter(
-      (set) =>
-        set.deletedAt === null &&
-        set.workoutSessionExerciseId === snapshot.id,
-    )
-
-  if (sets.some((set) => set.completedAt !== null)) {
-    throw new Error(
-      'No se puede sustituir después de registrar una serie. Añade el cambio antes de empezar ese ejercicio.',
-    )
-  }
-
-  const templateConfig = snapshot.sourceTemplateExerciseId
-    ? await db.workoutTemplateExercises.get(snapshot.sourceTemplateExerciseId)
-    : undefined
-
-  const now = nowIso()
-
   await db.transaction(
     'rw',
+    db.workoutSessions,
     db.workoutSessionExercises,
     db.exerciseSets,
+    db.exercises,
     db.workoutTemplateExercises,
     async () => {
-      await db.workoutSessionExercises.update(snapshot.id, {
+      const snapshot = await db.workoutSessionExercises.get(
+        workoutSessionExerciseId,
+      )
+
+      if (!snapshot || snapshot.deletedAt !== null) {
+        throw new Error('Ejercicio de sesión no encontrado.')
+      }
+
+      const session = await db.workoutSessions.get(snapshot.workoutSessionId)
+
+      if (!session || session.deletedAt !== null) {
+        throw new TrainingIntegrityError(
+          'Integridad Training: la sesión del ejercicio ya no está disponible.',
+        )
+      }
+
+      if (session.status !== 'active') {
+        throw new TrainingIntegrityError(
+          'Integridad Training: solo se puede sustituir un ejercicio durante una sesión activa.',
+        )
+      }
+
+      if (snapshot.workoutSessionId !== session.id) {
+        throw new TrainingIntegrityError(
+          'Integridad Training: el ejercicio no pertenece a la ejecución indicada.',
+        )
+      }
+
+      const sets = (await db.exerciseSets
+        .where('workoutSessionId')
+        .equals(session.id)
+        .toArray())
+        .filter(
+          (set) =>
+            set.deletedAt === null &&
+            set.workoutSessionExerciseId === snapshot.id,
+        )
+
+      if (sets.some((set) => set.completedAt !== null)) {
+        throw new TrainingIntegrityError(
+          'No se puede sustituir después de registrar una serie. Añade el cambio antes de empezar ese ejercicio.',
+        )
+      }
+
+      const nextExercise = await db.exercises.get(newExerciseId)
+
+      if (!nextExercise || nextExercise.deletedAt !== null) {
+        throw new Error('Ejercicio alternativo no encontrado.')
+      }
+
+      let templateConfig: WorkoutTemplateExercise | undefined
+
+      if (updateRoutine) {
+        if (!snapshot.sourceTemplateExerciseId) {
+          throw new TrainingIntegrityError(
+            'Integridad Training: este ejercicio no tiene una configuración de rutina actualizable.',
+          )
+        }
+
+        templateConfig = await db.workoutTemplateExercises.get(
+          snapshot.sourceTemplateExerciseId,
+        )
+
+        if (!templateConfig || templateConfig.deletedAt !== null) {
+          throw new TrainingIntegrityError(
+            'Integridad Training: la configuración de rutina ya no está disponible.',
+          )
+        }
+
+        if (templateConfig.workoutTemplateId !== session.workoutTemplateId) {
+          throw new TrainingIntegrityError(
+            'Integridad Training: la configuración de rutina no pertenece a la plantilla de esta ejecución.',
+          )
+        }
+      }
+
+      const now = nowIso()
+
+      const updatedSnapshot = await db.workoutSessionExercises.update(snapshot.id, {
         exerciseId: nextExercise.id,
         exerciseName: nextExercise.name,
         substitutedFromExerciseId:
@@ -1078,24 +1456,47 @@ export async function substituteSessionExercise(
         version: snapshot.version + 1,
       })
 
+      if (updatedSnapshot !== 1) {
+        throw new TrainingIntegrityError(
+          'Integridad Training: no se ha podido actualizar el ejercicio de la sesión.',
+        )
+      }
+
       for (const set of sets) {
-        await db.exerciseSets.update(set.id, {
+        const updatedSet = await db.exerciseSets.update(set.id, {
           exerciseId: nextExercise.id,
           exerciseName: nextExercise.name,
           updatedAt: now,
           version: set.version + 1,
         })
+
+        if (updatedSet !== 1) {
+          throw new TrainingIntegrityError(
+            'Integridad Training: no se ha podido actualizar una serie durante la sustitución.',
+          )
+        }
       }
 
       if (updateRoutine && templateConfig) {
-        await db.workoutTemplateExercises.update(templateConfig.id, {
-          exerciseId: nextExercise.id,
-          updatedAt: now,
-          version: templateConfig.version + 1,
-        })
+        const updatedTemplate = await db.workoutTemplateExercises.update(
+          templateConfig.id,
+          {
+            exerciseId: nextExercise.id,
+            updatedAt: now,
+            version: templateConfig.version + 1,
+          },
+        )
+
+        if (updatedTemplate !== 1) {
+          throw new TrainingIntegrityError(
+            'Integridad Training: no se ha podido actualizar la rutina futura.',
+          )
+        }
       }
     },
   )
+
+  publishCommittedMutation('training')
 }
 
 export async function getExerciseAlternatives(snapshot: WorkoutSessionExercise) {
@@ -1210,6 +1611,8 @@ export async function updateRoutineExercise(
     updatedAt: nowIso(),
     version: config.version + 1,
   })
+
+  publishCommittedMutation('training')
 }
 
 export async function getExerciseCatalog() {
@@ -1237,4 +1640,6 @@ export async function updateExercisePersonalContext(
     updatedAt: nowIso(),
     version: exercise.version + 1,
   })
+
+  publishCommittedMutation('training')
 }

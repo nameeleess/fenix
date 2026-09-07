@@ -1,4 +1,6 @@
 import { db } from '../../db/database'
+import { publishCommittedMutation } from '../../app/freshnessEvents'
+import { createKeyedSerialQueue } from '../../app/keyedSerialQueue'
 
 import type {
   AppetiteMode,
@@ -14,6 +16,16 @@ import type {
 import type {
   PlannedWorkoutSession,
 } from '../../types/training'
+
+import {
+  dailyMealIdentityKey,
+  dailyMealMatchesIdentity,
+  planPendingTrainingMealReconciliation,
+} from './dailyMealIdentity'
+
+import {
+  chooseRecipeForAppetite,
+} from './nutritionAppetitePolicy'
 
 export interface MacroSummary {
   calories: number
@@ -32,7 +44,9 @@ export interface NutritionMealView {
 export interface NutritionDayView {
   date: string
   day: NutritionDay
+  /** Compatibility focus only. trainingSessions is the non-destructive source. */
   trainingSession: PlannedWorkoutSession | null
+  trainingSessions: PlannedWorkoutSession[]
   meals: NutritionMealView[]
   goal: NutritionGoal | null
   planned: MacroSummary
@@ -41,12 +55,15 @@ export interface NutritionDayView {
 
 export interface NutritionWeekDaySuggestion {
   date: string
+  /** Compatibility focus only. trainingSessions is the non-destructive source. */
   trainingSession: PlannedWorkoutSession | null
+  trainingSessions: PlannedWorkoutSession[]
   appetiteMode: AppetiteMode
   meals: Array<{
     role: NutritionRole
     recipe: Recipe | null
     portionMultiplier: number
+    trainingSessionId: string | null
   }>
   planned: MacroSummary
 }
@@ -58,6 +75,7 @@ export interface NutritionWeekSuggestion {
 }
 
 export interface ImprovisedMealInput {
+  submissionId: string
   name: string
   role: NutritionRole
   calories: number | null
@@ -74,6 +92,10 @@ export interface NutritionGoalInput {
   targetWeightGainMinKgPerWeek: number | null
   targetWeightGainMaxKgPerWeek: number | null
 }
+
+const nutritionDayReadQueue = createKeyedSerialQueue()
+const nutritionTrainingReconciliationQueue = createKeyedSerialQueue()
+const NUTRITION_TRAINING_RECONCILIATION_KEY = 'global-training-meal-reconciliation'
 
 const roleLabels: Record<NutritionRole, string> = {
   breakfast: 'Desayuno',
@@ -133,19 +155,9 @@ export function getMonday(dateKey: string) {
   return getLocalDateKey(date)
 }
 
-function hash(value: string) {
-  let total = 0
-  for (let index = 0; index < value.length; index += 1) {
-    total = (total * 31 + value.charCodeAt(index)) >>> 0
-  }
-  return total
-}
-
-function rolesFor(trainingSession: PlannedWorkoutSession | null) {
-  if (trainingSession) {
+function nonTrainingRolesFor(hasTraining: boolean) {
+  if (hasTraining) {
     return [
-      'preworkout',
-      'postworkout',
       'main_meal',
       'snack',
       'dinner',
@@ -158,6 +170,59 @@ function rolesFor(trainingSession: PlannedWorkoutSession | null) {
     'snack',
     'dinner',
   ] satisfies NutritionRole[]
+}
+
+function compareNutritionTrainingSessions(
+  a: PlannedWorkoutSession,
+  b: PlannedWorkoutSession,
+) {
+  const byDate = a.scheduledDate.localeCompare(b.scheduledDate)
+  if (byDate !== 0) return byDate
+
+  const byCreatedAt = a.createdAt.localeCompare(b.createdAt)
+  if (byCreatedAt !== 0) return byCreatedAt
+
+  return a.id.localeCompare(b.id)
+}
+
+function activeFormalTrainingSessions(
+  sessions: readonly PlannedWorkoutSession[],
+  date?: string,
+) {
+  return sessions
+    .filter(
+      (session) =>
+        session.deletedAt === null &&
+        session.isFormalStrength &&
+        !session.isExtra &&
+        session.status !== 'omitted' &&
+        (!date || session.scheduledDate === date),
+    )
+    .sort(compareNutritionTrainingSessions)
+}
+
+interface DesiredMealSpec {
+  role: NutritionRole
+  trainingSessionId: string | null
+}
+
+function desiredMealSpecsForDate(
+  trainingSessions: readonly PlannedWorkoutSession[],
+): DesiredMealSpec[] {
+  const specs: DesiredMealSpec[] = []
+
+  for (const session of trainingSessions) {
+    specs.push(
+      { role: 'preworkout', trainingSessionId: session.id },
+      { role: 'postworkout', trainingSessionId: session.id },
+    )
+  }
+
+  for (const role of nonTrainingRolesFor(trainingSessions.length > 0)) {
+    specs.push({ role, trainingSessionId: null })
+  }
+
+  return specs
 }
 
 function qualityFor(recipe: Recipe | null): NutritionDataQuality {
@@ -189,37 +254,6 @@ function qualityFor(recipe: Recipe | null): NutritionDataQuality {
 
 function scale(value: number | null, multiplier: number) {
   return value === null ? null : Math.round(value * multiplier * 10) / 10
-}
-
-function chooseRecipe(
-  recipes: Recipe[],
-  role: NutritionRole,
-  appetiteMode: AppetiteMode,
-  date: string,
-  salt = '',
-) {
-  const roleCandidates = recipes.filter(
-    (recipe) =>
-      recipe.deletedAt === null &&
-      (recipe.compatibleRoles ?? []).includes(role),
-  )
-
-  if (roleCandidates.length === 0) {
-    return null
-  }
-
-  const volumeCandidates = roleCandidates.filter(
-    (recipe) => recipe.volumeClass === appetiteMode,
-  )
-
-  const volumePool =
-    volumeCandidates.length > 0 ? volumeCandidates : roleCandidates
-
-  const favorites = volumePool.filter((recipe) => recipe.isFavorite)
-  const pool = favorites.length > 0 ? favorites : volumePool
-  const sorted = [...pool].sort((a, b) => a.name.localeCompare(b.name, 'es'))
-
-  return sorted[hash(`${date}:${role}:${salt}`) % sorted.length] ?? null
 }
 
 function macroSummaryFromMeals(
@@ -322,160 +356,211 @@ function buildMeal(
   }
 }
 
-async function getActiveGoal() {
-  const goals = (await db.nutritionGoals.toArray())
+function activeGoalFrom(
+  goals: readonly NutritionGoal[],
+) {
+  const active = goals
     .filter((goal) => goal.deletedAt === null && goal.endsOn === null)
-    .sort((a, b) => b.startsOn.localeCompare(a.startsOn))
-
-  return goals[0] ?? null
-}
-
-async function getTrainingSessionForDate(date: string) {
-  const sessions = (await db.plannedWorkoutSessions
-    .where('scheduledDate')
-    .equals(date)
-    .toArray())
-    .filter(
-      (session) =>
-        session.deletedAt === null &&
-        session.isFormalStrength &&
-        !session.isExtra &&
-        session.status !== 'omitted',
+    .sort(
+      (a, b) =>
+        a.startsOn.localeCompare(b.startsOn) ||
+        a.createdAt.localeCompare(b.createdAt) ||
+        a.id.localeCompare(b.id),
     )
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
 
-  return sessions[0] ?? null
+  if (active.length > 1) {
+    throw new Error(
+      `Integridad Nutrition: existen ${active.length} objetivos activos simultáneos.`,
+    )
+  }
+
+  return active[0] ?? null
 }
+
+async function getActiveGoal() {
+  return activeGoalFrom(await db.nutritionGoals.toArray())
+}
+
 
 async function reconcilePendingTrainingMeals() {
-  const [sessions, meals] = await Promise.all([
-    db.plannedWorkoutSessions.toArray(),
-    db.dailyMeals.toArray(),
-  ])
+  return nutritionTrainingReconciliationQueue.run(
+    NUTRITION_TRAINING_RECONCILIATION_KEY,
+    async () => {
+      const changed = await db.transaction(
+        'rw',
+        db.plannedWorkoutSessions,
+        db.dailyMeals,
+        async () => {
+          // Snapshot, deterministic planning and writes share one IndexedDB
+          // transaction. A Training write cannot commit between the session
+          // snapshot and these meal writes because both touch
+          // plannedWorkoutSessions.
+          const [sessions, meals] = await Promise.all([
+            db.plannedWorkoutSessions.toArray(),
+            db.dailyMeals.toArray(),
+          ])
 
-  const sessionMap = new Map(
-    sessions
-      .filter((session) => session.deletedAt === null)
-      .map((session) => [session.id, session]),
+          const reconciliationPlan = planPendingTrainingMealReconciliation(
+            meals,
+            sessions,
+          )
+
+          if (reconciliationPlan.length === 0) {
+            return false
+          }
+
+          const mealMap = new Map(meals.map((meal) => [meal.id, meal]))
+          const now = new Date().toISOString()
+          let appliedChanges = 0
+
+          for (const action of reconciliationPlan) {
+            const meal = mealMap.get(action.mealId)
+
+            if (!meal) {
+              continue
+            }
+
+            if (action.type === 'soft-delete') {
+              const updated = await db.dailyMeals.update(meal.id, {
+                deletedAt: now,
+                updatedAt: now,
+                version: meal.version + 1,
+              })
+              appliedChanges += updated
+              continue
+            }
+
+            const updated = await db.dailyMeals.update(meal.id, {
+              date: action.targetDate,
+              updatedAt: now,
+              version: meal.version + 1,
+            })
+            appliedChanges += updated
+          }
+
+          return appliedChanges > 0
+        },
+      )
+
+      // Dexie resolves the transaction promise only after commit. Publishing
+      // here therefore cannot expose a pre-commit reconciliation. A no-op
+      // reconciliation emits nothing and cannot self-sustain a refresh loop.
+      if (changed) {
+        publishCommittedMutation('nutrition')
+      }
+
+      return changed
+    },
   )
-
-  const activeMeals = meals.filter((meal) => meal.deletedAt === null)
-  const now = new Date().toISOString()
-
-  for (const meal of activeMeals) {
-    if (
-      meal.status !== 'pending' ||
-      !meal.trainingSessionId ||
-      (meal.role !== 'preworkout' && meal.role !== 'postworkout')
-    ) {
-      continue
-    }
-
-    const session = sessionMap.get(meal.trainingSessionId)
-
-    if (!session || session.status === 'omitted') {
-      await db.dailyMeals.update(meal.id, {
-        deletedAt: now,
-        updatedAt: now,
-        version: meal.version + 1,
-      })
-      continue
-    }
-
-    if (meal.date === session.scheduledDate) {
-      continue
-    }
-
-    const duplicate = activeMeals.find(
-      (candidate) =>
-        candidate.id !== meal.id &&
-        candidate.date === session.scheduledDate &&
-        candidate.role === meal.role &&
-        candidate.status === 'pending',
-    )
-
-    if (duplicate) {
-      await db.dailyMeals.update(duplicate.id, {
-        deletedAt: now,
-        updatedAt: now,
-        version: duplicate.version + 1,
-      })
-    }
-
-    await db.dailyMeals.update(meal.id, {
-      date: session.scheduledDate,
-      updatedAt: now,
-      version: meal.version + 1,
-    })
-  }
 }
 
 async function ensureNutritionDayEntity(date: string) {
-  const existing = await db.nutritionDays.where('date').equals(date).first()
+  return db.transaction('rw', db.nutritionDays, async () => {
+    const existing = await db.nutritionDays.where('date').equals(date).first()
 
-  if (existing && existing.deletedAt === null) {
-    return existing
-  }
+    if (existing && existing.deletedAt === null) {
+      return existing
+    }
 
-  const day: NutritionDay = {
-    ...createBase(),
-    date,
-    appetiteMode: 'normal',
-    appliedWeeklyPlanId: null,
-    notes: null,
-  }
+    const day: NutritionDay = {
+      ...createBase(),
+      date,
+      appetiteMode: 'normal',
+      appliedWeeklyPlanId: null,
+      notes: null,
+    }
 
-  await db.nutritionDays.add(day)
-  return day
+    await db.nutritionDays.add(day)
+    return day
+  })
 }
 
 async function ensureDayStructure(
   date: string,
   day: NutritionDay,
   recipes: Recipe[],
-  trainingSession: PlannedWorkoutSession | null,
 ) {
-  const expectedRoles = rolesFor(trainingSession)
-  const meals = (await db.dailyMeals.where('date').equals(date).toArray()).filter(
-    (meal) => meal.deletedAt === null,
-  )
   const now = new Date().toISOString()
 
-  for (const meal of meals) {
-    if (meal.status !== 'pending') {
-      continue
-    }
-
-    const isObsoleteTrainingRole =
-      !trainingSession &&
-      (meal.role === 'preworkout' || meal.role === 'postworkout')
-
-    const isObsoleteBreakfast = Boolean(trainingSession) && meal.role === 'breakfast'
-
-    if (isObsoleteTrainingRole || isObsoleteBreakfast) {
-      await db.dailyMeals.update(meal.id, {
-        deletedAt: now,
-        updatedAt: now,
-        version: meal.version + 1,
-      })
-    }
-  }
-
-  const refreshed = (await db.dailyMeals.where('date').equals(date).toArray()).filter(
-    (meal) => meal.deletedAt === null,
-  )
-
-  for (const role of expectedRoles) {
-    const exists = refreshed.some((meal) => meal.role === role)
-    if (exists) {
-      continue
-    }
-
-    const recipe = chooseRecipe(recipes, role, day.appetiteMode, date)
-    await db.dailyMeals.add(
-      buildMeal(date, role, recipe, trainingSession?.id ?? null),
+  return db.transaction(
+    'rw',
+    db.plannedWorkoutSessions,
+    db.dailyMeals,
+    async () => {
+      const trainingSessions = activeFormalTrainingSessions(
+        await db.plannedWorkoutSessions
+          .where('scheduledDate')
+          .equals(date)
+          .toArray(),
+        date,
+      )
+      const desiredSpecs = desiredMealSpecsForDate(trainingSessions)
+      const desiredKeys = new Set(
+        desiredSpecs.map((spec) =>
+          dailyMealIdentityKey(date, spec.role, spec.trainingSessionId),
+        ),
+      )
+      const meals = (await db.dailyMeals.where('date').equals(date).toArray()).filter(
+      (meal) => meal.deletedAt === null,
     )
-  }
+
+    // Only generated pending structure is disposable here. Manual meals and
+    // confirmed/skipped facts are historical/user-owned and remain intact.
+    for (const meal of meals) {
+      if (meal.status !== 'pending' || meal.planningSource === 'manual') {
+        continue
+      }
+
+      const identity = dailyMealIdentityKey(
+        meal.date,
+        meal.role,
+        meal.trainingSessionId,
+      )
+
+      if (!desiredKeys.has(identity)) {
+        await db.dailyMeals.update(meal.id, {
+          deletedAt: now,
+          updatedAt: now,
+          version: meal.version + 1,
+        })
+      }
+    }
+
+    for (const spec of desiredSpecs) {
+      // Re-read inside the same write transaction immediately before create.
+      // Any active fact/manual meal with this identity owns the slot and must
+      // not be replaced by automatic materialization.
+      const currentMeals = await db.dailyMeals.where('date').equals(date).toArray()
+      const exists = currentMeals.some(
+        (meal) =>
+          meal.deletedAt === null &&
+          dailyMealMatchesIdentity(
+            meal,
+            date,
+            spec.role,
+            spec.trainingSessionId,
+          ),
+      )
+
+      if (exists) {
+        continue
+      }
+
+      const recipe = chooseRecipeForAppetite(
+        recipes,
+        spec.role,
+        day.appetiteMode,
+        date,
+        spec.trainingSessionId ?? '',
+      )
+      await db.dailyMeals.add(
+        buildMeal(date, spec.role, recipe, spec.trainingSessionId),
+      )
+    }
+
+      return trainingSessions
+    },
+  )
 }
 
 async function buildMealViews(date: string, appetiteMode: AppetiteMode) {
@@ -505,23 +590,21 @@ async function buildMealViews(date: string, appetiteMode: AppetiteMode) {
     }))
 }
 
-export async function getNutritionDay(
-  date = getLocalDateKey(),
+async function getNutritionDaySerialized(
+  date: string,
 ): Promise<NutritionDayView> {
   await reconcilePendingTrainingMeals()
 
-  const [day, recipes, trainingSession, goal] = await Promise.all([
+  const [day, recipes, goal] = await Promise.all([
     ensureNutritionDayEntity(date),
     db.recipes.toArray(),
-    getTrainingSessionForDate(date),
     getActiveGoal(),
   ])
 
-  await ensureDayStructure(
+  const trainingSessions = await ensureDayStructure(
     date,
     day,
     recipes.filter((recipe) => recipe.deletedAt === null),
-    trainingSession,
   )
 
   const meals = await buildMealViews(date, day.appetiteMode)
@@ -530,12 +613,22 @@ export async function getNutritionDay(
   return {
     date,
     day,
-    trainingSession,
+    trainingSession: trainingSessions[0] ?? null,
+    trainingSessions,
     meals,
     goal,
     planned: macroSummaryFromMeals(rawMeals, 'planned'),
     consumed: macroSummaryFromMeals(rawMeals, 'confirmed'),
   }
+}
+
+export async function getNutritionDay(
+  date = getLocalDateKey(),
+): Promise<NutritionDayView> {
+  return nutritionDayReadQueue.run(
+    date,
+    () => getNutritionDaySerialized(date),
+  )
 }
 
 export function getRelevantNutritionMeal(
@@ -547,30 +640,48 @@ export function getRelevantNutritionMeal(
     return null
   }
 
-  if (day.trainingSession) {
-    const trainingStatus = day.trainingSession.status
+  const statusPriority: Record<PlannedWorkoutSession['status'], number> = {
+    in_progress: 0,
+    pending: 1,
+    completed: 2,
+    incomplete: 2,
+    omitted: 3,
+  }
 
-    if (trainingStatus === 'pending') {
-      const preworkout = pending.find((item) => item.meal.role === 'preworkout')
-      if (preworkout) {
-        return preworkout
-      }
+  const trainingSessions = [...day.trainingSessions].sort((a, b) => {
+    const byStatus = statusPriority[a.status] - statusPriority[b.status]
+    if (byStatus !== 0) return byStatus
+    return compareNutritionTrainingSessions(a, b)
+  })
 
-      const postworkout = pending.find((item) => item.meal.role === 'postworkout')
-      if (postworkout) {
-        return postworkout
-      }
+  for (const session of trainingSessions) {
+    if (session.status === 'pending') {
+      const preworkout = pending.find(
+        (item) =>
+          item.meal.role === 'preworkout' &&
+          item.meal.trainingSessionId === session.id,
+      )
+      if (preworkout) return preworkout
+
+      const postworkout = pending.find(
+        (item) =>
+          item.meal.role === 'postworkout' &&
+          item.meal.trainingSessionId === session.id,
+      )
+      if (postworkout) return postworkout
     }
 
     if (
-      trainingStatus === 'in_progress' ||
-      trainingStatus === 'completed' ||
-      trainingStatus === 'incomplete'
+      session.status === 'in_progress' ||
+      session.status === 'completed' ||
+      session.status === 'incomplete'
     ) {
-      const postworkout = pending.find((item) => item.meal.role === 'postworkout')
-      if (postworkout) {
-        return postworkout
-      }
+      const postworkout = pending.find(
+        (item) =>
+          item.meal.role === 'postworkout' &&
+          item.meal.trainingSessionId === session.id,
+      )
+      if (postworkout) return postworkout
     }
   }
 
@@ -580,17 +691,15 @@ export function getRelevantNutritionMeal(
     'snack',
     'dinner',
     'extra',
-    'preworkout',
-    'postworkout',
   ]
 
   for (const role of sequence) {
     const meal = pending.find((item) => item.meal.role === role)
-    if (meal) {
-      return meal
-    }
+    if (meal) return meal
   }
 
+  // Any remaining Training meal is still tied to its own trainingSessionId;
+  // ordering by the day view cannot merge identities.
   return pending[0] ?? null
 }
 
@@ -598,13 +707,164 @@ export async function setNutritionDayAppetite(
   date: string,
   appetiteMode: AppetiteMode,
 ) {
-  const day = await ensureNutritionDayEntity(date)
+  const changed = await db.transaction(
+    'rw',
+    db.nutritionDays,
+    db.plannedWorkoutSessions,
+    db.recipes,
+    db.dailyMeals,
+    async () => {
+      const dayCandidates = (await db.nutritionDays
+        .where('date')
+        .equals(date)
+        .toArray())
+        .filter((item) => item.deletedAt === null)
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
 
-  await db.nutritionDays.update(day.id, {
-    appetiteMode,
-    updatedAt: new Date().toISOString(),
-    version: day.version + 1,
-  })
+      const day = dayCandidates[0]
+      let writes = 0
+      const now = new Date().toISOString()
+
+      if (day && day.appetiteMode === appetiteMode) {
+        return false
+      }
+
+      if (!day) {
+        await db.nutritionDays.add({
+          ...createBase(),
+          date,
+          appetiteMode,
+          appliedWeeklyPlanId: null,
+          notes: null,
+        })
+        writes += 1
+      } else if (day.appetiteMode !== appetiteMode) {
+        await db.nutritionDays.update(day.id, {
+          appetiteMode,
+          updatedAt: now,
+          version: day.version + 1,
+        })
+        writes += 1
+      }
+
+      const [sessions, recipes, meals] = await Promise.all([
+        db.plannedWorkoutSessions
+          .where('scheduledDate')
+          .equals(date)
+          .toArray(),
+        db.recipes.toArray(),
+        db.dailyMeals.where('date').equals(date).toArray(),
+      ])
+
+      const trainingSessions = activeFormalTrainingSessions(sessions, date)
+      const desiredSpecs = desiredMealSpecsForDate(trainingSessions)
+      const desiredKeys = new Set(
+        desiredSpecs.map((spec) =>
+          dailyMealIdentityKey(date, spec.role, spec.trainingSessionId),
+        ),
+      )
+      const activeRecipes = recipes.filter((recipe) => recipe.deletedAt === null)
+      const activeMeals = meals.filter((meal) => meal.deletedAt === null)
+
+      for (const meal of activeMeals) {
+        if (meal.status !== 'pending' || meal.planningSource === 'manual') {
+          continue
+        }
+
+        const identity = dailyMealIdentityKey(
+          meal.date,
+          meal.role,
+          meal.trainingSessionId,
+        )
+
+        if (!desiredKeys.has(identity)) {
+          await db.dailyMeals.update(meal.id, {
+            deletedAt: now,
+            updatedAt: now,
+            version: meal.version + 1,
+          })
+          writes += 1
+        }
+      }
+
+      for (const spec of desiredSpecs) {
+        const sameIdentity = activeMeals
+          .filter((meal) =>
+            meal.deletedAt === null &&
+            dailyMealMatchesIdentity(
+              meal,
+              date,
+              spec.role,
+              spec.trainingSessionId,
+            ),
+          )
+          .sort(compareMealStable)
+
+        const protectedFact = sameIdentity.some(
+          (meal) => meal.status !== 'pending' || meal.planningSource === 'manual',
+        )
+
+        if (protectedFact) {
+          continue
+        }
+
+        const managed = sameIdentity.filter(
+          (meal) => meal.status === 'pending' && meal.planningSource !== 'manual',
+        )
+        const keeper = managed[0]
+        const recipe = chooseRecipeForAppetite(
+          activeRecipes,
+          spec.role,
+          appetiteMode,
+          date,
+          spec.trainingSessionId ?? '',
+          keeper?.recipeId ?? null,
+        )
+
+        if (!keeper) {
+          await db.dailyMeals.add(
+            buildMeal(date, spec.role, recipe, spec.trainingSessionId),
+          )
+          writes += 1
+          continue
+        }
+
+        const multiplier = keeper.portionMultiplier ?? 1
+        const desired = buildMeal(
+          date,
+          spec.role,
+          recipe,
+          spec.trainingSessionId,
+          multiplier,
+        )
+        desired.planningSource = keeper.planningSource ?? 'auto'
+
+        if (!sameWeeklyPlan(keeper, desired)) {
+          await db.dailyMeals.update(keeper.id, {
+            ...weeklyPlanPatch(desired),
+            updatedAt: now,
+            version: keeper.version + 1,
+          })
+          writes += 1
+        }
+
+        for (const duplicate of managed.slice(1)) {
+          await db.dailyMeals.update(duplicate.id, {
+            deletedAt: now,
+            updatedAt: now,
+            version: duplicate.version + 1,
+          })
+          writes += 1
+        }
+      }
+
+      return writes > 0
+    },
+  )
+
+  if (changed) {
+    publishCommittedMutation('nutrition')
+  }
 
   return getNutritionDay(date)
 }
@@ -613,48 +873,57 @@ export async function replaceDailyMealRecipe(
   mealId: string,
   recipeId: string,
 ) {
-  const [meal, recipe] = await Promise.all([
-    db.dailyMeals.get(mealId),
-    db.recipes.get(recipeId),
-  ])
+  const mealDate = await db.transaction(
+    'rw',
+    db.dailyMeals,
+    db.recipes,
+    async () => {
+      const meal = await db.dailyMeals.get(mealId)
 
-  if (!meal || meal.deletedAt !== null) {
-    throw new Error('Comida diaria no encontrada.')
-  }
+      if (!meal || meal.deletedAt !== null) {
+        throw new Error('Comida diaria no encontrada.')
+      }
 
-  if (meal.status !== 'pending') {
-    throw new Error('Solo se puede sustituir una comida pendiente.')
-  }
+      if (meal.status !== 'pending') {
+        throw new Error('Solo se puede sustituir una comida pendiente.')
+      }
 
-  if (!recipe || recipe.deletedAt !== null) {
-    throw new Error('Receta no encontrada.')
-  }
+      const recipe = await db.recipes.get(recipeId)
 
-  if (!(recipe.compatibleRoles ?? []).includes(meal.role)) {
-    throw new Error('La receta no es compatible con este momento del día.')
-  }
+      if (!recipe || recipe.deletedAt !== null) {
+        throw new Error('Receta no encontrada.')
+      }
 
-  const multiplier = meal.portionMultiplier ?? 1
-  const now = new Date().toISOString()
+      if (!(recipe.compatibleRoles ?? []).includes(meal.role)) {
+        throw new Error('La receta no es compatible con este momento del día.')
+      }
 
-  await db.dailyMeals.update(meal.id, {
-    recipeId: recipe.id,
-    name: recipe.name,
-    isImprovised: false,
-    plannedQuantity: multiplier,
-    plannedUnit: 'ración',
-    plannedCalories: scale(recipe.estimatedCalories, multiplier),
-    plannedProtein: scale(recipe.estimatedProtein, multiplier),
-    plannedCarbs: scale(recipe.estimatedCarbs, multiplier),
-    plannedFat: scale(recipe.estimatedFat, multiplier),
-    plannedDataQuality: qualityFor(recipe),
-    sourceRecipeVersion: recipe.version,
-    planningSource: meal.planningSource ?? 'manual',
-    updatedAt: now,
-    version: meal.version + 1,
-  })
+      const multiplier = meal.portionMultiplier ?? 1
+      const now = new Date().toISOString()
 
-  return getNutritionDay(meal.date)
+      await db.dailyMeals.update(meal.id, {
+        recipeId: recipe.id,
+        name: recipe.name,
+        isImprovised: false,
+        plannedQuantity: multiplier,
+        plannedUnit: 'ración',
+        plannedCalories: scale(recipe.estimatedCalories, multiplier),
+        plannedProtein: scale(recipe.estimatedProtein, multiplier),
+        plannedCarbs: scale(recipe.estimatedCarbs, multiplier),
+        plannedFat: scale(recipe.estimatedFat, multiplier),
+        plannedDataQuality: qualityFor(recipe),
+        sourceRecipeVersion: recipe.version,
+        planningSource: 'manual',
+        updatedAt: now,
+        version: meal.version + 1,
+      })
+
+      return meal.date
+    },
+  )
+
+  publishCommittedMutation('nutrition')
+  return getNutritionDay(mealDate)
 }
 
 export async function setDailyMealPortion(
@@ -665,100 +934,120 @@ export async function setDailyMealPortion(
     throw new Error('La porción debe ser mayor que cero.')
   }
 
-  const meal = await db.dailyMeals.get(mealId)
+  const mealDate = await db.transaction(
+    'rw',
+    db.dailyMeals,
+    db.recipes,
+    async () => {
+      const meal = await db.dailyMeals.get(mealId)
 
-  if (!meal || meal.deletedAt !== null) {
-    throw new Error('Comida diaria no encontrada.')
-  }
+      if (!meal || meal.deletedAt !== null) {
+        throw new Error('Comida diaria no encontrada.')
+      }
 
-  if (meal.status !== 'pending') {
-    throw new Error('Solo se puede cambiar la porción de una comida pendiente.')
-  }
+      if (meal.status !== 'pending') {
+        throw new Error('Solo se puede cambiar la porción de una comida pendiente.')
+      }
 
-  const recipe = meal.recipeId ? await db.recipes.get(meal.recipeId) : null
-  const now = new Date().toISOString()
+      const storedRecipe = meal.recipeId ? await db.recipes.get(meal.recipeId) : null
+      const recipe = storedRecipe && storedRecipe.deletedAt === null ? storedRecipe : null
+      const now = new Date().toISOString()
 
-  const baseCalories = recipe?.estimatedCalories ??
-    (meal.portionMultiplier ? (meal.plannedCalories ?? 0) / meal.portionMultiplier : meal.plannedCalories)
-  const baseProtein = recipe?.estimatedProtein ??
-    (meal.portionMultiplier ? (meal.plannedProtein ?? 0) / meal.portionMultiplier : meal.plannedProtein)
-  const baseCarbs = recipe?.estimatedCarbs ??
-    (meal.portionMultiplier ? (meal.plannedCarbs ?? 0) / meal.portionMultiplier : meal.plannedCarbs)
-  const baseFat = recipe?.estimatedFat ??
-    (meal.portionMultiplier ? (meal.plannedFat ?? 0) / meal.portionMultiplier : meal.plannedFat)
+      const baseCalories = recipe?.estimatedCalories ??
+        (meal.portionMultiplier ? (meal.plannedCalories ?? 0) / meal.portionMultiplier : meal.plannedCalories)
+      const baseProtein = recipe?.estimatedProtein ??
+        (meal.portionMultiplier ? (meal.plannedProtein ?? 0) / meal.portionMultiplier : meal.plannedProtein)
+      const baseCarbs = recipe?.estimatedCarbs ??
+        (meal.portionMultiplier ? (meal.plannedCarbs ?? 0) / meal.portionMultiplier : meal.plannedCarbs)
+      const baseFat = recipe?.estimatedFat ??
+        (meal.portionMultiplier ? (meal.plannedFat ?? 0) / meal.portionMultiplier : meal.plannedFat)
 
-  await db.dailyMeals.update(meal.id, {
-    portionMultiplier,
-    plannedQuantity: portionMultiplier,
-    plannedUnit: 'ración',
-    plannedCalories: scale(baseCalories ?? null, portionMultiplier),
-    plannedProtein: scale(baseProtein ?? null, portionMultiplier),
-    plannedCarbs: scale(baseCarbs ?? null, portionMultiplier),
-    plannedFat: scale(baseFat ?? null, portionMultiplier),
-    updatedAt: now,
-    version: meal.version + 1,
-  })
+      await db.dailyMeals.update(meal.id, {
+        portionMultiplier,
+        plannedQuantity: portionMultiplier,
+        plannedUnit: 'ración',
+        plannedCalories: scale(baseCalories ?? null, portionMultiplier),
+        plannedProtein: scale(baseProtein ?? null, portionMultiplier),
+        plannedCarbs: scale(baseCarbs ?? null, portionMultiplier),
+        plannedFat: scale(baseFat ?? null, portionMultiplier),
+        updatedAt: now,
+        version: meal.version + 1,
+      })
 
-  return getNutritionDay(meal.date)
+      return meal.date
+    },
+  )
+
+  publishCommittedMutation('nutrition')
+  return getNutritionDay(mealDate)
 }
 
 export async function setDailyMealStatus(
   mealId: string,
   status: MealStatus,
 ) {
-  const meal = await db.dailyMeals.get(mealId)
+  const mealDate = await db.transaction('rw', db.dailyMeals, async () => {
+    const meal = await db.dailyMeals.get(mealId)
 
-  if (!meal || meal.deletedAt !== null) {
-    throw new Error('Comida diaria no encontrada.')
-  }
+    if (!meal || meal.deletedAt !== null) {
+      throw new Error('Comida diaria no encontrada.')
+    }
 
-  const now = new Date().toISOString()
-  const patch: Partial<DailyMeal> = {
-    status,
-    updatedAt: now,
-    version: meal.version + 1,
-  }
+    const now = new Date().toISOString()
+    const patch: Partial<DailyMeal> = {
+      status,
+      updatedAt: now,
+      version: meal.version + 1,
+    }
 
-  if (status === 'completed') {
-    patch.confirmedQuantity = meal.plannedQuantity
-    patch.confirmedUnit = meal.plannedUnit
-    patch.confirmedCalories = meal.plannedCalories
-    patch.confirmedProtein = meal.plannedProtein
-    patch.confirmedCarbs = meal.plannedCarbs
-    patch.confirmedFat = meal.plannedFat
-    patch.confirmedDataQuality = meal.plannedDataQuality
-    patch.confirmedAt = now
-    patch.skippedAt = null
-  } else if (status === 'skipped') {
-    patch.confirmedQuantity = null
-    patch.confirmedUnit = null
-    patch.confirmedCalories = null
-    patch.confirmedProtein = null
-    patch.confirmedCarbs = null
-    patch.confirmedFat = null
-    patch.confirmedDataQuality = 'unknown'
-    patch.confirmedAt = null
-    patch.skippedAt = now
-  } else {
-    patch.confirmedQuantity = null
-    patch.confirmedUnit = null
-    patch.confirmedCalories = null
-    patch.confirmedProtein = null
-    patch.confirmedCarbs = null
-    patch.confirmedFat = null
-    patch.confirmedDataQuality = 'unknown'
-    patch.confirmedAt = null
-    patch.skippedAt = null
-  }
+    if (status === 'completed') {
+      patch.confirmedQuantity = meal.plannedQuantity
+      patch.confirmedUnit = meal.plannedUnit
+      patch.confirmedCalories = meal.plannedCalories
+      patch.confirmedProtein = meal.plannedProtein
+      patch.confirmedCarbs = meal.plannedCarbs
+      patch.confirmedFat = meal.plannedFat
+      patch.confirmedDataQuality = meal.plannedDataQuality
+      patch.confirmedAt = now
+      patch.skippedAt = null
+    } else if (status === 'skipped') {
+      patch.confirmedQuantity = null
+      patch.confirmedUnit = null
+      patch.confirmedCalories = null
+      patch.confirmedProtein = null
+      patch.confirmedCarbs = null
+      patch.confirmedFat = null
+      patch.confirmedDataQuality = 'unknown'
+      patch.confirmedAt = null
+      patch.skippedAt = now
+    } else {
+      patch.confirmedQuantity = null
+      patch.confirmedUnit = null
+      patch.confirmedCalories = null
+      patch.confirmedProtein = null
+      patch.confirmedCarbs = null
+      patch.confirmedFat = null
+      patch.confirmedDataQuality = 'unknown'
+      patch.confirmedAt = null
+      patch.skippedAt = null
+    }
 
-  await db.dailyMeals.update(meal.id, patch)
-  return getNutritionDay(meal.date)
+    await db.dailyMeals.update(meal.id, patch)
+    return meal.date
+  })
+
+  publishCommittedMutation('nutrition')
+  return getNutritionDay(mealDate)
 }
 
 export async function addImprovisedMeal(
   date: string,
   input: ImprovisedMealInput,
 ) {
+  if (!input.submissionId.trim()) {
+    throw new Error('La intención de guardado no tiene un identificador válido.')
+  }
+
   if (!input.name.trim()) {
     throw new Error('La comida necesita un nombre.')
   }
@@ -774,40 +1063,167 @@ export async function addImprovisedMeal(
       ? 'partial'
       : 'unknown'
 
-  const meal: DailyMeal = {
-    ...createBase(),
-    date,
-    role: input.role,
-    order: roleOrder[input.role] + 0.5,
-    status: 'completed',
-    trainingSessionId: null,
-    recipeId: null,
-    name: input.name.trim(),
-    isImprovised: true,
-    portionMultiplier: 1,
-    plannedQuantity: 1,
-    plannedUnit: 'ración',
-    plannedCalories: input.calories,
-    plannedProtein: input.protein,
-    plannedCarbs: input.carbs,
-    plannedFat: input.fat,
-    plannedDataQuality: quality,
-    confirmedQuantity: 1,
-    confirmedUnit: 'ración',
-    confirmedCalories: input.calories,
-    confirmedProtein: input.protein,
-    confirmedCarbs: input.carbs,
-    confirmedFat: input.fat,
-    confirmedDataQuality: quality,
-    confirmedAt: new Date().toISOString(),
-    skippedAt: null,
-    notes: null,
-    sourceRecipeVersion: null,
-    planningSource: 'manual',
+  const inserted = await db.transaction('rw', db.dailyMeals, async () => {
+    const existing = await db.dailyMeals.get(input.submissionId)
+
+    if (existing) {
+      const sameLogicalSubmission =
+        existing.deletedAt === null &&
+        existing.id === input.submissionId &&
+        existing.date === date &&
+        existing.role === input.role &&
+        existing.status === 'completed' &&
+        existing.isImprovised &&
+        existing.planningSource === 'manual' &&
+        existing.name === input.name.trim() &&
+        existing.confirmedCalories === input.calories &&
+        existing.confirmedProtein === input.protein &&
+        existing.confirmedCarbs === input.carbs &&
+        existing.confirmedFat === input.fat
+
+      if (!sameLogicalSubmission) {
+        throw new Error(
+          'Integridad Nutrition: el identificador de envío ya pertenece a otra comida.',
+        )
+      }
+
+      return false
+    }
+
+    const now = new Date().toISOString()
+    const meal: DailyMeal = {
+      ...createBase(input.submissionId),
+      createdAt: now,
+      updatedAt: now,
+      date,
+      role: input.role,
+      order: roleOrder[input.role] + 0.5,
+      status: 'completed',
+      trainingSessionId: null,
+      recipeId: null,
+      name: input.name.trim(),
+      isImprovised: true,
+      portionMultiplier: 1,
+      plannedQuantity: 1,
+      plannedUnit: 'ración',
+      plannedCalories: input.calories,
+      plannedProtein: input.protein,
+      plannedCarbs: input.carbs,
+      plannedFat: input.fat,
+      plannedDataQuality: quality,
+      confirmedQuantity: 1,
+      confirmedUnit: 'ración',
+      confirmedCalories: input.calories,
+      confirmedProtein: input.protein,
+      confirmedCarbs: input.carbs,
+      confirmedFat: input.fat,
+      confirmedDataQuality: quality,
+      confirmedAt: now,
+      skippedAt: null,
+      notes: null,
+      sourceRecipeVersion: null,
+      planningSource: 'manual',
+    }
+
+    await db.dailyMeals.add(meal)
+    return true
+  })
+
+  if (inserted) {
+    publishCommittedMutation('nutrition')
   }
 
-  await db.dailyMeals.add(meal)
   return getNutritionDay(date)
+}
+
+function buildNutritionWeekSuggestionFromSnapshots(
+  monday: string,
+  recipes: readonly Recipe[],
+  sessions: readonly PlannedWorkoutSession[],
+  nutritionDays: readonly NutritionDay[],
+  goals: readonly NutritionGoal[],
+): NutritionWeekSuggestion {
+  const dates = Array.from({ length: 7 }, (_, index) => shiftDateKey(monday, index))
+  const activeRecipes = recipes.filter((recipe) => recipe.deletedAt === null)
+  const activeSessions = activeFormalTrainingSessions(sessions)
+
+  const days: NutritionWeekDaySuggestion[] = dates.map((date) => {
+    const trainingSessions = activeSessions.filter(
+      (session) => session.scheduledDate === date,
+    )
+    const appetiteMode =
+      nutritionDays.find((day) => day.deletedAt === null && day.date === date)
+        ?.appetiteMode ?? 'normal'
+
+    const specs = desiredMealSpecsForDate(trainingSessions)
+    const meals = specs.map((spec, index) => ({
+      role: spec.role,
+      trainingSessionId: spec.trainingSessionId,
+      recipe: chooseRecipeForAppetite(
+        activeRecipes,
+        spec.role,
+        appetiteMode,
+        date,
+        `week-${spec.trainingSessionId ?? 'day'}-${index}`,
+      ),
+      portionMultiplier: 1,
+    }))
+
+    const macroMeals = meals.map(({ role, recipe, portionMultiplier, trainingSessionId }) =>
+      buildMeal(date, role, recipe, trainingSessionId, portionMultiplier),
+    )
+
+    return {
+      date,
+      trainingSession: trainingSessions[0] ?? null,
+      trainingSessions,
+      appetiteMode,
+      meals,
+      planned: macroSummaryFromMeals(macroMeals, 'planned'),
+    }
+  })
+
+  return {
+    monday,
+    days,
+    goal: activeGoalFrom(goals),
+  }
+}
+
+function compareMealStable(a: DailyMeal, b: DailyMeal) {
+  const byCreatedAt = a.createdAt.localeCompare(b.createdAt)
+  if (byCreatedAt !== 0) return byCreatedAt
+  return a.id.localeCompare(b.id)
+}
+
+const weeklyPlanFields = [
+  'date',
+  'role',
+  'order',
+  'trainingSessionId',
+  'recipeId',
+  'name',
+  'isImprovised',
+  'portionMultiplier',
+  'plannedQuantity',
+  'plannedUnit',
+  'plannedCalories',
+  'plannedProtein',
+  'plannedCarbs',
+  'plannedFat',
+  'plannedDataQuality',
+  'sourceRecipeVersion',
+  'planningSource',
+] as const satisfies readonly (keyof DailyMeal)[]
+
+function sameWeeklyPlan(existing: DailyMeal, desired: DailyMeal) {
+  return weeklyPlanFields.every((field) => existing[field] === desired[field])
+}
+
+function weeklyPlanPatch(desired: DailyMeal): Partial<DailyMeal> {
+  return Object.fromEntries(
+    weeklyPlanFields.map((field) => [field, desired[field]]),
+  ) as Partial<DailyMeal>
 }
 
 export async function getNutritionWeekSuggestion(
@@ -816,95 +1232,209 @@ export async function getNutritionWeekSuggestion(
   await reconcilePendingTrainingMeals()
 
   const monday = getMonday(anchorDate)
-  const dates = Array.from({ length: 7 }, (_, index) => shiftDateKey(monday, index))
-  const [recipes, sessions, nutritionDays, goal] = await Promise.all([
+  const [recipes, sessions, nutritionDays, goals] = await Promise.all([
     db.recipes.toArray(),
     db.plannedWorkoutSessions.toArray(),
     db.nutritionDays.toArray(),
-    getActiveGoal(),
+    db.nutritionGoals.toArray(),
   ])
 
-  const activeRecipes = recipes.filter((recipe) => recipe.deletedAt === null)
-  const activeSessions = sessions.filter(
-    (session) =>
-      session.deletedAt === null &&
-      session.isFormalStrength &&
-      !session.isExtra &&
-      session.status !== 'omitted',
+  return buildNutritionWeekSuggestionFromSnapshots(
+    monday,
+    recipes,
+    sessions,
+    nutritionDays,
+    goals,
   )
-
-  const days: NutritionWeekDaySuggestion[] = dates.map((date) => {
-    const trainingSession =
-      activeSessions.find((session) => session.scheduledDate === date) ?? null
-    const appetiteMode =
-      nutritionDays.find((day) => day.deletedAt === null && day.date === date)
-        ?.appetiteMode ?? 'normal'
-
-    const meals = rolesFor(trainingSession).map((role, index) => ({
-      role,
-      recipe: chooseRecipe(activeRecipes, role, appetiteMode, date, `week-${index}`),
-      portionMultiplier: 1,
-    }))
-
-    const macroMeals = meals.map(({ role, recipe, portionMultiplier }) =>
-      buildMeal(date, role, recipe, trainingSession?.id ?? null, portionMultiplier),
-    )
-
-    return {
-      date,
-      trainingSession,
-      appetiteMode,
-      meals,
-      planned: macroSummaryFromMeals(macroMeals, 'planned'),
-    }
-  })
-
-  return { monday, days, goal }
 }
 
 export async function applyNutritionWeek(anchorDate = getLocalDateKey()) {
-  const suggestion = await getNutritionWeekSuggestion(anchorDate)
-  const recipes = (await db.recipes.toArray()).filter((recipe) => recipe.deletedAt === null)
-  const now = new Date().toISOString()
+  // The week apply owns a coherent Training snapshot and all seven day writes
+  // in one transaction. Normal Day/Week reads retain B01 reconciliation.
+  const monday = getMonday(anchorDate)
+  const changed = await db.transaction(
+    'rw',
+    db.plannedWorkoutSessions,
+    db.recipes,
+    db.nutritionGoals,
+    db.nutritionDays,
+    db.dailyMeals,
+    async () => {
+      const [recipes, sessions, nutritionDays, goals] = await Promise.all([
+        db.recipes.toArray(),
+        db.plannedWorkoutSessions.toArray(),
+        db.nutritionDays.toArray(),
+        db.nutritionGoals.toArray(),
+      ])
 
-  for (const daySuggestion of suggestion.days) {
-    const day = await ensureNutritionDayEntity(daySuggestion.date)
-    const currentMeals = (await db.dailyMeals
-      .where('date')
-      .equals(daySuggestion.date)
-      .toArray())
-      .filter((meal) => meal.deletedAt === null)
-
-    for (const meal of currentMeals) {
-      if (meal.status === 'pending') {
-        await db.dailyMeals.update(meal.id, {
-          deletedAt: now,
-          updatedAt: now,
-          version: meal.version + 1,
-        })
-      }
-    }
-
-    for (const suggested of daySuggestion.meals) {
-      const recipe = suggested.recipe
-        ? recipes.find((item) => item.id === suggested.recipe?.id) ?? suggested.recipe
-        : null
-      const meal = buildMeal(
-        daySuggestion.date,
-        suggested.role,
-        recipe,
-        daySuggestion.trainingSession?.id ?? null,
-        suggested.portionMultiplier,
+      const suggestion = buildNutritionWeekSuggestionFromSnapshots(
+        monday,
+        recipes,
+        sessions,
+        nutritionDays,
+        goals,
       )
-      meal.planningSource = 'weekly'
-      await db.dailyMeals.add(meal)
-    }
+      const activeRecipes = recipes.filter((recipe) => recipe.deletedAt === null)
+      const now = new Date().toISOString()
+      let writes = 0
 
-    await db.nutritionDays.update(day.id, {
-      appliedWeeklyPlanId: `week:${suggestion.monday}`,
-      updatedAt: now,
-      version: day.version + 1,
-    })
+      for (const daySuggestion of suggestion.days) {
+        const dayCandidates = (await db.nutritionDays
+          .where('date')
+          .equals(daySuggestion.date)
+          .toArray())
+          .filter((day) => day.deletedAt === null)
+          .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
+
+        let day = dayCandidates[0]
+
+        if (!day) {
+          day = {
+            ...createBase(),
+            date: daySuggestion.date,
+            appetiteMode: daySuggestion.appetiteMode,
+            appliedWeeklyPlanId: null,
+            notes: null,
+          }
+          await db.nutritionDays.add(day)
+          writes += 1
+        }
+
+        const currentMeals = (await db.dailyMeals
+          .where('date')
+          .equals(daySuggestion.date)
+          .toArray())
+          .filter((meal) => meal.deletedAt === null)
+
+        const desiredMeals = daySuggestion.meals.map((suggested) => {
+          const recipe = suggested.recipe
+            ? activeRecipes.find((item) => item.id === suggested.recipe?.id) ?? suggested.recipe
+            : null
+          const meal = buildMeal(
+            daySuggestion.date,
+            suggested.role,
+            recipe,
+            suggested.trainingSessionId,
+            suggested.portionMultiplier,
+          )
+          meal.planningSource = 'weekly'
+          return meal
+        })
+
+        const desiredKeys = new Set(
+          desiredMeals.map((meal) =>
+            dailyMealIdentityKey(meal.date, meal.role, meal.trainingSessionId),
+          ),
+        )
+        const handledManagedIds = new Set<string>()
+
+        for (const desired of desiredMeals) {
+          const sameIdentity = currentMeals
+            .filter((meal) =>
+              dailyMealMatchesIdentity(
+                meal,
+                desired.date,
+                desired.role,
+                desired.trainingSessionId,
+              ),
+            )
+            .sort(compareMealStable)
+
+          const protectedFact = sameIdentity.some(
+            (meal) => meal.status !== 'pending' || meal.planningSource === 'manual',
+          )
+          const managed = sameIdentity.filter(
+            (meal) => meal.status === 'pending' && meal.planningSource !== 'manual',
+          )
+
+          if (protectedFact) {
+            for (const duplicate of managed) {
+              await db.dailyMeals.update(duplicate.id, {
+                deletedAt: now,
+                updatedAt: now,
+                version: duplicate.version + 1,
+              })
+              handledManagedIds.add(duplicate.id)
+              writes += 1
+            }
+            continue
+          }
+
+          const keeper = managed[0]
+
+          if (!keeper) {
+            await db.dailyMeals.add(desired)
+            writes += 1
+            continue
+          }
+
+          handledManagedIds.add(keeper.id)
+
+          if (!sameWeeklyPlan(keeper, desired)) {
+            await db.dailyMeals.update(keeper.id, {
+              ...weeklyPlanPatch(desired),
+              updatedAt: now,
+              version: keeper.version + 1,
+            })
+            writes += 1
+          }
+
+          for (const duplicate of managed.slice(1)) {
+            await db.dailyMeals.update(duplicate.id, {
+              deletedAt: now,
+              updatedAt: now,
+              version: duplicate.version + 1,
+            })
+            handledManagedIds.add(duplicate.id)
+            writes += 1
+          }
+        }
+
+        // Generated pending structure that no longer belongs to this week's
+        // desired identities is disposable. Manual and confirmed/skipped facts
+        // remain untouched.
+        for (const meal of currentMeals) {
+          if (
+            meal.status !== 'pending' ||
+            meal.planningSource === 'manual' ||
+            handledManagedIds.has(meal.id)
+          ) {
+            continue
+          }
+
+          const identity = dailyMealIdentityKey(
+            meal.date,
+            meal.role,
+            meal.trainingSessionId,
+          )
+
+          if (!desiredKeys.has(identity)) {
+            await db.dailyMeals.update(meal.id, {
+              deletedAt: now,
+              updatedAt: now,
+              version: meal.version + 1,
+            })
+            writes += 1
+          }
+        }
+
+        const appliedWeeklyPlanId = `week:${monday}`
+        if (day.appliedWeeklyPlanId !== appliedWeeklyPlanId) {
+          await db.nutritionDays.update(day.id, {
+            appliedWeeklyPlanId,
+            updatedAt: now,
+            version: day.version + 1,
+          })
+          writes += 1
+        }
+      }
+
+      return writes > 0
+    },
+  )
+
+  if (changed) {
+    publishCommittedMutation('nutrition')
   }
 
   return getNutritionWeekSuggestion(anchorDate)
@@ -932,21 +1462,44 @@ export async function updateNutritionGoal(input: NutritionGoalInput) {
     throw new Error('El máximo de ganancia no puede ser menor que el mínimo.')
   }
 
-  const active = await getActiveGoal()
   const now = new Date().toISOString()
   const today = getLocalDateKey()
+  const newGoalId = crypto.randomUUID()
 
   await db.transaction('rw', db.nutritionGoals, async () => {
+    const activeGoals = (await db.nutritionGoals.toArray())
+      .filter((goal) => goal.deletedAt === null && goal.endsOn === null)
+      .sort(
+        (a, b) =>
+          a.startsOn.localeCompare(b.startsOn) ||
+          a.createdAt.localeCompare(b.createdAt) ||
+          a.id.localeCompare(b.id),
+      )
+
+    if (activeGoals.length > 1) {
+      throw new Error(
+        `Integridad Nutrition: existen ${activeGoals.length} objetivos activos simultáneos.`,
+      )
+    }
+
+    const active = activeGoals[0]
+
     if (active) {
-      await db.nutritionGoals.update(active.id, {
+      const updated = await db.nutritionGoals.update(active.id, {
         endsOn: today,
         updatedAt: now,
         version: active.version + 1,
       })
+
+      if (updated !== 1) {
+        throw new Error('Integridad Nutrition: no se ha podido cerrar el objetivo vigente.')
+      }
     }
 
     await db.nutritionGoals.add({
-      ...createBase(),
+      ...createBase(newGoalId),
+      createdAt: now,
+      updatedAt: now,
       startsOn: today,
       endsOn: null,
       targetCalories: input.targetCalories,
@@ -959,6 +1512,7 @@ export async function updateNutritionGoal(input: NutritionGoalInput) {
     })
   })
 
+  publishCommittedMutation('nutrition')
   return getActiveGoal()
 }
 

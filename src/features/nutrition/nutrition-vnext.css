@@ -802,3 +802,23 @@
     padding-left: 14px;
   }
 }
+
+.nutrition-vnext-week__label {
+  min-width: 0;
+  text-align: center;
+}
+
+.nutrition-vnext-week__label small {
+  display: block;
+  color: var(--fenix-accent);
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+}
+
+.nutrition-vnext-week__label strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.9rem;
+  font-weight: 760;
+}

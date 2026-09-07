@@ -1,4 +1,9 @@
 import { db } from '../../db/database'
+import { publishCommittedMutation } from '../../app/freshnessEvents'
+import {
+  normalizeIngredientName as normalizeName,
+  normalizeShoppingUnit as normalizeUnit,
+} from './nutritionLibraryIdentity.ts'
 
 import type {
   Ingredient,
@@ -70,12 +75,6 @@ function createBase() {
     deletedAt: null,
     version: 1,
   }
-}
-
-function normalizeName(value: string) {
-  return value
-    .trim()
-    .toLocaleLowerCase('es')
 }
 
 function validateQuantityRange(
@@ -380,6 +379,7 @@ export async function createRecipe(
     },
   )
 
+  publishCommittedMutation('nutrition')
   return recipe
 }
 
@@ -389,62 +389,40 @@ export async function updateRecipe(
 ): Promise<Recipe> {
   validateRecipeInput(input)
 
-  const existing =
-    await db.recipes.get(
-      recipeId,
-    )
-
-  if (!existing) {
-    throw new Error(
-      'No se ha encontrado la receta.',
-    )
-  }
-
-  const updated: Recipe = {
-    ...existing,
-    name: input.name.trim(),
-    category: input.category,
-    instructions:
-      input.instructions?.trim() ||
-      null,
-    estimatedCalories:
-      input.estimatedCalories,
-    estimatedProtein:
-      input.estimatedProtein,
-    estimatedCarbs:
-      input.estimatedCarbs,
-    estimatedFat:
-      input.estimatedFat,
-    notes:
-      input.notes?.trim() ||
-      null,
-    updatedAt:
-      new Date().toISOString(),
-    version:
-      existing.version + 1,
-  }
-
-  await db.transaction(
+  const updated = await db.transaction(
     'rw',
     db.recipes,
     db.ingredients,
     db.recipeIngredients,
     async () => {
-      await db.recipes.put(
-        updated,
-      )
+      const existing = await db.recipes.get(recipeId)
 
-      await archiveRecipeRelations(
-        recipeId,
-      )
+      if (!existing || existing.deletedAt !== null) {
+        throw new Error('No se ha encontrado la receta.')
+      }
 
-      await createRecipeRelations(
-        recipeId,
-        input.ingredients,
-      )
+      const next: Recipe = {
+        ...existing,
+        name: input.name.trim(),
+        category: input.category,
+        instructions: input.instructions?.trim() || null,
+        estimatedCalories: input.estimatedCalories,
+        estimatedProtein: input.estimatedProtein,
+        estimatedCarbs: input.estimatedCarbs,
+        estimatedFat: input.estimatedFat,
+        notes: input.notes?.trim() || null,
+        updatedAt: new Date().toISOString(),
+        version: existing.version + 1,
+      }
+
+      await db.recipes.put(next)
+      await archiveRecipeRelations(recipeId)
+      await createRecipeRelations(recipeId, input.ingredients)
+      return next
     },
   )
 
+  publishCommittedMutation('nutrition')
   return updated
 }
 
@@ -516,68 +494,60 @@ export async function duplicateRecipe(
 export async function deleteRecipe(
   recipeId: string,
 ) {
-  const recipe =
-    await db.recipes.get(
-      recipeId,
-    )
-
-  if (!recipe) {
-    return
-  }
-
-  const now =
-    new Date().toISOString()
-
-  await db.transaction(
+  const changed = await db.transaction(
     'rw',
     db.recipes,
     db.recipeIngredients,
     async () => {
-      await db.recipes.update(
-        recipeId,
-        {
-          deletedAt: now,
-          updatedAt: now,
-          version:
-            recipe.version + 1,
-        },
-      )
+      const recipe = await db.recipes.get(recipeId)
 
-      await archiveRecipeRelations(
-        recipeId,
-      )
+      if (!recipe || recipe.deletedAt !== null) {
+        return false
+      }
+
+      const now = new Date().toISOString()
+      const updated = await db.recipes.update(recipeId, {
+        deletedAt: now,
+        updatedAt: now,
+        version: recipe.version + 1,
+      })
+
+      if (updated !== 1) {
+        throw new Error('No se ha podido eliminar la receta.')
+      }
+
+      await archiveRecipeRelations(recipeId)
+      return true
     },
   )
+
+  if (changed) {
+    publishCommittedMutation('nutrition')
+  }
 }
 
 export async function toggleRecipeFavorite(
   recipeId: string,
 ): Promise<Recipe> {
-  const recipe =
-    await db.recipes.get(
-      recipeId,
-    )
+  const updated = await db.transaction('rw', db.recipes, async () => {
+    const recipe = await db.recipes.get(recipeId)
 
-  if (!recipe) {
-    throw new Error(
-      'No se ha encontrado la receta.',
-    )
-  }
+    if (!recipe || recipe.deletedAt !== null) {
+      throw new Error('No se ha encontrado la receta.')
+    }
 
-  const updated: Recipe = {
-    ...recipe,
-    isFavorite:
-      !recipe.isFavorite,
-    updatedAt:
-      new Date().toISOString(),
-    version:
-      recipe.version + 1,
-  }
+    const next: Recipe = {
+      ...recipe,
+      isFavorite: !recipe.isFavorite,
+      updatedAt: new Date().toISOString(),
+      version: recipe.version + 1,
+    }
 
-  await db.recipes.put(
-    updated,
-  )
+    await db.recipes.put(next)
+    return next
+  })
 
+  publishCommittedMutation('nutrition')
   return updated
 }
 
@@ -610,33 +580,38 @@ export async function createCatalogIngredient(
     )
   }
 
-  const duplicate =
-    await findActiveIngredientByName(
-      input.name,
-    )
+  const ingredient = await db.transaction(
+    'rw',
+    db.ingredients,
+    async () => {
+      const duplicate =
+        await findActiveIngredientByName(
+          input.name,
+        )
 
-  if (duplicate) {
-    throw new Error(
-      'Ya existe un producto con ese nombre.',
-    )
-  }
+      if (duplicate) {
+        throw new Error(
+          'Ya existe un producto con ese nombre.',
+        )
+      }
 
-  const ingredient: Ingredient = {
-    ...createBase(),
-    name: input.name.trim(),
-    category: input.category,
-    defaultUnit:
-      input.defaultUnit?.trim() ||
-      null,
-    notes:
-      input.notes?.trim() ||
-      null,
-  }
+      const created: Ingredient = {
+        ...createBase(),
+        name: input.name.trim(),
+        category: input.category,
+        defaultUnit:
+          normalizeUnit(input.defaultUnit),
+        notes:
+          input.notes?.trim() ||
+          null,
+      }
 
-  await db.ingredients.add(
-    ingredient,
+      await db.ingredients.add(created)
+      return created
+    },
   )
 
+  publishCommittedMutation('nutrition')
   return ingredient
 }
 
@@ -650,160 +625,136 @@ export async function updateCatalogIngredient(
     )
   }
 
-  const existing =
-    await db.ingredients.get(
-      ingredientId,
-    )
+  const updated = await db.transaction(
+    'rw',
+    db.ingredients,
+    async () => {
+      const existing =
+        await db.ingredients.get(ingredientId)
 
-  if (!existing) {
-    throw new Error(
-      'No se ha encontrado el producto.',
-    )
-  }
+      if (!existing || existing.deletedAt !== null) {
+        throw new Error(
+          'No se ha encontrado el producto.',
+        )
+      }
 
-  const ingredients =
-    await db.ingredients.toArray()
+      const ingredients =
+        await db.ingredients.toArray()
 
-  const normalized =
-    normalizeName(input.name)
+      const normalized =
+        normalizeName(input.name)
 
-  const duplicate =
-    ingredients.find(
-      (ingredient) =>
-        ingredient.id !==
-          ingredientId &&
-        ingredient.deletedAt ===
-          null &&
-        normalizeName(
-          ingredient.name,
-        ) === normalized,
-    )
+      const duplicate = ingredients.find(
+        (ingredient) =>
+          ingredient.id !== ingredientId &&
+          ingredient.deletedAt === null &&
+          normalizeName(ingredient.name) === normalized,
+      )
 
-  if (duplicate) {
-    throw new Error(
-      'Ya existe otro producto con ese nombre.',
-    )
-  }
+      if (duplicate) {
+        throw new Error(
+          'Ya existe otro producto con ese nombre.',
+        )
+      }
 
-  const updated: Ingredient = {
-    ...existing,
-    name: input.name.trim(),
-    category: input.category,
-    defaultUnit:
-      input.defaultUnit?.trim() ||
-      null,
-    notes:
-      input.notes?.trim() ||
-      null,
-    updatedAt:
-      new Date().toISOString(),
-    version:
-      existing.version + 1,
-  }
+      const next: Ingredient = {
+        ...existing,
+        name: input.name.trim(),
+        category: input.category,
+        defaultUnit:
+          normalizeUnit(input.defaultUnit),
+        notes:
+          input.notes?.trim() || null,
+        updatedAt: new Date().toISOString(),
+        version: existing.version + 1,
+      }
 
-  await db.ingredients.put(
-    updated,
+      await db.ingredients.put(next)
+      return next
+    },
   )
 
+  publishCommittedMutation('nutrition')
   return updated
 }
 
 export async function deleteCatalogIngredient(
   ingredientId: string,
 ) {
-  const ingredient =
-    await db.ingredients.get(
-      ingredientId,
-    )
-
-  if (!ingredient) {
-    return
-  }
-
-  const relations =
-    await db.recipeIngredients
-      .where('ingredientId')
-      .equals(ingredientId)
-      .toArray()
-
-  const activeRelations =
-    relations.filter(
-      (relation) =>
-        relation.deletedAt === null,
-    )
-
-  const activeRecipeIds =
-    new Set<string>()
-
-  for (const relation of activeRelations) {
-    const recipe =
-      await db.recipes.get(
-        relation.recipeId,
-      )
-
-    if (
-      recipe &&
-      recipe.deletedAt === null
-    ) {
-      activeRecipeIds.add(
-        recipe.id,
-      )
-    }
-  }
-
-  if (
-    activeRecipeIds.size > 0
-  ) {
-    throw new Error(
-      activeRecipeIds.size === 1
-        ? 'Este producto está siendo utilizado por una receta. Elimínalo o sustitúyelo primero en esa receta.'
-        : `Este producto está siendo utilizado por ${activeRecipeIds.size} recetas. Elimínalo o sustitúyelo primero en esas recetas.`,
-    )
-  }
-
-  const shoppingItems =
-    await db.shoppingItems
-      .where('ingredientId')
-      .equals(ingredientId)
-      .toArray()
-
-  const now =
-    new Date().toISOString()
-
-  await db.transaction(
+  const changed = await db.transaction(
     'rw',
     db.ingredients,
+    db.recipeIngredients,
+    db.recipes,
     db.shoppingItems,
     async () => {
-      await db.ingredients.update(
-        ingredientId,
-        {
-          deletedAt: now,
-          updatedAt: now,
-          version:
-            ingredient.version + 1,
-        },
+      const ingredient =
+        await db.ingredients.get(ingredientId)
+
+      if (!ingredient || ingredient.deletedAt !== null) {
+        return false
+      }
+
+      const relations =
+        await db.recipeIngredients
+          .where('ingredientId')
+          .equals(ingredientId)
+          .toArray()
+
+      const activeRelations = relations.filter(
+        (relation) => relation.deletedAt === null,
       )
 
-      for (const item of shoppingItems) {
-        if (
-          item.deletedAt !== null
-        ) {
-          continue
-        }
+      const activeRecipeIds = new Set<string>()
 
-        await db.shoppingItems.update(
-          item.id,
-          {
-            deletedAt: now,
-            updatedAt: now,
-            version:
-              item.version + 1,
-          },
+      for (const relation of activeRelations) {
+        const recipe = await db.recipes.get(relation.recipeId)
+        if (recipe && recipe.deletedAt === null) {
+          activeRecipeIds.add(recipe.id)
+        }
+      }
+
+      if (activeRecipeIds.size > 0) {
+        throw new Error(
+          activeRecipeIds.size === 1
+            ? 'Este producto está siendo utilizado por una receta. Elimínalo o sustitúyelo primero en esa receta.'
+            : `Este producto está siendo utilizado por ${activeRecipeIds.size} recetas. Elimínalo o sustitúyelo primero en esas recetas.`,
         )
       }
+
+      const shoppingItems =
+        await db.shoppingItems
+          .where('ingredientId')
+          .equals(ingredientId)
+          .toArray()
+
+      const now = new Date().toISOString()
+
+      await db.ingredients.put({
+        ...ingredient,
+        deletedAt: now,
+        updatedAt: now,
+        version: ingredient.version + 1,
+      })
+
+      for (const item of shoppingItems) {
+        if (item.deletedAt !== null) continue
+
+        await db.shoppingItems.put({
+          ...item,
+          deletedAt: now,
+          updatedAt: now,
+          version: item.version + 1,
+        })
+      }
+
+      return true
     },
   )
+
+  if (changed) {
+    publishCommittedMutation('nutrition')
+  }
 }
 
 function combineQuantities(
@@ -869,25 +820,22 @@ function combineQuantities(
   }
 }
 
-async function addIngredientToBasket(
+async function addIngredientToBasketInTransaction(
   ingredientId: string,
   quantity: number | null,
   quantityMax: number | null,
   unit: string | null,
 ) {
   const ingredient =
-    await db.ingredients.get(
-      ingredientId,
-    )
+    await db.ingredients.get(ingredientId)
 
-  if (
-    !ingredient ||
-    ingredient.deletedAt !== null
-  ) {
+  if (!ingredient || ingredient.deletedAt !== null) {
     throw new Error(
       'No se ha encontrado el producto.',
     )
   }
+
+  const normalizedUnit = normalizeUnit(unit)
 
   const items =
     await db.shoppingItems
@@ -895,40 +843,34 @@ async function addIngredientToBasket(
       .equals(ingredientId)
       .toArray()
 
-  const existing =
-    items.find(
-      (item) =>
-        item.deletedAt === null &&
-        item.unit === unit,
-    )
+  const existing = items.find(
+    (item) =>
+      item.deletedAt === null &&
+      normalizeUnit(item.unit) === normalizedUnit,
+  )
 
-  const now =
-    new Date().toISOString()
+  const now = new Date().toISOString()
 
   if (existing) {
-    const combined =
-      combineQuantities(
-        existing.quantity,
-        existing.quantityMax,
-        quantity,
-        quantityMax,
-      )
-
-    await db.shoppingItems.update(
-      existing.id,
-      {
-        quantity:
-          combined.quantity,
-        quantityMax:
-          combined.quantityMax,
-        checked: false,
-        updatedAt: now,
-        version:
-          existing.version + 1,
-      },
+    const combined = combineQuantities(
+      existing.quantity,
+      existing.quantityMax,
+      quantity,
+      quantityMax,
     )
 
-    return
+    const next: ShoppingItem = {
+      ...existing,
+      quantity: combined.quantity,
+      quantityMax: combined.quantityMax,
+      unit: normalizedUnit,
+      checked: false,
+      updatedAt: now,
+      version: existing.version + 1,
+    }
+
+    await db.shoppingItems.put(next)
+    return next
   }
 
   const item: ShoppingItem = {
@@ -936,64 +878,82 @@ async function addIngredientToBasket(
     ingredientId,
     quantity,
     quantityMax,
-    unit,
+    unit: normalizedUnit,
     checked: false,
     addedAt: now,
   }
 
-  await db.shoppingItems.add(
-    item,
-  )
+  await db.shoppingItems.add(item)
+  return item
 }
 
 export async function addRecipeIngredientToBasket(
   relationId: string,
 ) {
-  const relation =
-    await db.recipeIngredients.get(
-      relationId,
-    )
+  const result = await db.transaction(
+    'rw',
+    db.recipes,
+    db.recipeIngredients,
+    db.ingredients,
+    db.shoppingItems,
+    async () => {
+      const relation =
+        await db.recipeIngredients.get(relationId)
 
-  if (
-    !relation ||
-    relation.deletedAt !== null
-  ) {
-    throw new Error(
-      'No se ha encontrado el ingrediente de la receta.',
-    )
-  }
+      if (!relation || relation.deletedAt !== null) {
+        throw new Error(
+          'No se ha encontrado el ingrediente de la receta.',
+        )
+      }
 
-  await addIngredientToBasket(
-    relation.ingredientId,
-    relation.quantity,
-    relation.quantityMax,
-    relation.unit,
+      const recipe = await db.recipes.get(relation.recipeId)
+      if (!recipe || recipe.deletedAt !== null) {
+        throw new Error(
+          'La receta asociada ya no está disponible.',
+        )
+      }
+
+      return addIngredientToBasketInTransaction(
+        relation.ingredientId,
+        relation.quantity,
+        relation.quantityMax,
+        relation.unit,
+      )
+    },
   )
+
+  publishCommittedMutation('nutrition')
+  return result
 }
 
 export async function addCatalogIngredientToBasket(
   ingredientId: string,
 ) {
-  const ingredient =
-    await db.ingredients.get(
-      ingredientId,
-    )
+  const result = await db.transaction(
+    'rw',
+    db.ingredients,
+    db.shoppingItems,
+    async () => {
+      const ingredient =
+        await db.ingredients.get(ingredientId)
 
-  if (
-    !ingredient ||
-    ingredient.deletedAt !== null
-  ) {
-    throw new Error(
-      'No se ha encontrado el producto.',
-    )
-  }
+      if (!ingredient || ingredient.deletedAt !== null) {
+        throw new Error(
+          'No se ha encontrado el producto.',
+        )
+      }
 
-  await addIngredientToBasket(
-    ingredientId,
-    null,
-    null,
-    ingredient.defaultUnit,
+      return addIngredientToBasketInTransaction(
+        ingredientId,
+        null,
+        null,
+        ingredient.defaultUnit,
+      )
+    },
   )
+
+  publishCommittedMutation('nutrition')
+  return result
 }
 
 export async function getShoppingList(): Promise<
@@ -1064,111 +1024,146 @@ export async function updateShoppingItem(
     input.quantityMax,
   )
 
-  const item =
-    await db.shoppingItems.get(
-      itemId,
-    )
+  await db.transaction(
+    'rw',
+    db.ingredients,
+    db.shoppingItems,
+    async () => {
+      const item = await db.shoppingItems.get(itemId)
 
-  if (!item) {
-    throw new Error(
-      'No se ha encontrado el producto de la cesta.',
-    )
-  }
+      if (!item || item.deletedAt !== null) {
+        throw new Error(
+          'No se ha encontrado el producto de la cesta.',
+        )
+      }
 
-  await db.shoppingItems.update(
-    itemId,
-    {
-      quantity:
-        input.quantity,
-      quantityMax:
-        input.quantityMax,
-      unit:
-        input.unit?.trim() ||
-        null,
-      updatedAt:
-        new Date().toISOString(),
-      version:
-        item.version + 1,
+      const ingredient = await db.ingredients.get(item.ingredientId)
+      if (!ingredient || ingredient.deletedAt !== null) {
+        throw new Error('El producto asociado ya no está disponible.')
+      }
+
+      const unit = normalizeUnit(input.unit)
+      const siblings = await db.shoppingItems
+        .where('ingredientId')
+        .equals(item.ingredientId)
+        .toArray()
+
+      const duplicate = siblings.find(
+        (candidate) =>
+          candidate.id !== item.id &&
+          candidate.deletedAt === null &&
+          normalizeUnit(candidate.unit) === unit,
+      )
+
+      if (duplicate) {
+        throw new Error(
+          'Ya existe otra entrada activa de este producto con la misma unidad.',
+        )
+      }
+
+      await db.shoppingItems.put({
+        ...item,
+        quantity: input.quantity,
+        quantityMax: input.quantityMax,
+        unit,
+        updatedAt: new Date().toISOString(),
+        version: item.version + 1,
+      })
     },
   )
+
+  publishCommittedMutation('nutrition')
 }
 
 export async function toggleShoppingItemChecked(
   itemId: string,
 ) {
-  const item =
-    await db.shoppingItems.get(
-      itemId,
-    )
+  await db.transaction(
+    'rw',
+    db.ingredients,
+    db.shoppingItems,
+    async () => {
+      const item = await db.shoppingItems.get(itemId)
 
-  if (!item) {
-    throw new Error(
-      'Producto no encontrado.',
-    )
-  }
+      if (!item || item.deletedAt !== null) {
+        throw new Error('Producto no encontrado.')
+      }
 
-  await db.shoppingItems.update(
-    itemId,
-    {
-      checked:
-        !item.checked,
-      updatedAt:
-        new Date().toISOString(),
-      version:
-        item.version + 1,
+      const ingredient = await db.ingredients.get(item.ingredientId)
+      if (!ingredient || ingredient.deletedAt !== null) {
+        throw new Error('El producto asociado ya no está disponible.')
+      }
+
+      await db.shoppingItems.put({
+        ...item,
+        checked: !item.checked,
+        updatedAt: new Date().toISOString(),
+        version: item.version + 1,
+      })
     },
   )
+
+  publishCommittedMutation('nutrition')
 }
 
 export async function removeShoppingItem(
   itemId: string,
 ) {
-  const item =
-    await db.shoppingItems.get(
-      itemId,
-    )
+  const changed = await db.transaction(
+    'rw',
+    db.shoppingItems,
+    async () => {
+      const item = await db.shoppingItems.get(itemId)
 
-  if (!item) {
-    return
-  }
+      if (!item || item.deletedAt !== null) {
+        return false
+      }
 
-  const now =
-    new Date().toISOString()
-
-  await db.shoppingItems.update(
-    itemId,
-    {
-      deletedAt: now,
-      updatedAt: now,
-      version:
-        item.version + 1,
+      const now = new Date().toISOString()
+      await db.shoppingItems.put({
+        ...item,
+        deletedAt: now,
+        updatedAt: now,
+        version: item.version + 1,
+      })
+      return true
     },
   )
+
+  if (changed) {
+    publishCommittedMutation('nutrition')
+  }
 }
 
 export async function clearCheckedShoppingItems() {
-  const items =
-    await db.shoppingItems.toArray()
+  const changed = await db.transaction(
+    'rw',
+    db.shoppingItems,
+    async () => {
+      const items = await db.shoppingItems.toArray()
+      const checkedItems = items.filter(
+        (item) => item.deletedAt === null && item.checked,
+      )
 
-  const checkedItems =
-    items.filter(
-      (item) =>
-        item.deletedAt === null &&
-        item.checked,
-    )
+      if (checkedItems.length === 0) {
+        return false
+      }
 
-  const now =
-    new Date().toISOString()
+      const now = new Date().toISOString()
+      for (const item of checkedItems) {
+        await db.shoppingItems.put({
+          ...item,
+          deletedAt: now,
+          updatedAt: now,
+          version: item.version + 1,
+        })
+      }
 
-  for (const item of checkedItems) {
-    await db.shoppingItems.update(
-      item.id,
-      {
-        deletedAt: now,
-        updatedAt: now,
-        version:
-          item.version + 1,
-      },
-    )
+      return true
+    },
+  )
+
+  if (changed) {
+    publishCommittedMutation('nutrition')
   }
 }

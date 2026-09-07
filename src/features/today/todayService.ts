@@ -2,6 +2,10 @@ import {
   db,
 } from '../../db/database'
 
+import {
+  publishCommittedMutation,
+} from '../../app/freshnessEvents'
+
 import type {
   BaseEntity,
 } from '../../types/common'
@@ -358,12 +362,24 @@ async function getActiveTemplateItems(
     )
 }
 
+class StaleRoutineReconciliationError extends Error {}
+
+type PersistenceGuard = () => boolean
+
+function assertPersistenceCurrent(canPersist: PersistenceGuard) {
+  if (!canPersist()) {
+    throw new StaleRoutineReconciliationError()
+  }
+}
+
 async function reconcileRoutineContext(
   routine:
     DailyRoutine,
 
   context:
     DailyRoutineContext,
+
+  canPersist: PersistenceGuard,
 ) {
   const tasks =
     await db
@@ -371,6 +387,8 @@ async function reconcileRoutineContext(
       .where('dailyRoutineId')
       .equals(routine.id)
       .toArray()
+
+  assertPersistenceCurrent(canPersist)
 
   const changedTasks:
     DailyRoutineTask[] = []
@@ -438,9 +456,16 @@ async function reconcileRoutineContext(
   if (
     changedTasks.length > 0
   ) {
+    assertPersistenceCurrent(canPersist)
+
     await db
       .dailyRoutineTasks
       .bulkPut(changedTasks)
+
+    // The request can become stale while the final write is in flight.
+    // Throwing here is still inside the Dexie transaction callback, so the
+    // stale reconciliation is rolled back instead of being allowed to commit.
+    assertPersistenceCurrent(canPersist)
   }
 }
 
@@ -499,91 +524,151 @@ export async function getDailyRoutineView(
   }
 }
 
+async function materializeDailyRoutine(
+  dateKey: string,
+
+  context: DailyRoutineContext,
+
+  canPersist: PersistenceGuard,
+): Promise<boolean> {
+  parseDateKey(dateKey)
+
+  try {
+    await db.transaction(
+      'rw',
+
+      db.dailyRoutineTemplates,
+      db.dailyRoutineTemplateItems,
+      db.dailyRoutines,
+      db.dailyRoutineTasks,
+      db.workShifts,
+
+      async () => {
+        const existingRoutine =
+          await db
+            .dailyRoutines
+            .where('date')
+            .equals(dateKey)
+            .first()
+
+        assertPersistenceCurrent(canPersist)
+
+        if (
+          existingRoutine &&
+          existingRoutine.deletedAt ===
+            null
+        ) {
+          await reconcileRoutineContext(
+            existingRoutine,
+            context,
+            canPersist,
+          )
+
+          // Final causal boundary for the existing-routine transaction path.
+          // No asynchronous operation may occur after this guard.
+          assertPersistenceCurrent(canPersist)
+          return
+        }
+
+        const template =
+          await getActiveTemplate()
+
+        if (!template) {
+          throw new Error(
+            'No existe una plantilla activa de Hoy.',
+          )
+        }
+
+        const templateItems =
+          await getActiveTemplateItems(
+            template.id,
+          )
+
+        assertPersistenceCurrent(canPersist)
+
+        const routine:
+          DailyRoutine = {
+          ...createBase(),
+
+          date:
+            dateKey,
+
+          templateId:
+            template.id,
+
+          startedAt: null,
+        }
+
+        const tasks =
+          templateItems.map(
+            (item) =>
+              createDailyTask(
+                routine,
+                item,
+                context,
+              ),
+          )
+
+        assertPersistenceCurrent(canPersist)
+
+        await db
+          .dailyRoutines
+          .add(routine)
+
+        // Covers the path where adding the routine is the final persistent
+        // operation (no tasks) and the interval before a following bulkAdd.
+        assertPersistenceCurrent(canPersist)
+
+        if (tasks.length > 0) {
+          await db
+            .dailyRoutineTasks
+            .bulkAdd(tasks)
+
+          // If this request became stale while bulkAdd was in flight, abort the
+          // transaction so both the routine and its tasks are rolled back.
+          assertPersistenceCurrent(canPersist)
+        }
+
+        // Last synchronous causal check before the transaction callback exits.
+        // Do not add an await after this assertion.
+        assertPersistenceCurrent(canPersist)
+      },
+    )
+  } catch (error) {
+    if (error instanceof StaleRoutineReconciliationError) {
+      return false
+    }
+
+    throw error
+  }
+
+  return true
+}
+
+export async function reconcileDailyRoutineForLoad(
+  dateKey: string,
+
+  context: DailyRoutineContext,
+
+  canPersist: PersistenceGuard,
+) {
+  return materializeDailyRoutine(
+    dateKey,
+    context,
+    canPersist,
+  )
+}
+
 export async function ensureDailyRoutine(
   dateKey: string,
 
   context:
     DailyRoutineContext,
 ): Promise<DailyRoutineView> {
-  parseDateKey(dateKey)
-
-  await db.transaction(
-    'rw',
-
-    db.dailyRoutineTemplates,
-    db.dailyRoutineTemplateItems,
-    db.dailyRoutines,
-    db.dailyRoutineTasks,
-    db.workShifts,
-
-    async () => {
-      const existingRoutine =
-        await db
-          .dailyRoutines
-          .where('date')
-          .equals(dateKey)
-          .first()
-
-      if (
-        existingRoutine &&
-        existingRoutine.deletedAt ===
-          null
-      ) {
-        await reconcileRoutineContext(
-          existingRoutine,
-          context,
-        )
-
-        return
-      }
-
-      const template =
-        await getActiveTemplate()
-
-      if (!template) {
-        throw new Error(
-          'No existe una plantilla activa de Hoy.',
-        )
-      }
-
-      const templateItems =
-        await getActiveTemplateItems(
-          template.id,
-        )
-
-      const routine:
-        DailyRoutine = {
-        ...createBase(),
-
-        date:
-          dateKey,
-
-        templateId:
-          template.id,
-
-        startedAt: null,
-      }
-
-      const tasks =
-        templateItems.map(
-          (item) =>
-            createDailyTask(
-              routine,
-              item,
-              context,
-            ),
-        )
-
-      await db
-        .dailyRoutines
-        .add(routine)
-
-      if (tasks.length > 0) {
-        await db
-          .dailyRoutineTasks
-          .bulkAdd(tasks)
-      }
-    },
+  await materializeDailyRoutine(
+    dateKey,
+    context,
+    () => true,
   )
 
   const view =
@@ -631,6 +716,8 @@ export async function startDay(
         view.routine.version + 1,
     },
   )
+
+  publishCommittedMutation('today')
 
   const updated =
     await getDailyRoutineView(
@@ -689,6 +776,8 @@ export async function setDailyTaskStatus(
           task.version + 1,
       },
     )
+
+  publishCommittedMutation('today')
 }
 
 export async function updateDailyTask(
@@ -752,6 +841,8 @@ export async function updateDailyTask(
           task.version + 1,
       },
     )
+
+  publishCommittedMutation('today')
 }
 
 export async function addOneOffTask(
@@ -840,6 +931,8 @@ export async function addOneOffTask(
     .dailyRoutineTasks
     .add(task)
 
+  publishCommittedMutation('today')
+
   return task
 }
 
@@ -885,6 +978,8 @@ export async function deleteOneOffTask(
           task.version + 1,
       },
     )
+
+  publishCommittedMutation('today')
 }
 
 export async function upsertWorkShift(
@@ -958,6 +1053,8 @@ export async function upsertWorkShift(
       },
     )
 
+    publishCommittedMutation('today')
+
     return
   }
 
@@ -997,6 +1094,8 @@ export async function upsertWorkShift(
   await db.workShifts.add(
     shift,
   )
+
+  publishCommittedMutation('today')
 }
 
 export async function setWorkShiftStatus(
@@ -1048,6 +1147,8 @@ export async function setWorkShiftStatus(
         shift.version + 1,
     },
   )
+
+  publishCommittedMutation('today')
 }
 export interface RoutineTemplateEditorView {
   template: DailyRoutineTemplate
@@ -1289,6 +1390,8 @@ export async function saveRoutineTemplate(
     },
   )
 
+  publishCommittedMutation('today')
+
   return getRoutineTemplateEditorView()
 }
 
@@ -1348,6 +1451,8 @@ export async function promoteOneOffTaskToRoutine(
       })
     },
   )
+
+  publishCommittedMutation('today')
 
   return item
 }

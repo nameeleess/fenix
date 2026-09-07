@@ -1,6 +1,5 @@
 import {
   useEffect,
-  useMemo,
   useState,
 } from 'react'
 
@@ -53,6 +52,11 @@ type TrainingTab =
   | 'routines'
   | 'exercises'
   | 'history'
+
+interface TrainingPageProps {
+  isActive: boolean
+  refreshRevision: number
+}
 
 interface TrainingData {
   active: ActiveSessionView | null
@@ -755,6 +759,7 @@ function HomeView({
 }) {
   const focus = home.focusSession
   const template = home.focusTemplate
+  const multiSessionDays = home.week.filter((day) => day.sessions.length > 1)
 
   return (
     <>
@@ -767,9 +772,84 @@ function HomeView({
             <span>{day.weekdayLabel}</span>
             <strong>{day.dayNumber}</strong>
             <i />
+            {day.sessions.length > 1 ? <small>{day.sessions.length}×</small> : null}
           </div>
         ))}
       </section>
+
+      {multiSessionDays.length > 0 ? (
+        <section className="training-same-day-panel">
+          <div className="training-section-heading">
+            <div>
+              <span className="training-kicker">MÚLTIPLES SESIONES</span>
+              <h2>Sesiones que comparten fecha</h2>
+            </div>
+          </div>
+
+          <div className="training-same-day-list">
+            {multiSessionDays.flatMap((day) =>
+              day.sessions.map((session) => (
+                <article key={session.id} className="training-same-day-session">
+                  <div>
+                    <span>{formatDate(day.date)}</span>
+                    <strong>{session.templateName}</strong>
+                    <small className={statusClass(session.status)}>{statusLabel(session.status)}</small>
+                  </div>
+                  <div className="training-same-day-actions">
+                    {(session.status === 'pending' || session.status === 'in_progress') ? (
+                      <button type="button" onClick={() => void onStart(session)}>
+                        {session.status === 'in_progress' ? 'Reabrir' : 'Iniciar'}
+                      </button>
+                    ) : null}
+                    {session.status === 'pending' ? (
+                      <>
+                        <button type="button" onClick={() => onReprogram(session)}>Reprogramar</button>
+                        <button type="button" onClick={() => onOmit(session)}>Omitir</button>
+                      </>
+                    ) : null}
+                  </div>
+                </article>
+              )),
+            )}
+          </div>
+        </section>
+      ) : null}
+
+      {home.actionableSessions.length > 1 ? (
+        <section className="training-session-queue">
+          <div className="training-section-heading">
+            <div>
+              <span className="training-kicker">AGENDA PENDIENTE</span>
+              <h2>Otras sesiones disponibles</h2>
+            </div>
+          </div>
+
+          <div className="training-session-queue__list">
+            {home.actionableSessions.slice(1).map((session) => (
+              <article key={session.id} className="training-session-queue__item">
+                <div>
+                  <span>{formatDate(session.scheduledDate)}</span>
+                  <strong>{session.templateName}</strong>
+                  <small>{statusLabel(session.status)}</small>
+                </div>
+                <div className="training-same-day-actions">
+                  {(session.status === 'pending' || session.status === 'in_progress') ? (
+                    <button type="button" onClick={() => void onStart(session)}>
+                      {session.status === 'in_progress' ? 'Reabrir' : 'Iniciar'}
+                    </button>
+                  ) : null}
+                  {session.status === 'pending' ? (
+                    <>
+                      <button type="button" onClick={() => onReprogram(session)}>Reprogramar</button>
+                      <button type="button" onClick={() => onOmit(session)}>Omitir</button>
+                    </>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {home.unresolvedPast > 0 ? (
         <div className="training-attention-banner">
@@ -1152,7 +1232,10 @@ async function fetchTrainingData(): Promise<TrainingData> {
   }
 }
 
-export default function TrainingPage() {
+export default function TrainingPage({
+  isActive,
+  refreshRevision,
+}: TrainingPageProps) {
   const [tab, setTab] = useState<TrainingTab>('home')
   const [data, setData] = useState<TrainingData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -1163,15 +1246,11 @@ export default function TrainingPage() {
   const [reprogramDate, setReprogramDate] = useState('')
   const [omitSession, setOmitSession] = useState<PlannedWorkoutSession | null>(null)
 
-  const titleDate = useMemo(
-    () =>
-      new Intl.DateTimeFormat('es-ES', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-      }).format(new Date()),
-    [],
-  )
+  const titleDate = new Intl.DateTimeFormat('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(new Date())
 
   async function reload() {
     const next = await fetchTrainingData()
@@ -1179,28 +1258,36 @@ export default function TrainingPage() {
   }
 
   useEffect(() => {
+    if (!isActive) return
+
     let active = true
 
-    fetchTrainingData()
-      .then((next) => {
-        if (!active) return
-        setData(next)
-        setLoading(false)
-      })
-      .catch((loadError: unknown) => {
-        if (!active) return
-        setError(
-          loadError instanceof Error
-            ? loadError.message
-            : 'No se ha podido cargar Training.',
-        )
-        setLoading(false)
-      })
+    const timer = window.setTimeout(() => {
+      setLoading(true)
+
+      void fetchTrainingData()
+        .then((next) => {
+          if (!active) return
+          setData(next)
+          setError('')
+          setLoading(false)
+        })
+        .catch((loadError: unknown) => {
+          if (!active) return
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : 'No se ha podido cargar Training.',
+          )
+          setLoading(false)
+        })
+    }, 0)
 
     return () => {
       active = false
+      window.clearTimeout(timer)
     }
-  }, [])
+  }, [isActive, refreshRevision])
 
   async function startPlanned(session: PlannedWorkoutSession) {
     if (data?.active) {
@@ -1310,7 +1397,7 @@ export default function TrainingPage() {
       <header className="training-main-header">
         <div>
           <span className="training-brand">FÉNIX</span>
-          <h1>Training</h1>
+          <h1>TRAINING</h1>
           <p>{titleDate}</p>
         </div>
 

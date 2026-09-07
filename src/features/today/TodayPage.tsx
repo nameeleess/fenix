@@ -1,12 +1,13 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
+  useRef,
   useState,
   type CSSProperties,
 } from 'react'
 
 import { db } from '../../db/database'
+import { createLatestWinsGate } from '../../app/latestWins'
 import type {
   DailyRoutineTask,
   TodayBlock,
@@ -17,9 +18,8 @@ import {
   addOneOffTask,
   deleteOneOffTask,
   promoteOneOffTaskToRoutine,
-  ensureDailyRoutine,
+  reconcileDailyRoutineForLoad,
   getDailyRoutineView,
-  getLocalDateKey,
   setDailyTaskStatus,
   startDay,
   type DailyRoutineView,
@@ -36,6 +36,8 @@ import './today-integration.css'
 
 interface TodayPageProps {
   isActive: boolean
+  dateKey: string
+  refreshRevision: number
   onOpenTraining: () => void
   onOpenNutrition: () => void
   onOpenProgress: () => void
@@ -105,12 +107,12 @@ function weightPrimary(summary: TodayIntegrationSummary['progress']) {
 
 function TodayPage({
   isActive,
+  dateKey,
+  refreshRevision,
   onOpenTraining,
   onOpenNutrition,
   onOpenProgress,
 }: TodayPageProps) {
-  const dateKey = useMemo(() => getLocalDateKey(), [])
-
   const [view, setView] = useState<DailyRoutineView | null>(null)
   const [integration, setIntegration] = useState<TodayIntegrationSummary | null>(null)
   const [loading, setLoading] = useState(true)
@@ -121,8 +123,12 @@ function TodayPage({
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [newTaskBlock, setNewTaskBlock] = useState<TodayBlock>('development')
   const [editingRoutine, setEditingRoutine] = useState(false)
+  const loadCausality = useRef(createLatestWinsGate())
 
   const loadDay = useCallback(async () => {
+    const token = loadCausality.current.begin()
+    const isCurrent = () => loadCausality.current.isCurrent(token)
+
     try {
       setError(null)
 
@@ -130,6 +136,10 @@ function TodayPage({
         getTodayIntegrationSummary(dateKey),
         db.workShifts.where('date').equals(dateKey).first(),
       ])
+
+      if (!isCurrent()) {
+        return
+      }
 
       const isTrainingDay =
         moduleSummary.training.status !== 'rest' &&
@@ -141,12 +151,24 @@ function TodayPage({
           existingShift.isWorking,
       )
 
-      await ensureDailyRoutine(dateKey, {
-        isTrainingDay,
-        isWorkDay,
-      })
+      const persisted = await reconcileDailyRoutineForLoad(
+        dateKey,
+        {
+          isTrainingDay,
+          isWorkDay,
+        },
+        isCurrent,
+      )
+
+      if (!persisted || !isCurrent()) {
+        return
+      }
 
       const nextView = await getDailyRoutineView(dateKey)
+
+      if (!isCurrent()) {
+        return
+      }
 
       setIntegration(moduleSummary)
       setView(nextView)
@@ -160,13 +182,18 @@ function TodayPage({
       }
     } catch (loadError) {
       console.error('Error cargando Hoy:', loadError)
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : 'No se ha podido cargar el día.',
-      )
+
+      if (isCurrent()) {
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : 'No se ha podido cargar el día.',
+        )
+      }
     } finally {
-      setLoading(false)
+      if (isCurrent()) {
+        setLoading(false)
+      }
     }
   }, [dateKey])
 
@@ -174,11 +201,12 @@ function TodayPage({
     if (!isActive) return
 
     const timer = window.setTimeout(() => {
+      setLoading(true)
       void loadDay()
     }, 0)
 
     return () => window.clearTimeout(timer)
-  }, [isActive, loadDay])
+  }, [isActive, loadDay, refreshRevision])
 
   const tasks = view?.tasks ?? []
   const applicableTasks = tasks.filter((task) => task.status !== 'not_applicable')
@@ -671,6 +699,9 @@ function TodayPage({
                   {integration.training.completedThisWeek}/{integration.training.plannedThisWeek} semana
                   {' · '}racha {integration.training.streak}
                   {integration.training.streakPending ? ' pendiente' : ''}
+                  {integration.training.hasMultipleSessions
+                    ? ` · ${integration.training.sessionCount} sesiones hoy`
+                    : ''}
                 </small>
                 <b>{integration.training.status === 'in_progress' ? 'Continuar' : 'Abrir'} ›</b>
               </button>

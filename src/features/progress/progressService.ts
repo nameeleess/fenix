@@ -1,10 +1,15 @@
 import { db } from '../../db/database'
+import { publishCommittedMutation } from '../../app/freshnessEvents'
 import type {
   BodyMeasurement,
   ProgressFeaturedExercise,
   ProgressGoal,
   WeightEntry,
 } from '../../types/progress'
+
+import {
+  getCanonicalTrainingStreak,
+} from './trainingStreak'
 
 export interface WeightTrendSummary {
   latest: WeightEntry | null
@@ -221,6 +226,8 @@ export async function getTrainingAdherenceSummary(
       return a.scheduledDate.localeCompare(b.scheduledDate)
     })
 
+  const streakInfo = await getCanonicalTrainingStreak(todayKey)
+
   let completed = 0
   let incomplete = 0
   let omitted = 0
@@ -240,24 +247,6 @@ export async function getTrainingAdherenceSummary(
 
   const known = completed + incomplete + omitted
 
-  let streak = 0
-  let streakPending = false
-
-  for (let index = sessions.length - 1; index >= 0; index -= 1) {
-    const session = sessions[index]
-
-    if (session.status === 'pending' || session.status === 'in_progress') {
-      streakPending = true
-      continue
-    }
-
-    if (session.status === 'completed') {
-      streak += 1
-      continue
-    }
-
-    break
-  }
 
   return {
     completed,
@@ -266,8 +255,8 @@ export async function getTrainingAdherenceSummary(
     unresolved,
     known,
     adherencePercent: known > 0 ? Math.round((completed / known) * 100) : null,
-    streak,
-    streakPending,
+    streak: streakInfo.streak,
+    streakPending: streakInfo.pending,
   }
 }
 
@@ -279,11 +268,13 @@ export async function getActiveProgressGoals() {
     .sort((a, b) => a.targetWeightKg - b.targetWeightKg)
 }
 
-export async function getProgressSummary(): Promise<ProgressSummary> {
+export async function getProgressSummary(
+  todayKey = getLocalDateKey(),
+): Promise<ProgressSummary> {
   const [weight, routine, training, goals] = await Promise.all([
-    getWeightTrendSummary(),
-    getRoutineAdherenceSummary(),
-    getTrainingAdherenceSummary(),
+    getWeightTrendSummary(todayKey),
+    getRoutineAdherenceSummary(todayKey),
+    getTrainingAdherenceSummary(todayKey),
     getActiveProgressGoals(),
   ])
 
@@ -341,6 +332,7 @@ export async function addWeightEntry(input: {
   }
 
   await db.weightEntries.add(entry)
+  publishCommittedMutation('progress')
   return entry
 }
 
@@ -381,6 +373,8 @@ export async function updateWeightEntry(
     updatedAt: new Date().toISOString(),
     version: current.version + 1,
   })
+
+  publishCommittedMutation('progress')
 }
 
 export async function deleteWeightEntry(id: string) {
@@ -395,6 +389,8 @@ export async function deleteWeightEntry(id: string) {
     updatedAt: new Date().toISOString(),
     version: current.version + 1,
   })
+
+  publishCommittedMutation('progress')
 }
 
 export async function addBodyMeasurement(input: {
@@ -429,6 +425,7 @@ export async function addBodyMeasurement(input: {
   }
 
   await db.bodyMeasurements.add(measurement)
+  publishCommittedMutation('progress')
   return measurement
 }
 
@@ -452,6 +449,8 @@ export async function deleteBodyMeasurement(id: string) {
     updatedAt: new Date().toISOString(),
     version: current.version + 1,
   })
+
+  publishCommittedMutation('progress')
 }
 
 export async function getFeaturedExerciseOptions() {
@@ -501,6 +500,8 @@ export async function setFeaturedExercises(exerciseIds: string[]) {
       await db.progressFeaturedExercises.bulkAdd(next)
     }
   })
+
+  publishCommittedMutation('progress')
 }
 
 export async function getFeaturedExercisePerformance() {

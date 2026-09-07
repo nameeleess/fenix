@@ -1,6 +1,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
 } from 'react'
@@ -189,8 +190,10 @@ function MealCard({
   onUndo,
   onReplace,
   onPortion,
+  trainingSessionName,
 }: {
   item: NutritionMealView
+  trainingSessionName?: string | null
   onComplete: () => Promise<void>
   onSkip: () => Promise<void>
   onUndo: () => Promise<void>
@@ -233,7 +236,7 @@ function MealCard({
 
           {meal.trainingSessionId && (
             <p className="nutrition-vnext-linkNote">
-              Vinculada a la sesión de Training. Si se reprograma, las comidas pendientes asociadas se trasladan con ella.
+              Vinculada a {trainingSessionName ?? 'su sesión de Training'}. Si se reprograma, las comidas pendientes asociadas se trasladan con ella.
             </p>
           )}
 
@@ -304,6 +307,7 @@ function ImprovisedMealModal({
 }: {
   onClose: () => void
   onSave: (input: {
+    submissionId: string
     name: string
     role: NutritionRole
     calories: number | null
@@ -319,6 +323,9 @@ function ImprovisedMealModal({
   const [carbs, setCarbs] = useState('')
   const [fat, setFat] = useState('')
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const submittingRef = useRef(false)
+  const [submissionId] = useState(() => crypto.randomUUID())
 
   function optional(value: string) {
     const trimmed = value.replace(',', '.').trim()
@@ -332,10 +339,18 @@ function ImprovisedMealModal({
 
   async function submit(event: FormEvent) {
     event.preventDefault()
+
+    if (submittingRef.current) {
+      return
+    }
+
+    submittingRef.current = true
+    setSubmitting(true)
     setError('')
 
     try {
       await onSave({
+        submissionId,
         name,
         role,
         calories: optional(calories),
@@ -346,6 +361,8 @@ function ImprovisedMealModal({
       onClose()
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'No se ha podido guardar.')
+      submittingRef.current = false
+      setSubmitting(false)
     }
   }
 
@@ -357,7 +374,7 @@ function ImprovisedMealModal({
             <small>REGISTRO MANUAL</small>
             <h2>Comida improvisada</h2>
           </div>
-          <button type="button" onClick={onClose}>×</button>
+          <button type="button" disabled={submitting} onClick={onClose}>×</button>
         </div>
 
         {error && <div className="nutrition-vnext-error">{error}</div>}
@@ -388,8 +405,8 @@ function ImprovisedMealModal({
         </p>
 
         <div className="nutrition-vnext-modal__actions">
-          <button type="button" onClick={onClose}>Cancelar</button>
-          <button className="primary" type="submit">Guardar como realizada</button>
+          <button type="button" disabled={submitting} onClick={onClose}>Cancelar</button>
+          <button className="primary" type="submit" disabled={submitting}>{submitting ? 'Guardando…' : 'Guardar como realizada'}</button>
         </div>
       </form>
     </div>
@@ -412,6 +429,8 @@ function GoalEditor({
   const [rateMin, setRateMin] = useState(current?.targetWeightGainMinKgPerWeek?.toString() ?? '')
   const [rateMax, setRateMax] = useState(current?.targetWeightGainMaxKgPerWeek?.toString() ?? '')
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const submittingRef = useRef(false)
 
   function optional(value: string) {
     const trimmed = value.replace(',', '.').trim()
@@ -423,6 +442,13 @@ function GoalEditor({
 
   async function submit(event: FormEvent) {
     event.preventDefault()
+
+    if (submittingRef.current) {
+      return
+    }
+
+    submittingRef.current = true
+    setSubmitting(true)
     setError('')
     try {
       await onSave({
@@ -436,6 +462,8 @@ function GoalEditor({
       onClose()
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'No se ha podido guardar.')
+      submittingRef.current = false
+      setSubmitting(false)
     }
   }
 
@@ -447,7 +475,7 @@ function GoalEditor({
             <small>OBJETIVO ACTIVO</small>
             <h2>Objetivos Nutrition</h2>
           </div>
-          <button type="button" onClick={onClose}>×</button>
+          <button type="button" disabled={submitting} onClick={onClose}>×</button>
         </div>
         {error && <div className="nutrition-vnext-error">{error}</div>}
         <div className="nutrition-vnext-modal__macroInputs two">
@@ -462,8 +490,8 @@ function GoalEditor({
           Guardar crea una nueva vigencia. El objetivo anterior se conserva como histórico.
         </p>
         <div className="nutrition-vnext-modal__actions">
-          <button type="button" onClick={onClose}>Cancelar</button>
-          <button className="primary" type="submit">Guardar objetivo</button>
+          <button type="button" disabled={submitting} onClick={onClose}>Cancelar</button>
+          <button className="primary" type="submit" disabled={submitting}>{submitting ? 'Guardando…' : 'Guardar objetivo'}</button>
         </div>
       </form>
     </div>
@@ -474,25 +502,32 @@ function WeekView({
   week,
   onPrevious,
   onNext,
-  onCurrent,
+  preferredDate,
   onApply,
 }: {
   week: NutritionWeekSuggestion
+  preferredDate: string
   onPrevious: () => void
   onNext: () => void
-  onCurrent: () => void
   onApply: () => Promise<void>
 }) {
-  const [selectedDate, setSelectedDate] = useState(week.days[0]?.date ?? week.monday)
-  const selected = week.days.find((day) => day.date === selectedDate) ?? week.days[0]
+  const initialDate = week.days.some((day) => day.date === preferredDate)
+    ? preferredDate
+    : week.days[0]?.date ?? week.monday
+  const [selectedDate, setSelectedDate] = useState(initialDate)
+  const effectiveSelectedDate = week.days.some((day) => day.date === selectedDate)
+    ? selectedDate
+    : initialDate
+  const selected = week.days.find((day) => day.date === effectiveSelectedDate) ?? week.days[0]
 
   return (
     <div className="nutrition-vnext-week">
       <div className="nutrition-vnext-week__toolbar">
         <button type="button" onClick={onPrevious}>‹</button>
-        <button type="button" onClick={onCurrent}>
-          Semana de {formatDate(week.monday, false)}
-        </button>
+        <div className="nutrition-vnext-week__label">
+          <small>SEMANA</small>
+          <strong>Desde {formatDate(week.monday, false)}</strong>
+        </div>
         <button type="button" onClick={onNext}>›</button>
       </div>
 
@@ -506,7 +541,7 @@ function WeekView({
           >
             <span>{shortDate(day.date).split(' ')[0]}</span>
             <strong>{parseDateKey(day.date).getDate()}</strong>
-            <i className={day.trainingSession ? 'training' : ''} />
+            <i className={day.trainingSessions.length > 0 ? 'training' : ''} />
           </button>
         ))}
       </div>
@@ -515,21 +550,33 @@ function WeekView({
         <section className="nutrition-vnext-week__selected">
           <div className="nutrition-vnext-sectionHead">
             <div>
-              <small>{selected.trainingSession ? 'DÍA DE ENTRENAMIENTO' : 'DÍA SIN TRAINING'}</small>
+              <small>
+                {selected.trainingSessions.length > 0
+                  ? `${selected.trainingSessions.length} SESIÓN${selected.trainingSessions.length === 1 ? '' : 'ES'} TRAINING`
+                  : 'DÍA SIN TRAINING'}
+              </small>
               <h2>{formatDate(selected.date)}</h2>
             </div>
             <span>{number(selected.planned.calories)} kcal plan</span>
           </div>
 
           <div className="nutrition-vnext-week__mealList">
-            {selected.meals.map((meal) => (
-              <article key={`${selected.date}-${meal.role}`} className="nutrition-vnext-weekMeal">
+            {selected.meals.map((meal) => {
+              const linkedSession = meal.trainingSessionId
+                ? selected.trainingSessions.find((session) => session.id === meal.trainingSessionId) ?? null
+                : null
+
+              return (
+              <article key={`${selected.date}-${meal.role}-${meal.trainingSessionId ?? 'day'}`} className="nutrition-vnext-weekMeal">
                 <RecipeVisual
                   recipe={meal.recipe}
                   role={meal.role}
                   name={meal.recipe?.name ?? nutritionRoleLabel(meal.role)}
                 />
-                <span>{nutritionRoleLabel(meal.role)}</span>
+                <span>
+                  {nutritionRoleLabel(meal.role)}
+                  {linkedSession ? ` · ${linkedSession.templateName}` : ''}
+                </span>
                 <strong>{meal.recipe?.name ?? 'Sin propuesta compatible'}</strong>
                 <small>
                   {meal.recipe?.estimatedCalories === null || meal.recipe?.estimatedCalories === undefined
@@ -537,7 +584,8 @@ function WeekView({
                     : `${number(meal.recipe.estimatedCalories)} kcal`}
                 </small>
               </article>
-            ))}
+              )
+            })}
           </div>
         </section>
       )}
@@ -555,7 +603,15 @@ function WeekView({
   )
 }
 
-export default function NutritionPage() {
+interface NutritionPageProps {
+  isActive: boolean
+  refreshRevision: number
+}
+
+export default function NutritionPage({
+  isActive,
+  refreshRevision,
+}: NutritionPageProps) {
   const [tab, setTab] = useState<NutritionTab>('today')
   const [date, setDate] = useState(getLocalDateKey())
   const [weekAnchor, setWeekAnchor] = useState(getLocalDateKey())
@@ -573,9 +629,11 @@ export default function NutritionPage() {
   )
 
   useEffect(() => {
-    if (tab !== 'today') return
+    if (!isActive || tab !== 'today') return
     let active = true
     const timer = window.setTimeout(() => {
+      setLoading(true)
+
       void getNutritionDay(date)
         .then((value) => {
           if (!active) return
@@ -594,12 +652,14 @@ export default function NutritionPage() {
       active = false
       window.clearTimeout(timer)
     }
-  }, [date, tab])
+  }, [date, isActive, refreshRevision, tab])
 
   useEffect(() => {
-    if (tab !== 'week') return
+    if (!isActive || tab !== 'week') return
     let active = true
     const timer = window.setTimeout(() => {
+      setLoading(true)
+
       void getNutritionWeekSuggestion(weekAnchor)
         .then((value) => {
           if (!active) return
@@ -618,7 +678,7 @@ export default function NutritionPage() {
       active = false
       window.clearTimeout(timer)
     }
-  }, [tab, weekAnchor])
+  }, [isActive, refreshRevision, tab, weekAnchor])
 
   async function refreshDay(action: () => Promise<NutritionDayView>, success?: string) {
     try {
@@ -632,6 +692,12 @@ export default function NutritionPage() {
   }
 
   function changeTab(next: NutritionTab) {
+    if (next === 'week') {
+      // Open the week that contains the day the user is currently viewing.
+      // Do not jump back to the app's initial/current date implicitly.
+      setWeekAnchor(date)
+    }
+
     setLoading(next !== 'library')
     setMessage('')
     setError('')
@@ -644,7 +710,7 @@ export default function NutritionPage() {
         <header className="nutrition-vnext-topbar">
           <div>
             <small>FÉNIX</small>
-            <h1>Nutrition</h1>
+            <h1>NUTRITION</h1>
           </div>
         </header>
         <nav className="nutrition-vnext-tabs" aria-label="Secciones de Nutrition">
@@ -662,7 +728,7 @@ export default function NutritionPage() {
       <header className="nutrition-vnext-topbar">
         <div>
           <small>FÉNIX</small>
-          <h1>Nutrition</h1>
+          <h1>NUTRITION</h1>
         </div>
         <button className="nutrition-vnext-goalButton" type="button" onClick={() => setShowGoal(true)}>
           Objetivos
@@ -685,7 +751,11 @@ export default function NutritionPage() {
           <section className="nutrition-vnext-dayHeader">
             <button type="button" onClick={() => { setLoading(true); setDate(shiftDate(date, -1)) }}>‹</button>
             <div>
-              <small>{day.trainingSession ? `${day.trainingSession.templateName} · Training` : 'Día sin Training'}</small>
+              <small>
+                {day.trainingSessions.length > 0
+                  ? `${day.trainingSessions.map((session) => session.templateName).join(' + ')} · Training`
+                  : 'Día sin Training'}
+              </small>
               <h2>{formatDate(date)}</h2>
             </div>
             <button type="button" onClick={() => { setLoading(true); setDate(shiftDate(date, 1)) }}>›</button>
@@ -749,6 +819,11 @@ export default function NutritionPage() {
                 <MealCard
                   key={item.meal.id}
                   item={item}
+                  trainingSessionName={
+                    item.meal.trainingSessionId
+                      ? day.trainingSessions.find((session) => session.id === item.meal.trainingSessionId)?.templateName ?? null
+                      : null
+                  }
                   onComplete={() => refreshDay(() => setDailyMealStatus(item.meal.id, 'completed'))}
                   onSkip={() => refreshDay(() => setDailyMealStatus(item.meal.id, 'skipped'))}
                   onUndo={() => refreshDay(() => setDailyMealStatus(item.meal.id, 'pending'))}
@@ -777,9 +852,9 @@ export default function NutritionPage() {
       {!loading && tab === 'week' && week && (
         <WeekView
           week={week}
+          preferredDate={date}
           onPrevious={() => { setLoading(true); setWeekAnchor(shiftDate(week.monday, -7)) }}
           onNext={() => { setLoading(true); setWeekAnchor(shiftDate(week.monday, 7)) }}
-          onCurrent={() => { setLoading(true); setWeekAnchor(getLocalDateKey()) }}
           onApply={async () => {
             try {
               const next = await applyNutritionWeek(week.monday)

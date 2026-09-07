@@ -37,6 +37,11 @@ type ProgressView =
   | 'body'
   | 'data'
 
+interface ProgressPageProps {
+  isActive: boolean
+  refreshRevision: number
+}
+
 interface ExerciseOption {
   exercise: {
     id: string
@@ -232,7 +237,10 @@ function MetricCard({
   )
 }
 
-export default function ProgressPage() {
+export default function ProgressPage({
+  isActive,
+  refreshRevision,
+}: ProgressPageProps) {
   const [view, setView] = useState<ProgressView>('summary')
   const [summary, setSummary] = useState<ProgressSummary | null>(null)
   const [weightHistory, setWeightHistory] = useState<WeightEntry[]>([])
@@ -283,39 +291,47 @@ export default function ProgressPage() {
   }
 
   useEffect(() => {
+    if (!isActive) return
+
     let active = true
 
-    fetchProgressData()
-      .then((data) => {
-        if (!active) {
-          return
-        }
+    const timer = window.setTimeout(() => {
+      setLoading(true)
 
-        setSummary(data.nextSummary)
-        setWeightHistory(data.weights)
-        setMeasurements(data.body)
-        setExerciseOptions(data.options)
-        setPerformance(data.performanceItems)
-        setSelectedExercises(
-          data.options
-            .filter((item) => item.selected)
-            .map((item) => item.exercise.id),
-        )
-        setLoading(false)
-      })
-      .catch((loadError: unknown) => {
-        console.error('Error cargando Progreso:', loadError)
+      void fetchProgressData()
+        .then((data) => {
+          if (!active) {
+            return
+          }
 
-        if (active) {
-          setError('No se ha podido cargar Progreso.')
+          setSummary(data.nextSummary)
+          setWeightHistory(data.weights)
+          setMeasurements(data.body)
+          setExerciseOptions(data.options)
+          setPerformance(data.performanceItems)
+          setSelectedExercises(
+            data.options
+              .filter((item) => item.selected)
+              .map((item) => item.exercise.id),
+          )
+          setError('')
           setLoading(false)
-        }
-      })
+        })
+        .catch((loadError: unknown) => {
+          console.error('Error cargando Progreso:', loadError)
+
+          if (active) {
+            setError('No se ha podido cargar Progreso.')
+            setLoading(false)
+          }
+        })
+    }, 0)
 
     return () => {
       active = false
+      window.clearTimeout(timer)
     }
-  }, [])
+  }, [isActive, refreshRevision])
 
   function clearFeedback() {
     setMessage('')
@@ -468,7 +484,7 @@ export default function ProgressPage() {
           <div className="progress-header__mark"><PhoenixMark /></div>
           <div>
             <span>FÉNIX</span>
-            <h1>Progreso</h1>
+            <h1>PROGRESO</h1>
           </div>
         </header>
 

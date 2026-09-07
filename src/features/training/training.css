@@ -693,3 +693,132 @@
   .training-active-header { margin-left: -12px; margin-right: -12px; padding-left: 12px; padding-right: 12px; }
   .training-finish-shortcut { padding: 0 9px; font-size: 0.72rem; }
 }
+
+/* F2-B02: same-day planned session identities */
+.training-week-day {
+  position: relative;
+}
+
+.training-week-day > small {
+  position: absolute;
+  right: 6px;
+  top: 5px;
+  color: var(--fenix-text);
+  font-size: 0.56rem;
+  font-weight: 850;
+}
+
+.training-same-day-panel {
+  margin: 0 0 14px;
+  border: 1px solid var(--fenix-border);
+  border-radius: var(--fenix-radius-lg);
+  padding: 14px;
+  background: var(--fenix-carbon-texture), var(--fenix-surface);
+}
+
+.training-same-day-list {
+  display: grid;
+  gap: 8px;
+}
+
+.training-same-day-session {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--fenix-border-soft);
+  border-radius: 12px;
+  padding: 10px 11px;
+  background: var(--fenix-surface-soft);
+}
+
+.training-same-day-session > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.training-same-day-session span,
+.training-same-day-session small {
+  color: var(--fenix-text-dim);
+  font-size: 0.68rem;
+}
+
+.training-same-day-session strong {
+  color: var(--fenix-text);
+}
+
+.training-same-day-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.training-same-day-actions button {
+  min-height: 34px;
+  border: 1px solid var(--fenix-border);
+  border-radius: 9px;
+  padding: 0 9px;
+  color: var(--fenix-text);
+  background: transparent;
+  font-size: 0.7rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .training-same-day-session {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .training-same-day-actions {
+    justify-content: flex-start;
+  }
+}
+
+.training-session-queue {
+  margin: 0 0 14px;
+  border: 1px solid var(--fenix-border);
+  border-radius: var(--fenix-radius-lg);
+  padding: 14px;
+  background: var(--fenix-carbon-texture), var(--fenix-surface);
+}
+
+.training-session-queue__list {
+  display: grid;
+  gap: 8px;
+}
+
+.training-session-queue__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--fenix-border-soft);
+  border-radius: 12px;
+  padding: 10px 11px;
+  background: var(--fenix-surface-soft);
+}
+
+.training-session-queue__item > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.training-session-queue__item span,
+.training-session-queue__item small {
+  color: var(--fenix-text-dim);
+  font-size: 0.68rem;
+}
+
+.training-session-queue__item strong {
+  color: var(--fenix-text);
+}
+
+@media (max-width: 640px) {
+  .training-session-queue__item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

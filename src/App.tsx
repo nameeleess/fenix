@@ -4,6 +4,10 @@ import {
 } from 'react'
 
 import {
+  useAppFreshness,
+} from './app/useAppFreshness'
+
+import {
   initializeDatabase,
 } from './db/database'
 
@@ -155,6 +159,9 @@ function App() {
       'today',
     )
 
+  const freshness =
+    useAppFreshness()
+
   useEffect(() => {
     let active = true
 
@@ -253,6 +260,12 @@ function App() {
             section ===
             'today'
           }
+          dateKey={
+            freshness.dateKey
+          }
+          refreshRevision={
+            freshness.revision
+          }
           onOpenTraining={() =>
             setSection(
               'training',
@@ -278,7 +291,15 @@ function App() {
           'training'
         }
       >
-        <TrainingPage />
+        <TrainingPage
+          isActive={
+            section ===
+            'training'
+          }
+          refreshRevision={
+            freshness.revision
+          }
+        />
       </div>
 
       <div
@@ -288,7 +309,15 @@ function App() {
           'nutrition'
         }
       >
-        <NutritionPage />
+        <NutritionPage
+          isActive={
+            section ===
+            'nutrition'
+          }
+          refreshRevision={
+            freshness.revision
+          }
+        />
       </div>
 
       <div
@@ -298,7 +327,15 @@ function App() {
           'progress'
         }
       >
-        <ProgressPage />
+        <ProgressPage
+          isActive={
+            section ===
+            'progress'
+          }
+          refreshRevision={
+            freshness.revision
+          }
+        />
       </div>
 
       <nav

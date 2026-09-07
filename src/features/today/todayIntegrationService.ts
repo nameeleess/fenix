@@ -14,11 +14,19 @@ import {
   getProgressSummary,
   type ProgressSummary,
 } from '../progress/progressService'
-import type { PlannedWorkoutStatus } from '../../types/training'
+import type { PlannedWorkoutSession, PlannedWorkoutStatus } from '../../types/training'
 
 export type TodayTrainingStatus =
   | 'rest'
   | PlannedWorkoutStatus
+
+export interface TodayTrainingSessionSummary {
+  id: string
+  title: string
+  status: PlannedWorkoutStatus
+  estimatedDurationMinutes: number | null
+  durationMinutes: number | null
+}
 
 export interface TodayTrainingSummary {
   status: TodayTrainingStatus
@@ -26,6 +34,9 @@ export interface TodayTrainingSummary {
   plannedWorkoutId: string | null
   estimatedDurationMinutes: number | null
   durationMinutes: number | null
+  sessions: TodayTrainingSessionSummary[]
+  sessionCount: number
+  hasMultipleSessions: boolean
   completedThisWeek: number
   plannedThisWeek: number
   streak: number
@@ -69,14 +80,61 @@ function durationMinutes(startedAt: string, endedAt: string | null | undefined) 
   return Math.round((end - start) / 60000)
 }
 
+function compareTodaySessions(a: PlannedWorkoutSession, b: PlannedWorkoutSession) {
+  const priority: Record<PlannedWorkoutStatus, number> = {
+    in_progress: 0,
+    pending: 1,
+    completed: 2,
+    incomplete: 2,
+    omitted: 3,
+  }
+  const byStatus = priority[a.status] - priority[b.status]
+  if (byStatus !== 0) return byStatus
+
+  const byCreatedAt = a.createdAt.localeCompare(b.createdAt)
+  if (byCreatedAt !== 0) return byCreatedAt
+  return a.id.localeCompare(b.id)
+}
+
+async function sessionSummary(session: PlannedWorkoutSession): Promise<TodayTrainingSessionSummary> {
+  const execution = session.executionSessionId
+    ? await db.workoutSessions.get(session.executionSessionId)
+    : null
+
+  return {
+    id: session.id,
+    title: session.templateName,
+    status: session.status,
+    estimatedDurationMinutes: session.estimatedDurationMinutes,
+    durationMinutes: execution
+      ? durationMinutes(execution.startedAt, execution.endedAt ?? execution.completedAt)
+      : null,
+  }
+}
+
 async function getTodayTraining(dateKey: string): Promise<TodayTrainingSummary> {
   const [home, active] = await Promise.all([
     getTrainingHome(dateKey),
     getActiveWorkout(),
   ])
 
+  const plannedSessions = [
+    ...(home.week.find((item) => item.date === dateKey)?.sessions ?? []),
+  ].sort(compareTodaySessions)
+  const summaries = await Promise.all(plannedSessions.map(sessionSummary))
+  const common = {
+    sessions: summaries,
+    sessionCount: summaries.length,
+    hasMultipleSessions: summaries.length > 1,
+    completedThisWeek: home.completedThisWeek,
+    plannedThisWeek: home.plannedThisWeek,
+    streak: home.streak,
+    streakPending: home.streakPending,
+  }
+
   if (active) {
     return {
+      ...common,
       status: 'in_progress',
       title: active.template.name,
       plannedWorkoutId: active.planned?.id ?? null,
@@ -85,49 +143,31 @@ async function getTodayTraining(dateKey: string): Promise<TodayTrainingSummary> 
         active.template.estimatedDurationMinutes ??
         null,
       durationMinutes: null,
-      completedThisWeek: home.completedThisWeek,
-      plannedThisWeek: home.plannedThisWeek,
-      streak: home.streak,
-      streakPending: home.streakPending,
     }
   }
 
-  const todayPlanned =
-    home.week.find((item) => item.date === dateKey)?.session ?? null
+  const focus = plannedSessions[0] ?? null
 
-  if (!todayPlanned) {
+  if (!focus) {
     return {
+      ...common,
       status: 'rest',
       title: 'Descanso programado',
       plannedWorkoutId: null,
       estimatedDurationMinutes: null,
       durationMinutes: null,
-      completedThisWeek: home.completedThisWeek,
-      plannedThisWeek: home.plannedThisWeek,
-      streak: home.streak,
-      streakPending: home.streakPending,
     }
   }
 
-  const execution = todayPlanned.executionSessionId
-    ? await db.workoutSessions.get(todayPlanned.executionSessionId)
-    : null
+  const focusSummary = summaries.find((item) => item.id === focus.id) ?? null
 
   return {
-    status: todayPlanned.status,
-    title: todayPlanned.templateName,
-    plannedWorkoutId: todayPlanned.id,
-    estimatedDurationMinutes: todayPlanned.estimatedDurationMinutes,
-    durationMinutes: execution
-      ? durationMinutes(
-          execution.startedAt,
-          execution.endedAt ?? execution.completedAt,
-        )
-      : null,
-    completedThisWeek: home.completedThisWeek,
-    plannedThisWeek: home.plannedThisWeek,
-    streak: home.streak,
-    streakPending: home.streakPending,
+    ...common,
+    status: focus.status,
+    title: focus.templateName,
+    plannedWorkoutId: focus.id,
+    estimatedDurationMinutes: focus.estimatedDurationMinutes,
+    durationMinutes: focusSummary?.durationMinutes ?? null,
   }
 }
 
@@ -158,7 +198,7 @@ export async function getTodayIntegrationSummary(
   const [training, nutrition, progress] = await Promise.all([
     getTodayTraining(dateKey),
     getTodayNutrition(dateKey),
-    getProgressSummary(),
+    getProgressSummary(dateKey),
   ])
 
   return {
