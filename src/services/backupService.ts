@@ -20,6 +20,7 @@ export type {
 
 export interface BackupExportResult {
   fileName: string
+  exportedAt: string
   totalRecords: number
   tableCounts: Record<string, number>
   method: 'share' | 'download'
@@ -97,6 +98,21 @@ function downloadBackup(file: File) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
+async function recordSuccessfulBackupExport(backup: FenixBackup, fileName: string) {
+  const updatedAt = new Date().toISOString()
+  await db.transaction('rw', db.appMeta, async () => {
+    await db.appMeta.put({
+      key: 'v21:lastBackupExport',
+      value: JSON.stringify({
+        exportedAt: backup.exportedAt,
+        fileName,
+        totalRecords: backup.totalRecords,
+      }),
+      updatedAt,
+    })
+  })
+}
+
 export async function exportFenixBackup(): Promise<BackupExportResult> {
   const backup = await buildBackup()
   const fileName = createBackupFileName(backup.exportedAt)
@@ -115,9 +131,11 @@ export async function exportFenixBackup(): Promise<BackupExportResult> {
       text: 'Copia completa de los datos locales de FÉNIX.',
       files: [file],
     })
+    await recordSuccessfulBackupExport(backup, fileName)
 
     return {
       fileName,
+      exportedAt: backup.exportedAt,
       totalRecords: backup.totalRecords,
       tableCounts: backup.tableCounts,
       method: 'share',
@@ -125,9 +143,11 @@ export async function exportFenixBackup(): Promise<BackupExportResult> {
   }
 
   downloadBackup(file)
+  await recordSuccessfulBackupExport(backup, fileName)
 
   return {
     fileName,
+    exportedAt: backup.exportedAt,
     totalRecords: backup.totalRecords,
     tableCounts: backup.tableCounts,
     method: 'download',

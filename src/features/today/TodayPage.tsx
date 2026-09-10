@@ -22,9 +22,12 @@ import {
   getDailyRoutineView,
   setDailyTaskStatus,
   startDay,
+  upsertWorkShift,
+  setWorkShiftStatus,
   type DailyRoutineView,
 } from './todayService'
-import RoutineEditor from './RoutineEditor'
+import { AppHeader } from '../../components/designSystem'
+import { SectionIcon } from '../../components/SectionIcon'
 
 import {
   getTodayIntegrationSummary,
@@ -41,6 +44,8 @@ interface TodayPageProps {
   onOpenTraining: () => void
   onOpenNutrition: () => void
   onOpenProgress: () => void
+  onOpenSettings: () => void
+  onOpenRoutineSettings: () => void
 }
 
 const BLOCKS: Array<{ key: TodayBlock; label: string }> = [
@@ -58,21 +63,6 @@ const STATUS_LABELS: Record<TodayTaskStatus, string> = {
   not_applicable: 'No aplica',
 }
 
-function parseDateKey(dateKey: string) {
-  const [year, month, day] = dateKey.split('-').map(Number)
-  return new Date(year, month - 1, day, 12)
-}
-
-function formatTodayDate(dateKey: string) {
-  const value = new Intl.DateTimeFormat('es-ES', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  }).format(parseDateKey(dateKey))
-
-  return value.charAt(0).toUpperCase() + value.slice(1)
-}
-
 function formatNumber(value: number, decimals = 0) {
   return new Intl.NumberFormat('es-ES', {
     maximumFractionDigits: decimals,
@@ -82,7 +72,7 @@ function formatNumber(value: number, decimals = 0) {
 
 function getTaskStatusSymbol(status: TodayTaskStatus) {
   if (status === 'completed') return '✓'
-  if (status === 'skipped') return '—'
+  if (status === 'skipped') return ''
   if (status === 'not_applicable') return '×'
   return ''
 }
@@ -112,17 +102,20 @@ function TodayPage({
   onOpenTraining,
   onOpenNutrition,
   onOpenProgress,
+  onOpenSettings,
+  onOpenRoutineSettings,
 }: TodayPageProps) {
   const [view, setView] = useState<DailyRoutineView | null>(null)
   const [integration, setIntegration] = useState<TodayIntegrationSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [openBlock, setOpenBlock] = useState<TodayBlock>('morning')
+  const [openBlock, setOpenBlock] = useState<TodayBlock | null>('morning')
   const [taskMenuId, setTaskMenuId] = useState<string | null>(null)
   const [addingTask, setAddingTask] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [newTaskBlock, setNewTaskBlock] = useState<TodayBlock>('development')
-  const [editingRoutine, setEditingRoutine] = useState(false)
+  const [workDraft, setWorkDraft] = useState<{ key: string; start: string; end: string } | null>(null)
+  const [workBusy, setWorkBusy] = useState(false)
   const loadCausality = useRef(createLatestWinsGate())
 
   const loadDay = useCallback(async () => {
@@ -209,6 +202,28 @@ function TodayPage({
   }, [isActive, loadDay, refreshRevision])
 
   const tasks = view?.tasks ?? []
+
+  async function saveWorkShift(isWorking: boolean) {
+    setWorkBusy(true)
+    try {
+      await upsertWorkShift(dateKey, {
+        isWorking,
+        startTime: isWorking ? workStart || null : null,
+        endTime: isWorking ? workEnd || null : null,
+      })
+      await refresh()
+    } catch (shiftError) {
+      setError(shiftError instanceof Error ? shiftError.message : 'No se ha podido actualizar la jornada.')
+    } finally { setWorkBusy(false) }
+  }
+
+  async function changeWorkStatus(status: 'pending' | 'completed' | 'skipped') {
+    setWorkBusy(true)
+    try { await setWorkShiftStatus(dateKey, status); await refresh() }
+    catch (shiftError) { setError(shiftError instanceof Error ? shiftError.message : 'No se ha podido actualizar la jornada.') }
+    finally { setWorkBusy(false) }
+  }
+
   const applicableTasks = tasks.filter((task) => task.status !== 'not_applicable')
   const completedTasks = applicableTasks.filter((task) => task.status === 'completed')
   const routineProgress =
@@ -216,8 +231,37 @@ function TodayPage({
       ? 0
       : Math.round((completedTasks.length / applicableTasks.length) * 100)
 
-  const recommendedTask = tasks.find((task) => task.status === 'pending') ?? null
+  const recommendedTask = tasks.find((task) => task.status === 'pending')
+    ?? tasks.find((task) => task.status === 'completed')
+    ?? null
   const workShift: WorkShift | null = view?.workShift ?? null
+  const workShiftDraftKey = `${dateKey}:${workShift?.id ?? 'none'}:${workShift?.updatedAt ?? 'none'}`
+  const workStart = workDraft?.key === workShiftDraftKey
+    ? workDraft.start
+    : workShift?.startTime ?? ''
+  const workEnd = workDraft?.key === workShiftDraftKey
+    ? workDraft.end
+    : workShift?.endTime ?? ''
+
+  function updateWorkStart(value: string) {
+    setWorkDraft((current) => ({
+      key: workShiftDraftKey,
+      start: value,
+      end: current?.key === workShiftDraftKey
+        ? current.end
+        : workShift?.endTime ?? '',
+    }))
+  }
+
+  function updateWorkEnd(value: string) {
+    setWorkDraft((current) => ({
+      key: workShiftDraftKey,
+      start: current?.key === workShiftDraftKey
+        ? current.start
+        : workShift?.startTime ?? '',
+      end: value,
+    }))
+  }
 
   const visibleBlocks = BLOCKS.filter((block) => {
     const hasTasks = tasks.some(
@@ -225,16 +269,10 @@ function TodayPage({
     )
 
     if (block.key === 'development') return true
-    if (block.key === 'work') return Boolean(workShift?.isWorking)
+    if (block.key === 'work') return hasTasks && Boolean(workShift?.isWorking)
     return hasTasks
   })
 
-  const currentBlockKey =
-    recommendedTask?.block ?? visibleBlocks[0]?.key ?? 'development'
-
-  const remainingBlocks = visibleBlocks.filter(
-    (block) => block.key !== currentBlockKey,
-  )
 
   async function refresh() {
     await loadDay()
@@ -335,7 +373,7 @@ function TodayPage({
     }
   }
 
-  function renderRoutineBlock(blockKey: TodayBlock, forceOpen = false) {
+  function renderRoutineBlock(blockKey: TodayBlock) {
     const block = BLOCKS.find((item) => item.key === blockKey)
     if (!block) return null
 
@@ -343,7 +381,7 @@ function TodayPage({
       (task) => task.block === block.key && task.status !== 'not_applicable',
     )
     const completed = blockTasks.filter((task) => task.status === 'completed').length
-    const isOpen = forceOpen || openBlock === block.key
+    const isOpen = openBlock === block.key
 
     return (
       <article
@@ -354,13 +392,12 @@ function TodayPage({
           type="button"
           className="today-block__header"
           onClick={() => {
-            if (!forceOpen) {
-              setOpenBlock(isOpen ? currentBlockKey : block.key)
-            }
+            setOpenBlock(isOpen ? null : block.key)
           }}
           aria-expanded={isOpen}
         >
-          <span>{block.label}</span>
+          <SectionIcon name={block.key === 'morning' ? 'routine' : block.key === 'night' ? 'moon' : block.key === 'work' ? 'work' : 'energy'} />
+          <span className="today-block__title">{block.label.toLocaleLowerCase('es-ES')}<small>{completed}/{blockTasks.length} {completed === 1 ? 'completada' : 'completadas'}</small></span>
           <span className="today-block__summary">
             {block.key === 'work' && workShift?.isWorking ? (
               <>{workShift.startTime ?? '—'}–{workShift.endTime ?? '—'}</>
@@ -369,7 +406,7 @@ function TodayPage({
             ) : (
               'Sin acciones'
             )}
-            {!forceOpen && <span aria-hidden="true">{isOpen ? '⌃' : '›'}</span>}
+            <span aria-hidden="true">{isOpen ? '⌃' : '⌄'}</span>
           </span>
         </button>
 
@@ -518,36 +555,92 @@ function TodayPage({
 
   const ringStyle = {
     '--today-progress-color': progressColor(routineProgress),
-    background: `conic-gradient(var(--today-progress-color) ${routineProgress}%, var(--fenix-border) ${routineProgress}% 100%)`,
+    background: `conic-gradient(#ffac23 0%, #9fcc1b ${routineProgress * .45}%, #30b92d ${routineProgress * .65}%, #ff1426 ${routineProgress}%, var(--fenix-border) ${routineProgress}% 100%)`,
   } as CSSProperties
+
+  const moduleDashboard = (
+    <section className="today-dashboard-grid" aria-label="Resumen de módulos">
+      <button
+        type="button"
+        className="today-dashboard-card today-dashboard-card--training"
+        onClick={onOpenTraining}
+      >
+        <span className="today-dashboard-card__eyebrow">TRAINING</span>
+        <strong>{integration.training.title}</strong>
+        <small>
+          {integration.training.completedThisWeek}/{integration.training.plannedThisWeek} semana
+          {' · '}racha {integration.training.streak}
+          {integration.training.streakPending ? ' pendiente' : ''}
+          {integration.training.hasMultipleSessions
+            ? ` · ${integration.training.sessionCount} sesiones hoy`
+            : ''}
+        </small>
+        <b>{integration.training.status === 'in_progress' ? 'Continuar' : 'Abrir'} ›</b>
+      </button>
+
+      <button
+        type="button"
+        className="today-dashboard-card today-dashboard-card--nutrition"
+        onClick={onOpenNutrition}
+      >
+        <span className="today-dashboard-card__eyebrow">NUTRITION</span>
+        <strong>{nutritionMeal ? nutritionMeal.roleLabel : 'Día resuelto'}</strong>
+        <small>
+          {formatNumber(integration.nutrition.consumed.calories)} kcal
+          {' · '}P {formatNumber(integration.nutrition.consumed.protein)} g
+        </small>
+        <b>Abrir ›</b>
+      </button>
+
+      <button
+        type="button"
+        className="today-dashboard-card today-dashboard-card--progress"
+        onClick={onOpenProgress}
+      >
+        <span className="today-dashboard-card__eyebrow">PROGRESO</span>
+        <strong>{weightPrimary(integration.progress)}</strong>
+        <small>
+          Rutina{' '}
+          {integration.progress.routine.adherencePercent === null
+            ? '—'
+            : `${integration.progress.routine.adherencePercent}%`}
+        </small>
+        <b>Ver ›</b>
+      </button>
+    </section>
+  )
 
   return (
     <main className="today-page today-page--integrated">
       <div className="today-shell">
-        <header className="today-header">
-          <div>
-            <span className="today-brand">FÉNIX</span>
-            <h1>HOY</h1>
-            <p>{formatTodayDate(dateKey)}</p>
-          </div>
-        </header>
+        <AppHeader title="Hoy" dateKey={dateKey} onSettings={onOpenSettings} />
 
         {error && <div className="today-inline-error" role="alert">{error}</div>}
 
         {!dayStarted ? (
+          <>
           <section className="today-start-card">
-            <img src="/fenix-icon-192.png" alt="" className="today-start-card__icon" />
+            <span className="today-start-card__icon"><SectionIcon name="routine" /></span>
             <div>
-              <span className="today-eyebrow">HOY</span>
               <h2>Tu día está preparado</h2>
-              <p>
-                Training, Nutrition y Progreso ya están conectados. Iniciar el día activa la rutina sin inventar cumplimiento.
-              </p>
+              <p>Todo en cero. Un nuevo día,<br/>las mismas oportunidades.</p>
+              <button type="button" className="today-primary-button" onClick={() => void handleStartDay()}>
+                <SectionIcon name="play" /> Comenzar mi día
+              </button>
             </div>
-            <button type="button" className="today-primary-button" onClick={() => void handleStartDay()}>
-              Iniciar día
-            </button>
           </section>
+            <div className="today-day-zero-settings">
+              <button type="button" onClick={onOpenRoutineSettings}><SectionIcon name="work"/><span><strong>Configura tu horario laboral</strong><small>Define tu jornada para adaptar la rutina.</small></span><SectionIcon name="chevron"/></button>
+              <button type="button" onClick={onOpenRoutineSettings}><SectionIcon name="target"/><span><strong>Prepara tu rutina del día</strong><small>Añade tus tareas y enfoca tu sesión.</small></span><SectionIcon name="chevron"/></button>
+            </div>
+            <section className="today-start-empty"><span className="today-eyebrow">TU DÍA</span><div><i/><span><strong>Aún no hay pasos completados</strong><small>Tu día comienza aquí.<br/>Completa tu primera tarea para ver tu progreso.</small></span><SectionIcon name="chevron"/></div></section>
+            <p className="today-day-zero-quote">“Disciplina hoy, resultados mañana.”</p>
+            <section className="today-day-zero-modules">
+              <button type="button" onClick={onOpenTraining}><span>TRAINING</span><strong>Listo para empezar</strong><small>Tu sesión te espera.</small><b><SectionIcon name="play"/> Iniciar</b></button>
+              <button type="button" onClick={onOpenNutrition}><span>NUTRITION</span><strong>Empieza tu plan</strong><small>Registra tu primera comida del día.</small><b><SectionIcon name="play"/> Registrar</b></button>
+              <button type="button" onClick={onOpenProgress}><span>PROGRESO</span><strong>Día 0</strong><small>Todo comienza aquí.</small><b><SectionIcon name="play"/> Ver métricas</b></button>
+            </section>
+          </>
         ) : (
           <>
             <section className="today-hero today-hero--integrated">
@@ -560,12 +653,13 @@ function TodayPage({
                 </div>
                 <div className="today-hero__numbers">
                   <strong>{completedTasks.length}/{applicableTasks.length}</strong>
-                  <span>acciones de hoy</span>
+                  <span>tareas locales</span><small>Rutina del día</small>
                 </div>
               </div>
 
               <div className="today-now-card today-now-card--integrated">
                 <span className="today-eyebrow">AHORA</span>
+                <SectionIcon name={recommendedTask ? 'routine' : priorityNutrition ? 'nutrition' : 'routine'} />
 
                 {integration.training.status === 'in_progress' ? (
                   <>
@@ -574,21 +668,10 @@ function TodayPage({
                     <button
                       type="button"
                       className="today-primary-button today-primary-button--compact"
+                      aria-label="Continuar entrenamiento"
                       onClick={onOpenTraining}
                     >
-                      Continuar entrenamiento
-                    </button>
-                  </>
-                ) : priorityNutrition && nutritionMeal ? (
-                  <>
-                    <h2>{nutritionMeal.roleLabel}</h2>
-                    <p>{nutritionMeal.name}</p>
-                    <button
-                      type="button"
-                      className="today-primary-button today-primary-button--compact"
-                      onClick={onOpenNutrition}
-                    >
-                      Abrir Nutrition
+                      ›
                     </button>
                   </>
                 ) : recommendedTask ? (
@@ -598,9 +681,23 @@ function TodayPage({
                     <button
                       type="button"
                       className="today-primary-button today-primary-button--compact"
+                      aria-label={recommendedTask.status === 'completed' ? 'Reabrir tarea' : 'Completar'}
                       onClick={() => void handleTaskToggle(recommendedTask)}
                     >
-                      Completar
+                      ✓
+                    </button>
+                  </>
+                ) : priorityNutrition && nutritionMeal ? (
+                  <>
+                    <h2>{nutritionMeal.roleLabel}</h2>
+                    <p>{nutritionMeal.name}</p>
+                    <button
+                      type="button"
+                      className="today-primary-button today-primary-button--compact"
+                      aria-label="Abrir Nutrition"
+                      onClick={onOpenNutrition}
+                    >
+                      ›
                     </button>
                   </>
                 ) : nutritionMeal ? (
@@ -610,9 +707,10 @@ function TodayPage({
                     <button
                       type="button"
                       className="today-primary-button today-primary-button--compact"
+                      aria-label="Abrir Nutrition"
                       onClick={onOpenNutrition}
                     >
-                      Abrir Nutrition
+                      ›
                     </button>
                   </>
                 ) : (
@@ -624,17 +722,41 @@ function TodayPage({
               </div>
             </section>
 
+            <section className="today-workshift-card" aria-label="Jornada laboral">
+              <details>
+              <summary><SectionIcon name="work" /><div><strong>{workShift?.isWorking ? 'Horario laboral configurado' : 'Día libre'}</strong><span>{workShift?.isWorking ? 'La rutina del día se adapta a tu jornada.' : 'Sin jornada laboral'}</span></div><span aria-hidden="true">›</span></summary>
+              <div className="today-section-heading">
+                <div><span className="today-eyebrow">JORNADA</span><h2>{workShift?.isWorking ? 'Día de trabajo' : 'Día libre'}</h2></div>
+                <div className="today-workshift-card__mode" role="group" aria-label="Tipo de jornada">
+                  <button type="button" className={workShift?.isWorking ? 'active' : ''} disabled={workBusy} onClick={() => void saveWorkShift(true)}>Trabajo</button>
+                  <button type="button" className={workShift && !workShift.isWorking ? 'active' : ''} disabled={workBusy} onClick={() => void saveWorkShift(false)}>Libre</button>
+                </div>
+              </div>
+              {workShift?.isWorking ? (
+                <div className="today-workshift-card__details">
+                  <label><span>Entrada</span><input type="time" value={workStart} onChange={(event) => updateWorkStart(event.target.value)} /></label>
+                  <label><span>Salida</span><input type="time" value={workEnd} onChange={(event) => updateWorkEnd(event.target.value)} /></label>
+                  <button type="button" disabled={workBusy} onClick={() => void saveWorkShift(true)}>Guardar horario</button>
+                  <div className="today-workshift-card__status">
+                    <button type="button" className={workShift.status === 'pending' ? 'active' : ''} onClick={() => void changeWorkStatus('pending')}>Pendiente</button>
+                    <button type="button" className={workShift.status === 'completed' ? 'active' : ''} onClick={() => void changeWorkStatus('completed')}>Hecha</button>
+                    <button type="button" className={workShift.status === 'skipped' ? 'active' : ''} onClick={() => void changeWorkStatus('skipped')}>Omitida</button>
+                  </div>
+                </div>
+              ) : <p>Hoy no tienes una jornada de trabajo configurada.</p>}
+              </details>
+            </section>
+
             <section className="today-section today-current-block">
               <div className="today-section-heading">
                 <div>
-                  <span className="today-eyebrow">RUTINA · BLOQUE ACTUAL</span>
-                  <h2>{BLOCKS.find((item) => item.key === currentBlockKey)?.label ?? 'Tu día'}</h2>
+                  <span className="today-eyebrow">TU DÍA</span>
                 </div>
                 <div className="today-section-heading__actions">
                   <button
                     type="button"
                     className="today-text-button"
-                    onClick={() => setEditingRoutine(true)}
+                    onClick={onOpenRoutineSettings}
                   >
                     Editar rutina
                   </button>
@@ -683,89 +805,15 @@ function TodayPage({
               )}
 
               <div className="today-block-list">
-                {renderRoutineBlock(currentBlockKey, true)}
+                {visibleBlocks.map(block => renderRoutineBlock(block.key))}
               </div>
             </section>
 
-            <section className="today-dashboard-grid" aria-label="Resumen de módulos">
-              <button
-                type="button"
-                className="today-dashboard-card today-dashboard-card--training"
-                onClick={onOpenTraining}
-              >
-                <span className="today-dashboard-card__eyebrow">TRAINING</span>
-                <strong>{integration.training.title}</strong>
-                <small>
-                  {integration.training.completedThisWeek}/{integration.training.plannedThisWeek} semana
-                  {' · '}racha {integration.training.streak}
-                  {integration.training.streakPending ? ' pendiente' : ''}
-                  {integration.training.hasMultipleSessions
-                    ? ` · ${integration.training.sessionCount} sesiones hoy`
-                    : ''}
-                </small>
-                <b>{integration.training.status === 'in_progress' ? 'Continuar' : 'Abrir'} ›</b>
-              </button>
+            {moduleDashboard}
 
-              <button
-                type="button"
-                className="today-dashboard-card today-dashboard-card--nutrition"
-                onClick={onOpenNutrition}
-              >
-                <span className="today-dashboard-card__eyebrow">NUTRITION</span>
-                <strong>{nutritionMeal ? nutritionMeal.roleLabel : 'Día resuelto'}</strong>
-                <small>
-                  {formatNumber(integration.nutrition.consumed.calories)} kcal
-                  {' · '}P {formatNumber(integration.nutrition.consumed.protein)} g
-                </small>
-                <b>Abrir ›</b>
-              </button>
-
-              <button
-                type="button"
-                className="today-dashboard-card today-dashboard-card--progress"
-                onClick={onOpenProgress}
-              >
-                <span className="today-dashboard-card__eyebrow">PROGRESO</span>
-                <strong>{weightPrimary(integration.progress)}</strong>
-                <small>
-                  Rutina{' '}
-                  {integration.progress.routine.adherencePercent === null
-                    ? '—'
-                    : `${integration.progress.routine.adherencePercent}%`}
-                </small>
-                <b>Ver ›</b>
-              </button>
-            </section>
-
-            {remainingBlocks.length > 0 && (
-              <section className="today-section today-rest-of-day">
-                <div className="today-section-heading">
-                  <div>
-                    <span className="today-eyebrow">DESPUÉS</span>
-                    <h2>Resto del día</h2>
-                  </div>
-                </div>
-                <div className="today-block-list">
-                  {remainingBlocks.map((block) => renderRoutineBlock(block.key))}
-                </div>
-              </section>
-            )}
           </>
         )}
 
-        {editingRoutine && (
-          <RoutineEditor
-            dateKey={dateKey}
-            context={{
-              isTrainingDay:
-                integration.training.status !== 'rest' &&
-                integration.training.status !== 'omitted',
-              isWorkDay: Boolean(workShift?.isWorking),
-            }}
-            onClose={() => setEditingRoutine(false)}
-            onSaved={refresh}
-          />
-        )}
       </div>
     </main>
   )

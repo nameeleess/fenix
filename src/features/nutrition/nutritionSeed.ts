@@ -1805,11 +1805,22 @@ export async function ensureNutritionSeed() {
     db.recipeIngredients,
     db.appMeta,
     async () => {
-      await db.ingredients.bulkPut(ingredients)
-      await db.recipes.bulkPut(recipes)
-      await db.recipeIngredients.bulkPut(
-        recipeIngredients,
-      )
+      // Seed ownership v2.1: seed only fills identities that have never existed.
+      // Existing active, edited or soft-deleted user entities are never overwritten
+      // or resurrected when seed metadata is missing/replayed.
+      const [currentIngredients, currentRecipes, currentRelations] = await Promise.all([
+        db.ingredients.bulkGet(ingredients.map((item) => item.id)),
+        db.recipes.bulkGet(recipes.map((item) => item.id)),
+        db.recipeIngredients.bulkGet(recipeIngredients.map((item) => item.id)),
+      ])
+
+      const missingIngredients = ingredients.filter((_, index) => currentIngredients[index] === undefined)
+      const missingRecipes = recipes.filter((_, index) => currentRecipes[index] === undefined)
+      const missingRelations = recipeIngredients.filter((_, index) => currentRelations[index] === undefined)
+
+      if (missingIngredients.length > 0) await db.ingredients.bulkAdd(missingIngredients)
+      if (missingRecipes.length > 0) await db.recipes.bulkAdd(missingRecipes)
+      if (missingRelations.length > 0) await db.recipeIngredients.bulkAdd(missingRelations)
 
       await db.appMeta.put({
         key: 'nutritionSeedVersion',

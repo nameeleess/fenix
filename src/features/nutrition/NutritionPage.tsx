@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useEffect,
   useMemo,
   useRef,
@@ -11,8 +13,12 @@ import type {
   NutritionRole,
 } from '../../types/nutrition'
 
-import NutritionLibrary from './NutritionLibrary'
+import { parseDateKey, shiftDateKey } from '../../utils/date'
+
+const NutritionLibrary = lazy(() => import('./NutritionLibrary'))
+import { AppHeader, Dialog, PrimaryButton, SecondaryButton, SegmentedTabs, Sheet, StatusBadge } from '../../components/designSystem'
 import RecipeVisual from './RecipeVisual'
+import { createUuid } from '../../utils/uuid'
 
 import {
   addImprovisedMeal,
@@ -35,11 +41,14 @@ import {
 } from './nutritionVNextService'
 
 import './nutrition-vnext.css'
+import './nutrition-day.css'
+import { SectionIcon } from '../../components/SectionIcon'
 
 type NutritionTab =
   | 'today'
   | 'week'
-  | 'library'
+  | 'recipes'
+  | 'shopping'
 
 const appetiteOptions: Array<{
   value: AppetiteMode
@@ -64,17 +73,6 @@ const appetiteOptions: Array<{
 ]
 
 const portionOptions = [0.5, 1, 1.5, 2]
-
-function parseDateKey(dateKey: string) {
-  const [year, month, day] = dateKey.split('-').map(Number)
-  return new Date(year, month - 1, day, 12)
-}
-
-function shiftDate(dateKey: string, days: number) {
-  const date = parseDateKey(dateKey)
-  date.setDate(date.getDate() + days)
-  return getLocalDateKey(date)
-}
 
 function formatDate(dateKey: string, withWeekday = true) {
   return new Intl.DateTimeFormat('es-ES', {
@@ -137,20 +135,18 @@ function MacroOverview({
       <div className="nutrition-vnext-macroHero">
         <div>
           <span>Consumido</span>
-          <strong>{number(consumed.calories)} kcal</strong>
-          <small>
-            de {caloriesTarget ? `${number(caloriesTarget)} kcal objetivo` : 'objetivo sin definir'}
-          </small>
+          <strong>{number(consumed.calories)}</strong>
+          <small>kcal</small>
+        </div>
+        <div className="nutrition-vnext-calorieRing" aria-label={caloriesTarget ? `${caloriePct}% del objetivo de ${number(caloriesTarget)} kcal` : 'Objetivo sin definir'}>
+          <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="42" /><circle className="nutrition-vnext-calorieRing__value" cx="50" cy="50" r="42" pathLength="100" strokeDasharray={`${caloriePct} 100`} /></svg>
+          <strong>{caloriesTarget ? `${caloriePct}%` : '—'}</strong><small>{caloriesTarget ? 'del objetivo' : 'Sin objetivo'}</small>
         </div>
         <div className="nutrition-vnext-macroHero__planned">
           <span>Planificado</span>
           <strong>{number(planned.calories)}</strong>
           <small>kcal</small>
         </div>
-      </div>
-
-      <div className="nutrition-vnext-progressLine">
-        <span style={{ width: `${caloriePct}%` }} />
       </div>
 
       <div className="nutrition-vnext-macroGrid">
@@ -190,6 +186,7 @@ function MealCard({
   onUndo,
   onReplace,
   onPortion,
+  onOpenDetail,
   trainingSessionName,
 }: {
   item: NutritionMealView
@@ -199,6 +196,7 @@ function MealCard({
   onUndo: () => Promise<void>
   onReplace: (recipeId: string) => Promise<void>
   onPortion: (portion: number) => Promise<void>
+  onOpenDetail: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const meal = item.meal
@@ -214,16 +212,16 @@ function MealCard({
         onClick={() => setExpanded((value) => !value)}
       >
         <span className="nutrition-vnext-meal__order">{meal.order}</span>
-        <RecipeVisual recipe={item.recipe} role={meal.role} name={meal.name} />
         <span className="nutrition-vnext-meal__title">
-          <small>{nutritionRoleLabel(meal.role)}</small>
-          <strong>{meal.name}</strong>
-          <em>{statusLabel(meal.status)}</em>
+          <strong>{nutritionRoleLabel(meal.role)}</strong>
+          <small>{meal.name}</small>
         </span>
         <span className="nutrition-vnext-meal__kcal">
           {meal.plannedCalories === null ? '—' : `${number(meal.plannedCalories)} kcal`}
+          <small>P {meal.plannedProtein ?? '—'} g | C {meal.plannedCarbs ?? '—'} g | G {meal.plannedFat ?? '—'} g</small>
         </span>
-        <span className="nutrition-vnext-chevron">{expanded ? '−' : '+'}</span>
+        <span className="nutrition-vnext-meal__status">{statusLabel(meal.status)}</span>
+        <span className="nutrition-vnext-chevron">{expanded ? '⌄' : '›'}</span>
       </button>
 
       {expanded && (
@@ -280,6 +278,7 @@ function MealCard({
           )}
 
           <div className="nutrition-vnext-meal__actions">
+            <button type="button" onClick={onOpenDetail}>Abrir detalle</button>
             {meal.status === 'pending' ? (
               <>
                 <button className="primary" type="button" onClick={() => void onComplete()}>
@@ -298,6 +297,113 @@ function MealCard({
         </div>
       )}
     </article>
+  )
+}
+
+function MealDetailSheet({
+  item,
+  appetiteMode,
+  trainingSessionName,
+  onClose,
+  onComplete,
+  onSkip,
+  onUndo,
+  onReplace,
+  onPortion,
+}: {
+  item: NutritionMealView | null
+  appetiteMode: AppetiteMode
+  trainingSessionName?: string | null
+  onClose: () => void
+  onComplete: () => Promise<void>
+  onSkip: () => Promise<void>
+  onUndo: () => Promise<void>
+  onReplace: (recipeId: string) => Promise<void>
+  onPortion: (portion: number) => Promise<void>
+}) {
+  if (!item) return null
+  const meal = item.meal
+  const disabled = meal.status !== 'pending'
+  const relationship = meal.trainingSessionId
+    ? `${nutritionRoleLabel(meal.role)} · ${trainingSessionName ?? 'Training'}`
+    : 'Comida del día'
+
+  return (
+    <Sheet
+      open
+      title={nutritionRoleLabel(meal.role)}
+      subtitle="Nutrition · comida del día"
+      className="nutrition-meal-detail-sheet"
+      header={<AppHeader title="Nutrition" kicker="FÉNIX" subtitle="Comida del día" back={{ label: 'Volver', onClick: onClose }} />}
+      onClose={onClose}
+    >
+      <div className="nutrition-vnext-meal-detail-v21">
+        <section className="nutrition-vnext-meal-detail-v21__hero">
+          <RecipeVisual recipe={item.recipe} role={meal.role} name={meal.name} variant="hero" />
+          <div className="nutrition-vnext-meal-detail-v21__copy">
+            <div className="nutrition-vnext-meal-detail-v21__badges">
+              <StatusBadge tone={meal.status === 'completed' ? 'success' : meal.status === 'skipped' ? 'warning' : 'accent'}>{statusLabel(meal.status)}</StatusBadge>
+              <StatusBadge>{appetiteMode === 'compact' ? 'Compacto' : appetiteMode === 'voluminous' ? 'Voluminoso' : 'Normal'}</StatusBadge>
+            </div>
+            <h2>{meal.name}</h2>
+            <p>{relationship}</p>
+            <div className="nutrition-vnext-meal-detail-v21__macros">
+              <span><strong>{meal.plannedCalories === null ? '—' : number(meal.plannedCalories)}</strong><small>kcal</small></span>
+              <span><strong>{meal.plannedProtein === null ? '—' : number(meal.plannedProtein)}</strong><small>g proteína</small></span>
+              <span><strong>{meal.plannedCarbs === null ? '—' : number(meal.plannedCarbs)}</strong><small>g carbohidratos</small></span>
+              <span><strong>{meal.plannedFat === null ? '—' : number(meal.plannedFat)}</strong><small>g grasas</small></span>
+            </div>
+          </div>
+          <div className="nutrition-vnext-meal-detail-v21__actions">
+            {meal.status === 'pending' ? (
+              <>
+                <PrimaryButton type="button" onClick={() => void onComplete()}>Marcar realizada</PrimaryButton>
+                <SecondaryButton type="button" onClick={() => document.getElementById('meal-alternatives')?.scrollIntoView({ behavior: 'smooth' })}>Alternativas</SecondaryButton>
+                <SecondaryButton type="button" onClick={() => document.getElementById('meal-alternatives')?.scrollIntoView({ behavior: 'smooth' })}>Sustituir</SecondaryButton>
+              </>
+            ) : (
+              <SecondaryButton type="button" onClick={() => void onUndo()}>Volver a pendiente</SecondaryButton>
+            )}
+          </div>
+        </section>
+
+        <section className="nutrition-vnext-meal-detail-v21__facts">
+          <header><span className="nutrition-vnext-kicker">DETALLES DE LA COMIDA</span><strong>Snapshot operativo</strong></header>
+          <div><span>Estado</span><strong>{statusLabel(meal.status)}</strong></div>
+          <div><span>Relación</span><strong>{relationship}</strong></div>
+          <div><span>Porción</span><strong>{meal.portionMultiplier}×</strong></div>
+          <div><span>Fuente</span><strong>{meal.planningSource === 'manual' ? 'Manual' : 'Plan FÉNIX'}</strong></div>
+          {item.recipe?.notes ? <div><span>Notas</span><strong>{item.recipe.notes}</strong></div> : null}
+          {item.recipe?.instructions ? <div><span>Preparación</span><strong>{item.recipe.instructions}</strong></div> : null}
+        </section>
+
+        <section className="nutrition-vnext-meal-detail-v21__portion">
+          <span className="nutrition-vnext-kicker">PORCIÓN</span>
+          <div>
+            {portionOptions.map((portion) => (
+              <button key={portion} type="button" disabled={disabled} className={meal.portionMultiplier === portion ? 'active' : ''} onClick={() => void onPortion(portion)}>{portion}×</button>
+            ))}
+          </div>
+        </section>
+
+        {item.alternatives.length > 0 ? (
+          <section id="meal-alternatives" className="nutrition-vnext-meal-detail-v21__alternatives">
+            <header><span className="nutrition-vnext-kicker">ALTERNATIVAS RÁPIDAS</span><strong>{item.alternatives.length}</strong></header>
+            <div>
+              {item.alternatives.filter((recipe) => recipe.id !== meal.recipeId).slice(0, 4).map((recipe) => (
+                <button key={recipe.id} type="button" disabled={disabled} onClick={() => void onReplace(recipe.id)}>
+                  <RecipeVisual recipe={recipe} role={meal.role} name={recipe.name} />
+                  <strong>{recipe.name}</strong>
+                  <small>{recipe.estimatedCalories === null ? '—' : `${number(recipe.estimatedCalories)} kcal`}</small>
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {meal.status === 'pending' ? <SecondaryButton className="nutrition-meal-skip-secondary" type="button" onClick={() => void onSkip()}>Omitir comida</SecondaryButton> : null}
+      </div>
+    </Sheet>
   )
 }
 
@@ -325,7 +431,7 @@ function ImprovisedMealModal({
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const submittingRef = useRef(false)
-  const [submissionId] = useState(() => crypto.randomUUID())
+  const [submissionId] = useState(() => createUuid())
 
   function optional(value: string) {
     const trimmed = value.replace(',', '.').trim()
@@ -367,17 +473,16 @@ function ImprovisedMealModal({
   }
 
   return (
-    <div className="nutrition-vnext-modalBackdrop" role="presentation">
-      <form className="nutrition-vnext-modal" onSubmit={submit}>
-        <div className="nutrition-vnext-modal__head">
-          <div>
-            <small>REGISTRO MANUAL</small>
-            <h2>Comida improvisada</h2>
-          </div>
-          <button type="button" disabled={submitting} onClick={onClose}>×</button>
-        </div>
-
-        {error && <div className="nutrition-vnext-error">{error}</div>}
+    <Dialog
+      open
+      title="Comida improvisada"
+      description="Registro manual · una intención lógica produce un único hecho confirmado."
+      onClose={onClose}
+      dismissible={!submitting}
+      className="nutrition-vnext-modal"
+    >
+      <form className="nutrition-vnext-modal__form" onSubmit={submit}>
+        {error && <div className="nutrition-vnext-error" role="alert">{error}</div>}
 
         <label>
           <span>Nombre</span>
@@ -405,11 +510,11 @@ function ImprovisedMealModal({
         </p>
 
         <div className="nutrition-vnext-modal__actions">
-          <button type="button" disabled={submitting} onClick={onClose}>Cancelar</button>
-          <button className="primary" type="submit" disabled={submitting}>{submitting ? 'Guardando…' : 'Guardar como realizada'}</button>
+          <SecondaryButton type="button" disabled={submitting} onClick={onClose}>Cancelar</SecondaryButton>
+          <PrimaryButton type="submit" disabled={submitting}>{submitting ? 'Guardando…' : 'Guardar como realizada'}</PrimaryButton>
         </div>
       </form>
-    </div>
+    </Dialog>
   )
 }
 
@@ -468,16 +573,16 @@ function GoalEditor({
   }
 
   return (
-    <div className="nutrition-vnext-modalBackdrop" role="presentation">
-      <form className="nutrition-vnext-modal" onSubmit={submit}>
-        <div className="nutrition-vnext-modal__head">
-          <div>
-            <small>OBJETIVO ACTIVO</small>
-            <h2>Objetivos Nutrition</h2>
-          </div>
-          <button type="button" disabled={submitting} onClick={onClose}>×</button>
-        </div>
-        {error && <div className="nutrition-vnext-error">{error}</div>}
+    <Dialog
+      open
+      title="Objetivos Nutrition"
+      description="Objetivo activo · guardar crea una nueva vigencia y conserva el histórico."
+      onClose={onClose}
+      dismissible={!submitting}
+      className="nutrition-vnext-modal"
+    >
+      <form className="nutrition-vnext-modal__form" onSubmit={submit}>
+        {error && <div className="nutrition-vnext-error" role="alert">{error}</div>}
         <div className="nutrition-vnext-modal__macroInputs two">
           <label><span>kcal/día</span><input inputMode="decimal" value={calories} onChange={(event) => setCalories(event.target.value)} /></label>
           <label><span>Proteína g/día</span><input inputMode="decimal" value={protein} onChange={(event) => setProtein(event.target.value)} /></label>
@@ -490,26 +595,32 @@ function GoalEditor({
           Guardar crea una nueva vigencia. El objetivo anterior se conserva como histórico.
         </p>
         <div className="nutrition-vnext-modal__actions">
-          <button type="button" disabled={submitting} onClick={onClose}>Cancelar</button>
-          <button className="primary" type="submit" disabled={submitting}>{submitting ? 'Guardando…' : 'Guardar objetivo'}</button>
+          <SecondaryButton type="button" disabled={submitting} onClick={onClose}>Cancelar</SecondaryButton>
+          <PrimaryButton type="submit" disabled={submitting}>{submitting ? 'Guardando…' : 'Guardar objetivo'}</PrimaryButton>
         </div>
       </form>
-    </div>
+    </Dialog>
   )
 }
 
 function WeekView({
   week,
+  day,
   onPrevious,
   onNext,
   preferredDate,
   onApply,
+  onTabChange,
+  onAppetite,
 }: {
   week: NutritionWeekSuggestion
+  day: NutritionDayView | null
   preferredDate: string
   onPrevious: () => void
   onNext: () => void
   onApply: () => Promise<void>
+  onTabChange: (tab: NutritionTab) => void
+  onAppetite: (date: string, mode: AppetiteMode) => Promise<void>
 }) {
   const initialDate = week.days.some((day) => day.date === preferredDate)
     ? preferredDate
@@ -522,15 +633,6 @@ function WeekView({
 
   return (
     <div className="nutrition-vnext-week">
-      <div className="nutrition-vnext-week__toolbar">
-        <button type="button" onClick={onPrevious}>‹</button>
-        <div className="nutrition-vnext-week__label">
-          <small>SEMANA</small>
-          <strong>Desde {formatDate(week.monday, false)}</strong>
-        </div>
-        <button type="button" onClick={onNext}>›</button>
-      </div>
-
       <div className="nutrition-vnext-week__days">
         {week.days.map((day) => (
           <button
@@ -550,14 +652,9 @@ function WeekView({
         <section className="nutrition-vnext-week__selected">
           <div className="nutrition-vnext-sectionHead">
             <div>
-              <small>
-                {selected.trainingSessions.length > 0
-                  ? `${selected.trainingSessions.length} SESIÓN${selected.trainingSessions.length === 1 ? '' : 'ES'} TRAINING`
-                  : 'DÍA SIN TRAINING'}
-              </small>
-              <h2>{formatDate(selected.date)}</h2>
+              <h2><SectionIcon name="calendar"/> Plan del día</h2>
             </div>
-            <span>{number(selected.planned.calories)} kcal plan</span>
+            <span>{formatDate(selected.date)}</span>
           </div>
 
           <div className="nutrition-vnext-week__mealList">
@@ -590,7 +687,27 @@ function WeekView({
         </section>
       )}
 
-      <div className="nutrition-vnext-week__apply">
+      {selected ? <section className="nutrition-vnext-appetite nutrition-vnext-week__appetite">
+        <div><small>APETITO / VOLUMEN</small></div>
+        <div className="nutrition-vnext-appetite__options">{appetiteOptions.map(option=><button key={option.value} type="button" className={selected.appetiteMode===option.value?'active':''} onClick={()=>void onAppetite(selected.date,option.value)}><SectionIcon name={option.value==='compact'?'clock':option.value==='normal'?'body':'nutrition'}/><strong>{option.label}</strong></button>)}</div>
+      </section> : null}
+
+      {selected ? <section className="nutrition-vnext-week__summary">
+        <header><SectionIcon name="progress"/><strong>Resumen del día</strong></header>
+        <MacroOverview consumed={day?.date===selected.date?day.consumed:{calories:0,protein:0,carbs:0,fat:0,hasUnknown:false}} planned={selected.planned} target={week.goal}/>
+      </section> : null}
+
+      {selected ? <section className="nutrition-vnext-week__quick">
+        <header><span><SectionIcon name="export"/><strong>Sustituciones rápidas</strong><small>Para: Post-entreno</small></span><b>Ver todas ›</b></header>
+        <div>{selected.meals.slice(0,3).map(meal=><article key={`${meal.role}-${meal.recipe?.id??'empty'}`}><RecipeVisual recipe={meal.recipe} role={meal.role} name={meal.recipe?.name??nutritionRoleLabel(meal.role)}/><strong>{meal.recipe?.name??'Sin propuesta'}</strong><small>{meal.recipe?.estimatedCalories??'—'} kcal</small><button type="button" disabled title="No disponible" aria-label={`Añadir ${meal.recipe?.name??'alternativa'}: no disponible`}>+</button></article>)}</div>
+      </section> : null}
+
+      <section className="nutrition-vnext-shortcuts nutrition-vnext-week__shortcuts">
+        <button type="button" onClick={()=>onTabChange('recipes')}><SectionIcon name="nutrition"/><div><strong>Recetas</strong><small>Explora y guarda tus favoritas</small></div><em>→</em></button>
+        <button type="button" onClick={()=>onTabChange('shopping')}><SectionIcon name="work"/><div><strong>Compra</strong><small>Crea tu lista de la compra</small></div><em>→</em></button>
+      </section>
+
+      <details className="nutrition-vnext-week__apply"><summary>Opciones de semana</summary>
         <div>
           <strong>Semana sugerida flexible</strong>
           <span>Aplicar reemplaza solo comidas pendientes. Nunca reescribe realizadas u omitidas.</span>
@@ -598,7 +715,8 @@ function WeekView({
         <button className="primary" type="button" onClick={() => void onApply()}>
           Aplicar semana
         </button>
-      </div>
+        <div className="nutrition-vnext-week__toolbar"><button type="button" onClick={onPrevious}>‹ Semana anterior</button><button type="button" onClick={onNext}>Semana siguiente ›</button></div>
+      </details>
     </div>
   )
 }
@@ -606,11 +724,13 @@ function WeekView({
 interface NutritionPageProps {
   isActive: boolean
   refreshRevision: number
+  onOpenSettings: () => void
 }
 
 export default function NutritionPage({
   isActive,
   refreshRevision,
+  onOpenSettings,
 }: NutritionPageProps) {
   const [tab, setTab] = useState<NutritionTab>('today')
   const [date, setDate] = useState(getLocalDateKey())
@@ -622,6 +742,7 @@ export default function NutritionPage({
   const [message, setMessage] = useState('')
   const [showImprovised, setShowImprovised] = useState(false)
   const [showGoal, setShowGoal] = useState(false)
+  const [selectedMealId, setSelectedMealId] = useState<string | null>(null)
 
   const nextPending = useMemo(
     () => (day ? getRelevantNutritionMeal(day) : null),
@@ -698,48 +819,51 @@ export default function NutritionPage({
       setWeekAnchor(date)
     }
 
-    setLoading(next !== 'library')
+    setLoading(next === 'today' || next === 'week')
     setMessage('')
     setError('')
     setTab(next)
   }
 
-  if (tab === 'library') {
+  if (tab === 'recipes' || tab === 'shopping') {
     return (
-      <div className="nutrition-vnext-shell nutrition-vnext-shell--library">
-        <header className="nutrition-vnext-topbar">
-          <div>
-            <small>FÉNIX</small>
-            <h1>NUTRITION</h1>
-          </div>
-        </header>
-        <nav className="nutrition-vnext-tabs" aria-label="Secciones de Nutrition">
-          <button type="button" onClick={() => changeTab('today')}>Hoy</button>
-          <button type="button" onClick={() => changeTab('week')}>Semana</button>
-          <button type="button" className="active">Recetas · Compra</button>
-        </nav>
-        <NutritionLibrary embedded />
-      </div>
+      <main className="nutrition-vnext-shell nutrition-vnext-shell--library">
+        <AppHeader title="Nutrition" dateKey={date} onSettings={onOpenSettings} />
+        <SegmentedTabs<NutritionTab>
+          value={tab}
+          label="Secciones de Nutrition"
+          onChange={changeTab}
+          items={[
+            { value: 'today', label: 'Hoy' },
+            { value: 'week', label: 'Semana' },
+            { value: 'recipes', label: 'Recetas' },
+            { value: 'shopping', label: 'Compra' },
+          ]}
+        />
+        <Suspense fallback={<div className="nutrition-vnext-loading">Cargando biblioteca…</div>}>
+          <NutritionLibrary embedded initialSection={tab} />
+        </Suspense>
+      </main>
     )
   }
 
   return (
-    <main className="nutrition-vnext-shell">
-      <header className="nutrition-vnext-topbar">
-        <div>
-          <small>FÉNIX</small>
-          <h1>NUTRITION</h1>
-        </div>
-        <button className="nutrition-vnext-goalButton" type="button" onClick={() => setShowGoal(true)}>
-          Objetivos
-        </button>
-      </header>
-
-      <nav className="nutrition-vnext-tabs" aria-label="Secciones de Nutrition">
-        <button type="button" className={tab === 'today' ? 'active' : ''} onClick={() => changeTab('today')}>Hoy</button>
-        <button type="button" className={tab === 'week' ? 'active' : ''} onClick={() => changeTab('week')}>Semana</button>
-        <button type="button" onClick={() => changeTab('library')}>Recetas · Compra</button>
-      </nav>
+    <main className={`nutrition-vnext-shell${tab === 'today' ? ' nutrition-vnext-shell--today' : ''}`}>
+      <AppHeader
+        title="Nutrition"
+        dateKey={date}
+      />
+      <SegmentedTabs<NutritionTab>
+        value={tab}
+        label="Secciones de Nutrition"
+        onChange={changeTab}
+        items={[
+          { value: 'today', label: 'Hoy' },
+          { value: 'week', label: 'Semana' },
+          { value: 'recipes', label: 'Recetas' },
+          { value: 'shopping', label: 'Compra' },
+        ]}
+      />
 
       {error && <div className="nutrition-vnext-error">{error}</div>}
       {message && <div className="nutrition-vnext-message">{message}</div>}
@@ -748,25 +872,12 @@ export default function NutritionPage({
 
       {!loading && tab === 'today' && day && (
         <>
-          <section className="nutrition-vnext-dayHeader">
-            <button type="button" onClick={() => { setLoading(true); setDate(shiftDate(date, -1)) }}>‹</button>
-            <div>
-              <small>
-                {day.trainingSessions.length > 0
-                  ? `${day.trainingSessions.map((session) => session.templateName).join(' + ')} · Training`
-                  : 'Día sin Training'}
-              </small>
-              <h2>{formatDate(date)}</h2>
-            </div>
-            <button type="button" onClick={() => { setLoading(true); setDate(shiftDate(date, 1)) }}>›</button>
-          </section>
 
           <MacroOverview consumed={day.consumed} planned={day.planned} target={day.goal} />
 
           <section className="nutrition-vnext-appetite">
             <div>
               <small>APETITO / VOLUMEN</small>
-              <strong>¿Cómo quieres comer hoy?</strong>
             </div>
             <div className="nutrition-vnext-appetite__options">
               {appetiteOptions.map((option) => (
@@ -774,13 +885,13 @@ export default function NutritionPage({
                   key={option.value}
                   type="button"
                   className={day.day.appetiteMode === option.value ? 'active' : ''}
+                  aria-label={`${option.label}: ${option.detail}`}
                   onClick={() => void refreshDay(
                     () => setNutritionDayAppetite(day.date, option.value),
                     `Modo ${option.label.toLowerCase()} activo.`,
                   )}
                 >
-                  <strong>{option.label}</strong>
-                  <span>{option.detail}</span>
+                  <SectionIcon name={option.value === 'compact' ? 'clock' : option.value === 'normal' ? 'body' : 'nutrition'} /><strong>{option.label}</strong>
                 </button>
               ))}
             </div>
@@ -788,28 +899,34 @@ export default function NutritionPage({
 
           {nextPending && (
             <section className="nutrition-vnext-nextMeal nutrition-vnext-nextMeal--visual">
+              <div className="nutrition-vnext-nextMeal__summary">
+              <div className="nutrition-vnext-nextMeal__copy">
+                <small>TE TOCA AHORA</small>
+                <strong>{nutritionRoleLabel(nextPending.meal.role)}</strong>
+                <span>{nextPending.meal.name}</span>
+                <span className="nutrition-vnext-nextMeal__energy">
+                  {nextPending.meal.plannedCalories === null ? '—' : `${number(nextPending.meal.plannedCalories)} kcal`}
+                </span>
+              </div>
               <RecipeVisual
                 recipe={nextPending.recipe}
                 role={nextPending.meal.role}
                 name={nextPending.meal.name}
                 variant="hero"
               />
-              <div className="nutrition-vnext-nextMeal__copy">
-                <small>TE TOCA AHORA</small>
-                <strong>{nutritionRoleLabel(nextPending.meal.role)}</strong>
-                <span>{nextPending.meal.name}</span>
               </div>
-              <span className="nutrition-vnext-nextMeal__energy">
-                {nextPending.meal.plannedCalories === null ? '—' : `${number(nextPending.meal.plannedCalories)} kcal`}
-              </span>
+              <div className="nutrition-vnext-nextMeal__actions">
+                <PrimaryButton type="button" onClick={() => void refreshDay(() => setDailyMealStatus(nextPending.meal.id, 'completed'))}>Realizada</PrimaryButton>
+                <SecondaryButton type="button" onClick={() => setSelectedMealId(nextPending.meal.id)}>Alternativas</SecondaryButton>
+                <SecondaryButton type="button" onClick={() => setSelectedMealId(nextPending.meal.id)}>Sustituir</SecondaryButton>
+              </div>
             </section>
           )}
 
           <section className="nutrition-vnext-dayPlan">
             <div className="nutrition-vnext-sectionHead">
               <div>
-                <small>PLAN DEL DÍA</small>
-                <h2>Comidas</h2>
+                <h2>DÍA DE HOY</h2>
               </div>
               <button type="button" onClick={() => setShowImprovised(true)}>+ Improvisada</button>
             </div>
@@ -829,32 +946,48 @@ export default function NutritionPage({
                   onUndo={() => refreshDay(() => setDailyMealStatus(item.meal.id, 'pending'))}
                   onReplace={(recipeId) => refreshDay(() => replaceDailyMealRecipe(item.meal.id, recipeId))}
                   onPortion={(portion) => refreshDay(() => setDailyMealPortion(item.meal.id, portion))}
+                  onOpenDetail={() => setSelectedMealId(item.meal.id)}
                 />
               ))}
             </div>
           </section>
 
           <section className="nutrition-vnext-shortcuts">
-            <button type="button" onClick={() => changeTab('week')}>
-              <span>SEMANA</span>
-              <strong>Planificar próximos días</strong>
+            <button type="button" onClick={() => changeTab('recipes')}>
+              <SectionIcon name="nutrition" /><div><strong>Recetas</strong><small>Explora y guarda tus favoritas</small></div>
               <em>→</em>
             </button>
-            <button type="button" onClick={() => changeTab('library')}>
-              <span>BIBLIOTECA</span>
-              <strong>Recetas y compra</strong>
+            <button type="button" onClick={() => changeTab('shopping')}>
+              <SectionIcon name="work" /><div><strong>Compra</strong><small>Crea tu lista de la compra</small></div>
               <em>→</em>
             </button>
           </section>
+          <details className="nutrition-day-controls"><summary>Fecha y objetivos</summary>
+          <section className="nutrition-vnext-dayHeader">
+            <button type="button" onClick={() => { setLoading(true); setDate(shiftDateKey(date, -1)) }}>‹</button>
+            <div>
+              <small>
+                {day.trainingSessions.length > 0
+                  ? `${day.trainingSessions.map((session) => session.templateName).join(' + ')} · Training`
+                  : 'Día sin Training'}
+              </small>
+              <h2>{formatDate(date)}</h2>
+            </div>
+            <button type="button" onClick={() => { setLoading(true); setDate(shiftDateKey(date, 1)) }}>›</button>
+          </section>
+
+          <button type="button" className="nutrition-vnext-goalButton" onClick={() => setShowGoal(true)}>Objetivos</button>
+          </details>
         </>
       )}
 
       {!loading && tab === 'week' && week && (
         <WeekView
           week={week}
+          day={day}
           preferredDate={date}
-          onPrevious={() => { setLoading(true); setWeekAnchor(shiftDate(week.monday, -7)) }}
-          onNext={() => { setLoading(true); setWeekAnchor(shiftDate(week.monday, 7)) }}
+          onPrevious={() => { setLoading(true); setWeekAnchor(shiftDateKey(week.monday, -7)) }}
+          onNext={() => { setLoading(true); setWeekAnchor(shiftDateKey(week.monday, 7)) }}
           onApply={async () => {
             try {
               const next = await applyNutritionWeek(week.monday)
@@ -864,8 +997,36 @@ export default function NutritionPage({
               setError(applyError instanceof Error ? applyError.message : 'No se ha podido aplicar la semana.')
             }
           }}
+          onTabChange={changeTab}
+          onAppetite={async (selectedDate, mode) => {
+            await setNutritionDayAppetite(selectedDate, mode)
+            setWeek(await getNutritionWeekSuggestion(week.monday))
+          }}
         />
       )}
+
+      {day ? (
+        <MealDetailSheet
+          item={day.meals.find((candidate) => candidate.meal.id === selectedMealId) ?? null}
+          appetiteMode={day.day.appetiteMode}
+          trainingSessionName={
+            selectedMealId
+              ? (() => {
+                  const selectedMeal = day.meals.find((candidate) => candidate.meal.id === selectedMealId)?.meal
+                  return selectedMeal?.trainingSessionId
+                    ? day.trainingSessions.find((session) => session.id === selectedMeal.trainingSessionId)?.templateName ?? null
+                    : null
+                })()
+              : null
+          }
+          onClose={() => setSelectedMealId(null)}
+          onComplete={() => refreshDay(() => setDailyMealStatus(selectedMealId!, 'completed'))}
+          onSkip={() => refreshDay(() => setDailyMealStatus(selectedMealId!, 'skipped'))}
+          onUndo={() => refreshDay(() => setDailyMealStatus(selectedMealId!, 'pending'))}
+          onReplace={(recipeId) => refreshDay(() => replaceDailyMealRecipe(selectedMealId!, recipeId))}
+          onPortion={(portion) => refreshDay(() => setDailyMealPortion(selectedMealId!, portion))}
+        />
+      ) : null}
 
       {showImprovised && day && (
         <ImprovisedMealModal

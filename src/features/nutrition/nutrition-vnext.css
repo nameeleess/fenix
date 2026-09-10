@@ -15,8 +15,6 @@
 }
 
 .nutrition-vnext-topbar,
-.nutrition-vnext-dayHeader,
-.nutrition-vnext-sectionHead,
 .nutrition-vnext-week__toolbar,
 .nutrition-vnext-week__apply,
 .nutrition-vnext-modal__head,
@@ -32,11 +30,6 @@
 }
 
 .nutrition-vnext-topbar small,
-.nutrition-vnext-sectionHead small,
-.nutrition-vnext-dayHeader small,
-.nutrition-vnext-nextMeal small,
-.nutrition-vnext-appetite small,
-.nutrition-vnext-shortcuts span,
 .nutrition-vnext-modal__head small {
   display: block;
   color: var(--fenix-muted);
@@ -47,8 +40,6 @@
 }
 
 .nutrition-vnext-topbar h1,
-.nutrition-vnext-dayHeader h2,
-.nutrition-vnext-sectionHead h2,
 .nutrition-vnext-modal h2 {
   margin: 3px 0 0;
   letter-spacing: -0.04em;
@@ -60,13 +51,8 @@
 
 .nutrition-vnext-goalButton,
 .nutrition-vnext-tabs button,
-.nutrition-vnext-dayHeader button,
-.nutrition-vnext-sectionHead button,
 .nutrition-vnext-week__toolbar button,
 .nutrition-vnext-week__apply button,
-.nutrition-vnext-meal button,
-.nutrition-vnext-appetite button,
-.nutrition-vnext-shortcuts button,
 .nutrition-vnext-modal button,
 .nutrition-vnext-modal input,
 .nutrition-vnext-modal select,
@@ -75,8 +61,6 @@
 }
 
 .nutrition-vnext-goalButton,
-.nutrition-vnext-dayHeader button,
-.nutrition-vnext-sectionHead > button,
 .nutrition-vnext-week__toolbar button,
 .nutrition-vnext-modal__head > button {
   border: 1px solid var(--fenix-border);
@@ -139,31 +123,6 @@
   color: var(--fenix-muted);
 }
 
-.nutrition-vnext-dayHeader {
-  margin-bottom: 16px;
-  padding: 0 2px;
-}
-
-.nutrition-vnext-dayHeader > div {
-  flex: 1;
-  text-align: center;
-}
-
-.nutrition-vnext-dayHeader h2 {
-  font-size: 1.1rem;
-  text-transform: capitalize;
-}
-
-.nutrition-vnext-dayHeader button {
-  width: 42px;
-  height: 42px;
-  font-size: 1.6rem;
-}
-
-.nutrition-vnext-macros,
-.nutrition-vnext-appetite,
-.nutrition-vnext-nextMeal,
-.nutrition-vnext-dayPlan,
 .nutrition-vnext-week__selected,
 .nutrition-vnext-week__apply {
   border: 1px solid var(--fenix-border);
@@ -173,82 +132,12 @@
     var(--fenix-surface);
 }
 
-.nutrition-vnext-macros {
-  padding: 20px;
-}
-
-.nutrition-vnext-macroHero {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.nutrition-vnext-macroHero span,
-.nutrition-vnext-macroGrid span,
-.nutrition-vnext-macroGrid small {
-  display: block;
-  color: var(--fenix-muted);
-  font-size: 0.78rem;
-}
-
-.nutrition-vnext-macroHero strong {
-  display: block;
-  margin-top: 3px;
-  font-size: clamp(1.8rem, 8vw, 2.8rem);
-  line-height: 1;
-  letter-spacing: -0.05em;
-}
-
-.nutrition-vnext-macroHero small {
-  color: var(--fenix-muted);
-}
-
 .nutrition-vnext-macroHero__planned {
-  text-align: right;
+  text-align: center;
 }
 
 .nutrition-vnext-macroHero__planned strong {
   font-size: 1.25rem;
-}
-
-.nutrition-vnext-progressLine {
-  height: 7px;
-  overflow: hidden;
-  margin: 17px 0 18px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.nutrition-vnext-progressLine.small {
-  height: 4px;
-  margin: 8px 0 0;
-}
-
-.nutrition-vnext-progressLine span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--fenix-accent);
-  transition: width 180ms ease;
-}
-
-.nutrition-vnext-macroGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.nutrition-vnext-macroGrid article {
-  min-width: 0;
-  padding: 12px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.nutrition-vnext-macroGrid strong {
-  display: block;
-  margin: 3px 0;
-  font-size: 1rem;
 }
 
 .nutrition-vnext-qualityNote,
@@ -259,65 +148,6 @@
   line-height: 1.45;
 }
 
-.nutrition-vnext-appetite {
-  margin-top: 12px;
-  padding: 18px;
-}
-
-.nutrition-vnext-appetite > div:first-child strong {
-  display: block;
-  margin-top: 3px;
-}
-
-.nutrition-vnext-appetite__options {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  margin-top: 14px;
-}
-
-.nutrition-vnext-appetite__options button {
-  padding: 10px 8px;
-  border: 1px solid var(--fenix-border);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--fenix-text);
-}
-
-.nutrition-vnext-appetite__options button.active {
-  border-color: rgba(222, 9, 10, 0.5);
-  background: rgba(222, 9, 10, 0.09);
-}
-
-.nutrition-vnext-appetite__options strong,
-.nutrition-vnext-appetite__options span {
-  display: block;
-}
-
-.nutrition-vnext-appetite__options strong {
-  font-size: 0.82rem;
-}
-
-.nutrition-vnext-appetite__options span {
-  margin-top: 2px;
-  color: var(--fenix-muted);
-  font-size: 0.67rem;
-}
-
-.nutrition-vnext-nextMeal {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 12px;
-  padding: 18px;
-  border-color: rgba(222, 9, 10, 0.28);
-}
-
-.nutrition-vnext-nextMeal strong,
-.nutrition-vnext-nextMeal span {
-  display: block;
-}
-
 .nutrition-vnext-nextMeal__energy {
   flex: 0 0 auto;
   align-self: center;
@@ -325,117 +155,13 @@
   font-size: 0.82rem;
 }
 
-.nutrition-vnext-dayPlan {
-  margin-top: 12px;
-  padding: 18px;
-}
-
-.nutrition-vnext-sectionHead {
-  margin-bottom: 12px;
-}
-
-.nutrition-vnext-sectionHead > span,
-.nutrition-vnext-sectionHead > button {
-  flex: 0 0 auto;
-}
-
-.nutrition-vnext-sectionHead > button {
-  padding: 8px 12px;
-}
-
-.nutrition-vnext-mealList {
-  display: grid;
-  gap: 8px;
-}
-
-.nutrition-vnext-meal {
-  overflow: hidden;
-  border: 1px solid var(--fenix-border);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.025);
-}
-
 .nutrition-vnext-meal--pre,
 .nutrition-vnext-meal--post {
   border-color: rgba(222, 9, 10, 0.25);
 }
 
-.nutrition-vnext-meal--completed {
-  border-color: rgba(69, 181, 116, 0.25);
-}
-
 .nutrition-vnext-meal--skipped {
   opacity: 0.68;
-}
-
-.nutrition-vnext-meal__head {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 30px minmax(0, 1fr) auto 20px;
-  align-items: center;
-  gap: 10px;
-  padding: 14px;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-}
-
-.nutrition-vnext-meal__order {
-  width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.055);
-  color: var(--fenix-muted);
-  font-size: 0.75rem;
-}
-
-.nutrition-vnext-meal__title {
-  min-width: 0;
-}
-
-.nutrition-vnext-meal__title small,
-.nutrition-vnext-meal__title strong,
-.nutrition-vnext-meal__title em {
-  display: block;
-}
-
-.nutrition-vnext-meal__title small {
-  color: var(--fenix-muted);
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.nutrition-vnext-meal__title strong {
-  overflow: hidden;
-  margin-top: 2px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.nutrition-vnext-meal__title em {
-  margin-top: 3px;
-  color: var(--fenix-muted);
-  font-size: 0.7rem;
-  font-style: normal;
-}
-
-.nutrition-vnext-meal__kcal {
-  color: var(--fenix-muted);
-  font-size: 0.76rem;
-}
-
-.nutrition-vnext-chevron {
-  color: var(--fenix-muted);
-  font-size: 1.15rem;
-  text-align: center;
-}
-
-.nutrition-vnext-meal__body {
-  padding: 0 14px 14px 54px;
 }
 
 .nutrition-vnext-meal__macroRow {
@@ -522,38 +248,6 @@
   border-color: var(--fenix-accent);
   background: var(--fenix-accent);
   color: white;
-}
-
-.nutrition-vnext-shortcuts {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.nutrition-vnext-shortcuts button {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2px 10px;
-  padding: 16px;
-  border: 1px solid var(--fenix-border);
-  border-radius: 18px;
-  background: var(--fenix-surface);
-  color: var(--fenix-text);
-  text-align: left;
-}
-
-.nutrition-vnext-shortcuts span,
-.nutrition-vnext-shortcuts strong {
-  grid-column: 1;
-}
-
-.nutrition-vnext-shortcuts em {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: center;
-  color: var(--fenix-muted);
-  font-style: normal;
 }
 
 .nutrition-vnext-week__toolbar {
@@ -668,16 +362,6 @@
   line-height: 1.4;
 }
 
-.nutrition-vnext-modalBackdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: grid;
-  align-items: end;
-  padding: 14px;
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(8px);
-}
 
 .nutrition-vnext-modal {
   width: min(100%, 620px);
@@ -701,7 +385,7 @@
   font-size: 1.3rem;
 }
 
-.nutrition-vnext-modal > label,
+.nutrition-vnext-modal__form > label,
 .nutrition-vnext-modal__macroInputs label {
   display: block;
   margin-top: 10px;
@@ -713,6 +397,8 @@
   color: var(--fenix-muted);
   font-size: 0.72rem;
 }
+
+.nutrition-vnext-modal__form { display: grid; gap: 0; }
 
 .nutrition-vnext-modal__macroInputs {
   display: grid;
@@ -738,20 +424,6 @@
 }
 
 @media (max-width: 560px) {
-  .nutrition-vnext-macroGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .nutrition-vnext-macroGrid article {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 2px 10px;
-  }
-
-  .nutrition-vnext-macroGrid article small,
-  .nutrition-vnext-macroGrid article .nutrition-vnext-progressLine {
-    grid-column: 1 / -1;
-  }
 
   .nutrition-vnext-week__mealList article {
     grid-template-columns: 90px minmax(0, 1fr);
@@ -781,26 +453,6 @@
     padding-inline: 6px;
     font-size: 0.78rem;
   }
-
-  .nutrition-vnext-appetite__options {
-    grid-template-columns: 1fr;
-  }
-
-  .nutrition-vnext-shortcuts {
-    grid-template-columns: 1fr;
-  }
-
-  .nutrition-vnext-meal__head {
-    grid-template-columns: 28px minmax(0, 1fr) 18px;
-  }
-
-  .nutrition-vnext-meal__kcal {
-    display: none;
-  }
-
-  .nutrition-vnext-meal__body {
-    padding-left: 14px;
-  }
 }
 
 .nutrition-vnext-week__label {
@@ -821,4 +473,158 @@
   margin-top: 2px;
   font-size: 0.9rem;
   font-weight: 760;
+}
+
+/* v2.1 · shell compartido */
+.nutrition-vnext-shell>.ds-app-header,.nutrition-vnext-shell>.ds-segmented,.nutrition-vnext-shell>.ds-week-selector{width:min(calc(100% - 32px),488px);margin-left:auto;margin-right:auto}.nutrition-vnext-shell>.ds-segmented{margin-bottom:14px}.nutrition-vnext-shell>.ds-week-selector{margin-bottom:10px}.nutrition-vnext-shell--library>.nutrition-page{padding-bottom:100px}
+
+/* v2.1 Golden 17 · Meal detail */
+.nutrition-vnext-meal-detail-v21{display:grid;gap:13px}
+.nutrition-vnext-meal-detail-v21__hero{display:grid;gap:10px;border:1px solid var(--fenix-border);border-radius:18px;overflow:hidden;background:var(--fenix-carbon),var(--fenix-surface)}
+.nutrition-vnext-meal-detail-v21__hero>.nutrition-recipe-visual{min-height:178px;border-radius:0;border:0}
+.nutrition-vnext-meal-detail-v21__copy{display:grid;gap:7px;padding:0 14px 14px}
+.nutrition-vnext-meal-detail-v21__copy h2{margin:0;font-size:23px;letter-spacing:-.025em}
+.nutrition-vnext-meal-detail-v21__copy p{margin:0;color:var(--fenix-text-muted);font-size:11px}
+.nutrition-vnext-meal-detail-v21__badges{display:flex;gap:6px;flex-wrap:wrap}
+.nutrition-vnext-meal-detail-v21__macros{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px}
+.nutrition-vnext-meal-detail-v21__macros span{display:grid;gap:2px;padding:8px;border-radius:11px;background:rgba(255,255,255,.025);border:1px solid var(--fenix-border-soft)}
+.nutrition-vnext-meal-detail-v21__macros strong{font-size:15px}.nutrition-vnext-meal-detail-v21__macros small{font-size:8px;color:var(--fenix-text-muted)}
+.nutrition-vnext-meal-detail-v21__facts{display:grid;border:1px solid var(--fenix-border);border-radius:16px;padding:5px 13px;background:var(--fenix-surface)}
+.nutrition-vnext-meal-detail-v21__facts header,.nutrition-vnext-meal-detail-v21__alternatives header{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--fenix-border-soft)}
+.nutrition-vnext-meal-detail-v21__facts header strong,.nutrition-vnext-meal-detail-v21__alternatives header strong{font-size:9px;color:var(--fenix-text-muted)}
+.nutrition-vnext-meal-detail-v21__facts>div{display:grid;grid-template-columns:100px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--fenix-border-soft)}
+.nutrition-vnext-meal-detail-v21__facts>div:last-child{border-bottom:0}.nutrition-vnext-meal-detail-v21__facts span{font-size:10px;color:var(--fenix-text-muted)}.nutrition-vnext-meal-detail-v21__facts strong{font-size:10px;font-weight:650;line-height:1.4}
+.nutrition-vnext-meal-detail-v21__portion{display:grid;gap:7px}.nutrition-vnext-meal-detail-v21__portion>div{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.nutrition-vnext-meal-detail-v21__portion button{min-height:44px;border:1px solid var(--fenix-border);border-radius:11px;background:var(--fenix-surface);color:var(--fenix-text)}.nutrition-vnext-meal-detail-v21__portion button.active{border-color:var(--fenix-accent);background:rgb(var(--fenix-accent-rgb)/.13)}
+.nutrition-vnext-meal-detail-v21__alternatives{display:grid;gap:8px}.nutrition-vnext-meal-detail-v21__alternatives>div{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.nutrition-vnext-meal-detail-v21__alternatives button{display:grid;grid-template-columns:64px 1fr;grid-template-rows:auto auto;gap:2px 8px;align-items:center;min-height:76px;text-align:left;border:1px solid var(--fenix-border);border-radius:13px;background:var(--fenix-surface);color:var(--fenix-text);padding:7px}.nutrition-vnext-meal-detail-v21__alternatives .nutrition-recipe-visual{grid-row:1/3;width:64px;height:60px}.nutrition-vnext-meal-detail-v21__alternatives strong{font-size:10px}.nutrition-vnext-meal-detail-v21__alternatives small{font-size:9px;color:var(--fenix-text-muted)}
+.nutrition-vnext-meal-detail-v21__actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:sticky;bottom:0;padding-top:8px;background:linear-gradient(transparent,var(--fenix-bg) 25%)}
+@media(max-width:390px){.nutrition-vnext-meal-detail-v21__macros{grid-template-columns:1fr 1fr}.nutrition-vnext-meal-detail-v21__alternatives>div{grid-template-columns:1fr}}
+
+/* v2.1 mobile interaction floor */
+.nutrition-vnext-portionGroup button,.nutrition-vnext-meal__actions button,.nutrition-vnext-week__toolbar button,.nutrition-vnext-week__days button{min-height:44px}
+.nutrition-vnext-modal__head>button{min-width:44px;min-height:44px}
+
+/* v2.1 Golden parity · Nutrition mobile composition */
+@media (max-width:600px){
+  .nutrition-vnext-shell{width:100%;max-width:none;margin:0;padding:0 8px calc(72px + env(safe-area-inset-bottom))}
+  .nutrition-vnext-shell>.ds-app-header,.nutrition-vnext-shell>.ds-segmented,.nutrition-vnext-shell>.ds-week-selector{width:100%;max-width:none;margin-left:0;margin-right:0}.nutrition-vnext-shell>.ds-segmented{margin-bottom:5px}.nutrition-vnext-shell>.ds-week-selector{margin-bottom:5px}
+  .nutrition-vnext-week__selected,.nutrition-vnext-week__apply{border-radius:13px}.nutrition-vnext-macroHero__planned strong{font-size:14px}.nutrition-vnext-nextMeal__energy{font-size:8px}
+  .nutrition-vnext-week{gap:5px}.nutrition-vnext-week__selected{padding:8px}.nutrition-vnext-week__selected h2{font-size:18px}.nutrition-vnext-week__mealList{gap:3px}.nutrition-vnext-week__mealList .nutrition-vnext-weekMeal{grid-template-columns:32px 38px minmax(0,1fr) auto;gap:5px;min-height:49px;padding:4px 5px}.nutrition-vnext-weekMeal .recipe-visual--thumb{width:34px;height:34px}.nutrition-vnext-weekMeal strong{font-size:9px}.nutrition-vnext-weekMeal small{font-size:7px}
+  .nutrition-vnext-meal-detail-v21{gap:7px}.nutrition-vnext-meal-detail-v21__hero{gap:6px;border-radius:13px}.nutrition-vnext-meal-detail-v21__hero>.nutrition-recipe-visual{min-height:145px}.nutrition-vnext-meal-detail-v21__copy{gap:5px;padding:0 9px 9px}.nutrition-vnext-meal-detail-v21__copy h2{font-size:19px}.nutrition-vnext-meal-detail-v21__copy p{font-size:9px}.nutrition-vnext-meal-detail-v21__macros{grid-template-columns:repeat(4,1fr);gap:4px}.nutrition-vnext-meal-detail-v21__macros span{padding:6px}.nutrition-vnext-meal-detail-v21__macros strong{font-size:12px}.nutrition-vnext-meal-detail-v21__facts{padding:4px 9px;border-radius:12px}.nutrition-vnext-meal-detail-v21__facts>div{grid-template-columns:86px 1fr;gap:6px;padding:7px 0}.nutrition-vnext-meal-detail-v21__facts span,.nutrition-vnext-meal-detail-v21__facts strong{font-size:8px}.nutrition-vnext-meal-detail-v21__portion>div{gap:4px}.nutrition-vnext-meal-detail-v21__alternatives{gap:5px}.nutrition-vnext-meal-detail-v21__alternatives>div{grid-template-columns:repeat(2,1fr);gap:4px}.nutrition-vnext-meal-detail-v21__alternatives button{grid-template-columns:48px 1fr;min-height:64px;padding:5px}.nutrition-vnext-meal-detail-v21__alternatives .nutrition-recipe-visual{width:48px;height:48px}.nutrition-vnext-meal-detail-v21__alternatives strong{font-size:8px}.nutrition-vnext-meal-detail-v21__alternatives small{font-size:7px}
+}
+.nutrition-vnext-sectionHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.nutrition-vnext-sectionHead h2{margin:3px 0 0;font-size:18px}
+.nutrition-vnext-sectionHead>div>small{color:var(--fenix-text-muted);font-size:10px;letter-spacing:.08em}
+
+/* Week thumbnail layout owned by Nutrition week. */
+
+.nutrition-vnext-week__mealList .nutrition-vnext-weekMeal {
+  grid-template-columns: 36px 76px minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.nutrition-vnext-weekMeal .recipe-visual--thumb {
+  grid-row: 1 / span 2;
+}
+
+@media (max-width: 600px) {
+
+  .nutrition-vnext-week__mealList .nutrition-vnext-weekMeal {
+    grid-template-columns: 32px 68px minmax(0, 1fr) auto;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .nutrition-vnext-weekMeal .recipe-visual--thumb {
+    width: 31px;
+    height: 31px;
+    border-radius: 8px;
+  }
+}
+
+/* Canonical day/week density keeps every approved meal and shortcut visible at
+   the pinned mobile viewport without clipping or an overflow concealment. */
+@media (max-width:600px){
+  .nutrition-vnext-day .nutrition-vnext-macros{margin-bottom:5px}
+  .nutrition-vnext-day .nutrition-vnext-appetite{padding:5px;margin-bottom:5px}
+  .nutrition-vnext-day .nutrition-vnext-appetite__options button{min-height:29px}
+  .nutrition-vnext-day .nutrition-vnext-meal__head{min-height:39px;padding:3px 5px}
+  .nutrition-vnext-day .nutrition-vnext-meal__head strong{font-size:10px}
+  .nutrition-vnext-day .nutrition-vnext-meal__head small{font-size:7px}
+  .nutrition-vnext-day .nutrition-vnext-shortcuts>button{min-height:48px}
+  .nutrition-vnext-week__summary .nutrition-vnext-macroHero{grid-template-columns:1fr 72px 1fr;height:88px;min-height:88px;padding:4px}
+  .nutrition-vnext-week__summary .nutrition-vnext-macroHero__bars{display:grid;grid-template-columns:repeat(3,1fr);grid-column:1/-1;gap:5px}
+  .nutrition-vnext-week__summary .nutrition-vnext-macroHero__bars>div{display:grid;grid-template-columns:1fr;gap:1px}
+  .nutrition-vnext-week__summary .nutrition-vnext-macroHero__bars progress{width:100%}
+}
+
+@media (max-width:600px){
+  .nutrition-vnext-week{gap:6px}
+  .nutrition-vnext-week__days{order:0;display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:5px;border:1px solid var(--fenix-border);border-radius:12px;background:var(--fenix-surface)}
+  .nutrition-vnext-week__days button{min-height:47px;padding:3px 1px;border-radius:9px}.nutrition-vnext-week__days button span{font-size:8px}.nutrition-vnext-week__days button strong{font-size:13px}
+  .nutrition-vnext-week__selected{order:1;padding:6px;border-radius:11px}.nutrition-vnext-week__selected .nutrition-vnext-sectionHead{min-height:25px;margin:0 0 3px}.nutrition-vnext-week__selected .nutrition-vnext-sectionHead h2{display:flex;align-items:center;gap:7px;font-size:13px}.nutrition-vnext-week__selected .nutrition-vnext-sectionHead h2 .ds-section-icon{width:18px;color:var(--fenix-accent)}.nutrition-vnext-week__selected .nutrition-vnext-sectionHead>span{font-size:8px;color:#aaa}
+  .nutrition-vnext-week__mealList{gap:0}.nutrition-vnext-week__mealList .nutrition-vnext-weekMeal{grid-template-columns:28px 28px minmax(0,1fr) 48px;min-height:36px;padding:2px 4px;border-radius:0;border:0;border-top:1px solid #252527;background:transparent}.nutrition-vnext-weekMeal .recipe-visual--thumb{width:26px;height:26px}.nutrition-vnext-weekMeal span{font-size:8px}.nutrition-vnext-weekMeal strong{font-size:8px}.nutrition-vnext-weekMeal small{font-size:7px;text-align:right}
+  .nutrition-vnext-week__appetite{order:2;margin:0;padding:6px}.nutrition-vnext-week__appetite .nutrition-vnext-appetite__options button{min-height:32px;font-size:8px}
+  .nutrition-vnext-week__summary{order:3;padding:6px;border:1px solid var(--fenix-border);border-radius:11px;background:var(--fenix-surface)}.nutrition-vnext-week__summary>header{display:flex;gap:7px;align-items:center;margin-bottom:3px}.nutrition-vnext-week__summary>header .ds-section-icon{width:18px;color:var(--fenix-accent)}.nutrition-vnext-week__summary>header strong{font-size:12px}.nutrition-vnext-week__summary .nutrition-vnext-macroHero{margin:0;min-height:90px;padding:5px}.nutrition-vnext-week__summary .nutrition-vnext-macroHero__summary strong{font-size:20px}.nutrition-vnext-week__summary .nutrition-vnext-macroHero__bars{font-size:7px}
+  .nutrition-vnext-week__quick{order:4;padding:6px;border:1px solid var(--fenix-border);border-radius:11px;background:var(--fenix-surface)}.nutrition-vnext-week__quick>header{display:flex;justify-content:space-between;align-items:center}.nutrition-vnext-week__quick>header>span{display:grid;grid-template-columns:18px 1fr;gap:1px 6px}.nutrition-vnext-week__quick>header .ds-section-icon{grid-row:1/3;width:16px;color:var(--fenix-accent)}.nutrition-vnext-week__quick>header strong{font-size:11px}.nutrition-vnext-week__quick>header small{font-size:7px;color:#aaa}.nutrition-vnext-week__quick>header b{font-size:7px;color:var(--fenix-accent)}.nutrition-vnext-week__quick>div{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:5px}.nutrition-vnext-week__quick article{position:relative;display:grid;grid-template-columns:35px 1fr;gap:3px;min-height:58px;padding:4px;border:1px solid var(--fenix-border);border-radius:9px}.nutrition-vnext-week__quick .recipe-visual{grid-row:1/3;width:34px;height:46px}.nutrition-vnext-week__quick article strong{font-size:7px}.nutrition-vnext-week__quick article small{font-size:6px;color:#aaa}.nutrition-vnext-week__quick article button{position:absolute;right:3px;bottom:3px;width:18px;height:18px;border:1px solid #555;border-radius:50%;background:#151517;color:#ddd}
+  .nutrition-vnext-week__shortcuts{order:5;margin:0}.nutrition-vnext-week__shortcuts>button{min-height:54px}
+  .nutrition-vnext-week__apply{order:6;margin-top:0;padding:0;border:0;background:transparent}.nutrition-vnext-week__apply>summary{min-height:28px;color:#888;font-size:8px}.nutrition-vnext-week__apply>div,.nutrition-vnext-week__apply>.primary{margin-top:5px}.nutrition-vnext-week__toolbar{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+}
+
+@media (max-width:600px){
+  .nutrition-meal-detail-sheet>.ds-app-header{min-height:110px;padding:4px 14px 3px}
+  .nutrition-meal-detail-sheet>.ds-sheet__content{padding:0 10px 84px}
+  .nutrition-vnext-meal-detail-v21__hero{grid-template-columns:minmax(0,1fr) 146px;gap:0;padding:8px;border-radius:13px}
+  .nutrition-vnext-meal-detail-v21__hero>.nutrition-recipe-visual{grid-column:2;grid-row:1;min-height:120px;height:120px;border-radius:10px}
+  .nutrition-vnext-meal-detail-v21__copy{grid-column:1;grid-row:1;padding:5px 6px;align-content:start}
+  .nutrition-vnext-meal-detail-v21__copy h2{font-size:16px;line-height:1.08}
+  .nutrition-vnext-meal-detail-v21__macros{grid-column:1/-1}
+  .nutrition-vnext-meal-detail-v21__macros span{border:0;background:transparent;padding:3px 1px}
+  .nutrition-vnext-meal-detail-v21__actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;position:static;padding:7px 0 0;background:none}
+  .nutrition-vnext-meal-detail-v21__actions button{min-height:34px;padding:0 5px;font-size:9px}
+  .nutrition-vnext-meal-detail-v21__facts{margin-top:3px}
+  .nutrition-meal-skip-secondary{margin-top:6px}
+}
+
+@media (max-width:600px){
+  .nutrition-vnext-shell--today .nutrition-vnext-macros{margin-bottom:5px}
+  .nutrition-vnext-shell--today .nutrition-vnext-appetite{padding:5px;margin-bottom:5px}
+  .nutrition-vnext-shell--today .nutrition-vnext-appetite__options button{min-height:29px}
+  .nutrition-vnext-shell--today .nutrition-vnext-meal__head{min-height:39px;padding:3px 5px}
+  .nutrition-vnext-shell--today .nutrition-vnext-meal__head strong{font-size:10px}
+  .nutrition-vnext-shell--today .nutrition-vnext-meal__head small{font-size:7px}
+  .nutrition-vnext-shell--today .nutrition-vnext-shortcuts>button{min-height:48px}
+  .nutrition-vnext-week__summary>.nutrition-vnext-macros{margin:0}
+  .nutrition-vnext-week__summary .nutrition-vnext-macroHero{height:65px;min-height:65px;padding:3px}
+  .nutrition-vnext-week__summary .nutrition-vnext-macroGrid{grid-template-columns:repeat(3,1fr);gap:3px;margin-top:2px}
+  .nutrition-vnext-week__summary .nutrition-vnext-macroGrid article{min-height:30px;padding:2px 4px}
+  .nutrition-vnext-week__summary .nutrition-vnext-macroGrid span,
+  .nutrition-vnext-week__summary .nutrition-vnext-macroGrid strong,
+  .nutrition-vnext-week__summary .nutrition-vnext-macroGrid small{font-size:7px}
+}
+
+@media (max-width:600px){
+  .nutrition-vnext-shell--today .nutrition-vnext-macros{padding:6px}
+  .nutrition-vnext-shell--today .nutrition-vnext-macroHero{min-height:58px}
+  .nutrition-vnext-shell--today .nutrition-vnext-macroGrid{margin-top:3px;padding-top:3px}
+  .nutrition-vnext-shell--today .nutrition-vnext-macroGrid article{gap:1px}
+  .nutrition-vnext-shell--today .nutrition-vnext-nextMeal{margin-top:4px;padding:6px}
+  .nutrition-vnext-shell--today .nutrition-vnext-nextMeal__summary .recipe-visual--hero{height:67px}
+  .nutrition-vnext-shell--today .nutrition-vnext-nextMeal__copy{gap:2px}
+  .nutrition-vnext-shell--today .nutrition-vnext-nextMeal__actions{margin-top:4px}
+  .nutrition-vnext-shell--today .nutrition-vnext-meal__head{min-height:35px}
+  .nutrition-vnext-week__selected .nutrition-vnext-sectionHead{min-height:21px}
+  .nutrition-vnext-week__mealList .nutrition-vnext-weekMeal{min-height:31px}
+  .nutrition-vnext-weekMeal .recipe-visual--thumb{width:23px;height:23px}
+  .nutrition-vnext-week__appetite{padding:4px}
+  .nutrition-vnext-week__appetite .nutrition-vnext-appetite__options button{min-height:28px}
+  .nutrition-vnext-week__summary{padding:4px}
+  .nutrition-vnext-week__summary .nutrition-vnext-macroHero{height:55px;min-height:55px}
+  .nutrition-vnext-week__summary .nutrition-vnext-macroGrid{margin-top:0;padding-top:1px}
+  .nutrition-vnext-week__summary .nutrition-vnext-macroGrid article{min-height:24px}
+  .nutrition-vnext-week__quick{padding:4px}
+  .nutrition-vnext-week__quick article{min-height:50px}
+  .nutrition-vnext-week__quick .recipe-visual{height:40px}
+  .nutrition-vnext-week__shortcuts>button{min-height:45px}
 }

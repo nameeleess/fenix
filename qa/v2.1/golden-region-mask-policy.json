@@ -1,0 +1,122 @@
+{
+  "formatVersion": 1,
+  "coordinateSpace": "css-pixels",
+  "policy": "Static semantic DOM regions and explicit CENTRAL exceptions only. No region is inferred from pixel differences.",
+  "defaultSemanticCandidates": true,
+  "states": {
+    "01_HOY_Principal.png": {},
+    "02_HOY_Dia_0.png": {},
+    "03_TRAINING_Hoy.png": {},
+    "04_TRAINING_Rutinas.png": {},
+    "05_TRAINING_Ejercicios.png": {
+      "explicit": [
+        {
+          "x": 13,
+          "y": 181,
+          "w": 88,
+          "h": 22,
+          "id": "CENTRAL-EXCEPTION-G05-CATALOG-COUNT-01",
+          "reason": "Golden sample count 128 is superseded by truthful runtime catalogue count 33; minimum count text region only."
+        }
+      ]
+    },
+    "06_TRAINING_Historial.png": {
+      "explicit": [
+        {
+          "x": 254,
+          "y": 220,
+          "w": 126,
+          "h": 74,
+          "id": "CENTRAL-EXCEPTION-G06-TRAINING-VOLUME-KPI-01",
+          "reason": "Uncontracted global Training volume KPI uses the approved neutral value and copy."
+        }
+      ]
+    },
+    "07_TRAINING_Sesion_en_curso.png": {},
+    "08_TRAINING_Detalle_rutina.png": {},
+    "09_TRAINING_Detalle_ejercicio.png": {},
+    "10_TRAINING_Crear_Editar_rutina.png": {
+      "explicit": [
+        {
+          "x": 245,
+          "y": 169,
+          "w": 137,
+          "h": 30,
+          "id": "CENTRAL-EXCEPTION-G10-ROUTINE-EXPORT-01",
+          "reason": "Routine export is represented as disabled with no handler or side effect."
+        }
+      ]
+    },
+    "11_TRAINING_Crear_Editar_ejercicio.png": {
+      "explicit": [
+        {
+          "x": 18,
+          "y": 654,
+          "w": 360,
+          "h": 78,
+          "id": "CENTRAL-EXCEPTION-G11-EXERCISE-ACTIONS-01",
+          "reason": "Favorite and warm-up eligibility controls are disabled and have no persistence or side effect."
+        }
+      ]
+    },
+    "12_NUTRITION_Hoy.png": {},
+    "13_NUTRITION_Semana.png": {},
+    "14_NUTRITION_Recetas.png": {},
+    "15_NUTRITION_Compra.png": {},
+    "16_NUTRITION_Detalle_receta.png": {},
+    "17_NUTRITION_Detalle_comida.png": {},
+    "18_NUTRITION_Crear_Editar_receta.png": {
+      "explicit": [
+        {
+          "x": 135,
+          "y": 0,
+          "w": 256,
+          "h": 112,
+          "id": "CENTRAL-REGION-G18-BRAND-RASTER-01",
+          "reason": "Immutable Golden header brand raster extends beyond the licensed runtime brand-art slot; only the raster-bearing header region is excepted, with header geometry and copy reviewed separately."
+        }
+      ]
+    },
+    "19_PROGRESO_Resumen.png": {},
+    "20_PROGRESO_Peso.png": {},
+    "21_PROGRESO_Rendimiento.png": {
+      "explicit": [
+        {
+          "x": 16,
+          "y": 492,
+          "w": 362,
+          "h": 166,
+          "id": "CENTRAL-EXCEPTION-G21-PROGRESS-AGGREGATED-PERFORMANCE-01",
+          "reason": "Uncontracted aggregate performance KPIs use approved neutral values without formula."
+        }
+      ]
+    },
+    "22_PROGRESO_Adherencia.png": {
+      "explicit": [
+        {
+          "x": 203,
+          "y": 589,
+          "w": 174,
+          "h": 90,
+          "id": "CENTRAL-EXCEPTION-G22-NUTRITION-ADHERENCE-01",
+          "reason": "Nutrition adherence has no approved formula and uses the approved neutral state."
+        }
+      ]
+    },
+    "23_PROGRESO_Cuerpo_Medidas.png": {},
+    "24_AJUSTES_Principal.png": {},
+    "25_AJUSTES_Rutina_diaria.png": {},
+    "26_AJUSTES_Datos_Backup_Restore.png": {
+      "explicit": [
+        {
+          "x": 13,
+          "y": 687,
+          "w": 366,
+          "h": 48,
+          "id": "CENTRAL-EXCEPTION-G26-DELETE-ALL-DATA-01",
+          "reason": "Destructive local-data deletion remains disabled with no handler."
+        }
+      ]
+    }
+  }
+}

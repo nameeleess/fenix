@@ -96,12 +96,15 @@ assert.ok(page.includes('preferredDate={date}'))
 assert.ok(page.includes('nutrition-vnext-week__label'))
 assert.ok(!page.includes('onCurrent={() =>'))
 
-// S06 — primary module titles and typography share one explicit application-level treatment.
-for (const title of ['<h1>NUTRITION</h1>']) assert.ok(page.includes(title))
-assert.ok(fs.readFileSync('src/features/training/TrainingPage.tsx','utf8').includes('<h1>TRAINING</h1>'))
-assert.ok(fs.readFileSync('src/features/progress/ProgressPage.tsx','utf8').includes('<h1>PROGRESO</h1>'))
-for (const token of ['.today-header h1', '.training-main-header h1', '.nutrition-vnext-topbar h1', '.progress-header h1', 'text-transform: uppercase']) {
-  assert.ok(appCss.includes(token), `visual coherence missing ${token}`)
+// S06 — v2.1 supersedes page-local title rules with one shared AppHeader treatment.
+const trainingPage = fs.readFileSync('src/features/training/TrainingPage.tsx','utf8')
+const progressPage = fs.readFileSync('src/features/progress/ProgressPage.tsx','utf8')
+const todayPage = fs.readFileSync('src/features/today/TodayPage.tsx','utf8')
+const dsCss = fs.readFileSync('src/styles/design-system.css','utf8')
+for (const [source, title] of [[todayPage,'Hoy'], [trainingPage,'Training'], [page,'Nutrition'], [progressPage,'Progreso']]) {
+  assert.ok(source.includes('AppHeader'), `${title} missing shared AppHeader`)
+  assert.ok(source.includes(`title="${title}"`) || source.includes(`title={'${title}'}`), `${title} AppHeader title missing`)
 }
+for (const token of ['.ds-app-header h1','--fenix-accent','--fenix-tap:44px']) assert.ok(dsCss.includes(token), `shared visual coherence missing ${token}`)
 
 console.log('F2-RC1 smoke fixes: PASS (appetite replan/week navigation/visual coherence)')

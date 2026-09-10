@@ -1,13 +1,29 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import {
+  REPDB_MEDIA_ITEMS,
+  REPDB_PACKAGE_VERSION,
+  REPDB_PRECACHE_SOURCE_IDS,
+} from './scripts/media-freeze-v21.mjs'
+
+const mediaBySourceId = new Map(REPDB_MEDIA_ITEMS.map((item) => [item.sourceId, item]))
+const repdbSeedThumbnails = REPDB_PRECACHE_SOURCE_IDS.map((sourceId) => {
+  const item = mediaBySourceId.get(sourceId)
+  if (!item) throw new Error(`Media Freeze: sourceId de precache desconocido: ${sourceId}`)
+  const suffix = item.variant === 'main' ? 'main' : 'start'
+  return {
+    url: `/media/exercises/repdb/${REPDB_PACKAGE_VERSION}/${sourceId}-${suffix}.webp`,
+    revision: `repdb-${REPDB_PACKAGE_VERSION}`,
+  }
+})
 
 export default defineConfig({
   plugins: [
     react(),
 
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
 
       includeAssets: [
         'fenix-icon-32.png',
@@ -17,6 +33,7 @@ export default defineConfig({
       ],
 
       manifest: {
+        id: '/',
         name: 'FÉNIX',
         short_name: 'FÉNIX',
 
@@ -43,14 +60,33 @@ export default defineConfig({
             src: '/fenix-icon-512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any',
+            purpose: 'any maskable',
           },
         ],
       },
 
       workbox: {
+        // RepDB WebP are package-local. Only seed-routine thumbnails are precached;
+        // remaining detail frames are cached on first use to keep install weight bounded.
         globPatterns: [
-          '**/*.{js,css,html,ico,png,svg,webp,webmanifest}',
+          '**/*.{js,css,html,ico,png,svg,webmanifest}',
+          'media/exercises/fenix/*.webp',
+          'media/exercises/user-licensed/*.webp',
+        ],
+        additionalManifestEntries: repdbSeedThumbnails,
+        runtimeCaching: [
+          {
+            urlPattern: /\/media\/exercises\/repdb\/.*\.webp$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: `fenix-repdb-media-${REPDB_PACKAGE_VERSION}`,
+              expiration: {
+                maxEntries: 80,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ],
       },
     }),

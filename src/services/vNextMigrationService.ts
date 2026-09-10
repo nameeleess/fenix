@@ -1,4 +1,6 @@
 import { db } from '../db/database'
+import { getLocalDateKey } from '../utils/date'
+import { createUuid } from '../utils/uuid'
 import type {
   WorkoutSessionExercise,
   WorkoutTemplateExercise,
@@ -13,7 +15,7 @@ import type {
 const TRAINING_VNEXT_MIGRATION_VERSION = '1'
 const NUTRITION_VNEXT_MIGRATION_VERSION = '1'
 
-function entityBase(id: string = crypto.randomUUID()) {
+function entityBase(id: string = createUuid()) {
   const now = new Date().toISOString()
 
   return {
@@ -23,14 +25,6 @@ function entityBase(id: string = crypto.randomUUID()) {
     deletedAt: null,
     version: 1,
   }
-}
-
-function getLocalDateKey(date = new Date()) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-
-  return `${year}-${month}-${day}`
 }
 
 function getTargetRirRange(config: WorkoutTemplateExercise | undefined) {

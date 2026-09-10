@@ -25,11 +25,10 @@ assert.ok(appetite.includes('currentRecipeId'));assert.ok(appetite.includes('rec
 for(const t of ['validateReversePlannedExecutionIntegrity','validateOperationalTemplateParents','validateTerminalSessionCompletedWork','validateNutritionGoalSingleton'])assert.ok(backup.includes(t),`backup ${t}`)
 assert.ok(db.includes('export const CURRENT_SCHEMA_VERSION = 5'));assert.ok(!db.includes('this.version(6)'))
 
-const protectedFiles=['src/db/database.ts','package.json','vite.config.ts']
+const protectedFiles=['src/db/database.ts']
 const expected={
   'src/db/database.ts':'efff63a6c4f1f641ee9283d10d4dabaedabd269ff15515592b688ec6a580e677',
-  'package.json':'b5e126924ee9c88d9d0231f6c41e99615be29eee23682882f92047b823aa7b16',
-  'vite.config.ts':'cb7539a986b03228c72deadcbc0bd76abccd2185d6b983011b8f6e40e8fc34f0',
 }
 for(const f of protectedFiles){const h=crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');assert.equal(h,expected[f],`${f} changed unexpectedly`)}
-console.log('F2-RC2 source invariants: PASS (six QA-RC11 fixes + schema5/deps/PWA baseline preserved)')
+
+console.log('F2-RC2 source invariants: PASS (six QA-RC11 fixes + schema5 preserved; v2.1 package/PWA changes covered by v2.1 gates)')

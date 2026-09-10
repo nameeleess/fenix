@@ -1,0 +1,2111 @@
+# FENIX_CODEX_HANDOFF_NUTRITION_v1.0
+
+**Proyecto:** FÉNIX  
+**Área:** 03 · FÉNIX — NUTRITION  
+**Tipo:** HANDOFF CANÓNICO PARA MIGRACIÓN A CODEX  
+**Versión:** 1.0  
+**Fecha de corte:** 2026-09-08  
+**Estado documental:** CANÓNICO PARA MIGRACIÓN / FREEZE DE CONTEXTO  
+**Regla posterior a este handoff:** no continuar trabajo del área hasta nueva autorización de CENTRAL.
+
+---
+
+## 0. PROPÓSITO, ALCANCE Y REGLA DE PREVALENCIA
+
+Este documento preserva el conocimiento vigente del área **Nutrition** de FÉNIX para que un agente Codex que no haya participado en las conversaciones previas pueda continuar sin reconstruir decisiones funcionales, contratos cross-module, invariantes, UX, QA ni estado técnico.
+
+No diseña funciones nuevas. No cambia contratos. No autoriza implementación adicional. No cierra incidencias que no estén cerradas. No sustituye la autoridad de CENTRAL.
+
+### Prevalencia general
+
+Ante conflicto entre fuentes, aplicar:
+
+1. corrección o decisión expresa posterior del usuario;
+2. resolución formal posterior de CENTRAL;
+3. Golden/Design Freeze posterior aprobado;
+4. contrato funcional aprobado del especialista Nutrition;
+5. baseline técnico/release y QA más recientes;
+6. exportación histórica de FÉNIX/Notion para datos personales históricos;
+7. fuentes científicas para recomendaciones, según la jerarquía del Manifiesto.
+
+**Nunca** resolver una contradicción material por interpretación propia. Si una contradicción nueva aparece y no existe una supersesión explícita, detener y elevar a CENTRAL.
+
+### Contradicciones no resueltas detectadas en este corte
+
+**NINGUNA CONTRADICCIÓN FUNCIONAL ABIERTA CONOCIDA.**
+
+Hay, no obstante, una **incidencia PRE-QA técnica abierta** en la candidata v2.1.0-rc.1 tras la última reparación de Golden parity. Está documentada en las secciones 2, 12, 13 y 18.
+
+---
+
+# 1. ROL, AUTORIDAD Y LÍMITES DEL ESPECIALISTA NUTRITION
+
+## 1.1. Rol
+
+03 · FÉNIX — NUTRITION es el especialista funcional del dominio de:
+
+- nutrición aplicada al entrenamiento;
+- alimentación diaria;
+- suficiencia energética;
+- ingesta y consumo;
+- proteína y macros cuando aportan valor;
+- comidas, roles nutricionales y planificación;
+- recetas;
+- ingredientes;
+- cantidades, unidades y preparación;
+- pre-entreno y post-entreno;
+- desayunos, comidas principales, snacks y cenas;
+- adaptación a apetito/volumen;
+- compra alimentaria, catálogo y carrito;
+- suplementación como dominio de recomendación;
+- adherencia nutricional cuando corresponda conceptualmente a Nutrition;
+- UX funcional del módulo Nutrition;
+- investigación y recomendación nutricional basada en evidencia.
+
+## 1.2. Autoridad funcional
+
+Nutrition decide **QUÉ debe hacer Nutrition y QUÉ significa cada concepto nutricional**.
+
+Es autoridad funcional sobre:
+
+- receta;
+- comida diaria;
+- consumo;
+- planificación nutricional;
+- estado de comida;
+- rol nutricional;
+- receta/comida alternativa;
+- porción y cantidad nutricional;
+- macros y objetivos nutricionales;
+- catálogo de ingredientes;
+- carrito/compra;
+- recomendación de suplementos;
+- semántica de datos Nutrition que se exponen a Hoy y Progreso.
+
+## 1.3. Límites
+
+Nutrition **NO** decide ni implementa unilateralmente:
+
+- schema Dexie/IndexedDB;
+- tablas, índices o migraciones;
+- TypeScript, React o CSS;
+- servicios y arquitectura técnica;
+- persistencia concreta;
+- PWA/Workbox;
+- sincronización;
+- seguridad/privacidad técnica;
+- performance técnico;
+- tests de implementación;
+- despliegue;
+- cambios de branch/tag/release;
+- contratos funcionales propiedad de Hoy, Training o Progreso;
+- cierres formales de release.
+
+Todo lo anterior pertenece a CENTRAL/Ingeniería según gobierno del proyecto.
+
+## 1.4. Límites médicos y de evidencia
+
+Nutrition es un asesor nutricional basado en evidencia, no autoridad médica. Ante patologías, medicación, interacciones clínicas o seguridad médica material:
+
+- no inferir diagnóstico;
+- no sustituir atención sanitaria;
+- usar fuentes clínicas/sanitarias apropiadas;
+- elevar la incertidumbre cuando corresponda.
+
+## 1.5. Regla de fuentes
+
+Para datos personales/históricos:
+
+1. corrección expresa del usuario;
+2. exportación FÉNIX/Notion;
+3. datos creados posteriormente dentro de FÉNIX.
+
+Para afirmaciones científicas:
+
+1. guías sanitarias/clínicas pertinentes;
+2. consensos/position stands de calidad;
+3. revisiones sistemáticas y metaanálisis;
+4. ensayos revisados por pares;
+5. revisiones narrativas de calidad;
+6. libros/material educativo basado en evidencia;
+7. divulgación;
+8. opiniones/experiencias individuales.
+
+Jeff Nippard es **fuente educativa complementaria**, no autoridad nutricional absoluta. Las fuentes de técnica/ROM de Training no deben usarse como si fueran una biblioteca completa de nutrición.
+
+---
+
+# 2. ESTADO EXACTO ACTUAL DEL ÁREA
+
+## 2.1. Baseline de producción estable
+
+La release formal estable de FÉNIX sigue siendo:
+
+- **FÉNIX v2 CORE STABLE — v2.0.0**
+- commit/tag: `deac3890f4d1b794cae8f3acde5a12bf7c35cf94` / `v2.0.0`
+- rama de producción: `production`
+- `production` apunta a `deac3890f4d1b794cae8f3acde5a12bf7c35cf94`
+- source release SHA-256: `f98d902d245dcd3cc0a6db5eca4d40afa4b1bca3e7f7f00a9238d16f32fab617`
+- DB: `fenix-db`
+- schema: `5`
+- migraciones posteriores de CORE: **NONE**
+- backup oficial de validación: 759 registros
+- backup SHA-256: `3686d872e64d83f7fea7053fab9f2e32508bd525c50180431a5b437bad8e8732`
+- QA final v2.0.0: PASS; 0 incidencias abiertas.
+
+## 2.2. Candidata v2.1 en desarrollo
+
+Objetivo de release:
+
+- `v2.1.0`
+
+Candidata actual de Ingeniería:
+
+- `2.1.0-rc.1`
+- branch de trabajo: `main`
+- `production`: **UNTOUCHED** respecto a v2.0.0.
+
+## 2.3. Último estado conocido de v2.1.0-rc.1 — IMPORTANTE
+
+La evidencia más reciente disponible corresponde a la ejecución:
+
+`REPAIR_FENIX_v2.1_GOLDEN_PARITY_001_AND_FINAL_GATE_v1.0.ps1`
+
+La reparación `PREQA-V21-GOLDEN-PARITY-001` fue aplicada. Después de esa reparación:
+
+- branch `main`: PASS;
+- versión `2.1.0-rc.1`: PASS;
+- backup oficial SHA: PASS;
+- production precheck: PASS / UNTOUCHED;
+- RepDB package 2026.8.1: PASS;
+- Golden parity owner/fixture regression: PASS;
+- RecipeVisual ownership: PASS, **8 usages**;
+- Training responsive: PASS;
+- Settings responsive: PASS;
+- 26-state visual matrix source contract: PASS;
+- Design System/accessibility: PASS;
+- Playwright harness: PASS;
+- Playwright hermetic boot: PASS;
+- `npm build` + TypeScript + PWA: PASS;
+- `npm lint --max-warnings=0`: PASS;
+- v2.1 accumulated domain/PRE-QA gate: PASS, **21 suites**;
+- Playwright Golden visual matrix: **26/26 PASS**, exact captures, overflow checks PASS.
+
+### Estado bloqueante más reciente
+
+El **Playwright E2E hermetic recheck** posterior falló:
+
+- test: `qa/v2.1/e2e/core.spec.ts`
+- caso: `core navigation, dialogs, persistence and double-submit guards`
+- flujo:
+  - `mainNav(page, 'Nutrition')`
+  - `segmented(page, 'Secciones de Nutrition', 'Recetas')`
+  - se esperaba un heading `/Recetas/i`
+- locator: `getByRole('heading', { name: /Recetas/i }).first()`
+- resultado: elemento no encontrado en 8000 ms.
+- resumen: **1 test falló; 2 pasaron**.
+
+Banner de parada:
+
+`FÉNIX v2.1.0-rc.1 — PREQA-V21-GOLDEN-PARITY-001: STOP`
+
+Instrucción vigente del gate:
+
+- conservar estado;
+- **NO reset**;
+- **NO clean**;
+- **NO checkout**;
+- **NO commit**;
+- **NO tag**;
+- **NO push**;
+- **NO tocar production**.
+
+Por tanto, el estado canónico actual **NO es “Final Gate PASS”**. Hubo un Final Gate PASS anterior, pero fue supersedido como evidencia de estado actual por la reparación de Golden parity y este fallo E2E posterior.
+
+### Artefacto source actual post-Golden-parity
+
+- source bundle sellado posterior a este último fallo: **DESCONOCIDO**;
+- SHA-256 del source actual post-Golden-parity: **DESCONOCIDO**;
+- commit post-Golden-parity: **DESCONOCIDO / no autorizado por el STOP conocido**.
+
+## 2.4. Estado funcional de Nutrition
+
+La arquitectura funcional Nutrition vNext está **APROBADA**.
+
+La implementación v2.0 estable ya validó la semántica crítica de Nutrition: multi-session, Pre/Post asociados a sesión, Day/Week, DailyMeal, historial, week apply, recipe lifecycle, NutritionGoal singleton, comida improvisada idempotente, Appetite y library/Shopping integrity.
+
+v2.1 añade/perfecciona superficies UI, Golden parity, RecipeVisual, editor/detail y seed ownership. El último bloqueo conocido es un E2E de navegación/heading en la sección `Recetas`, no un defecto demostrado del modelo funcional Nutrition.
+
+---
+
+# 3. CONTRATOS FUNCIONALES VIGENTES Y REGLAS QUE NO PUEDEN ROMPERSE
+
+1. **Nutrition es la fuente de verdad de comida, planificación y consumo.**
+2. Hoy puede presentar y disparar acciones, pero no crea una segunda fuente de verdad.
+3. Training aporta contexto; nunca decide recetas, cantidades, macros ni consumo.
+4. Pre-entreno y Post-entreno pertenecen a Nutrition.
+5. Pre/Post se asocian a **identidad de sesión Training**, no solo a fecha.
+6. Varias sesiones Training distintas pueden compartir fecha y conservar identidades independientes.
+7. Iniciar Training no marca Pre-entreno como consumido.
+8. Terminar Training no marca Post-entreno como consumido.
+9. Consumo requiere confirmación explícita.
+10. `RECETA != COMIDA DIARIA`.
+11. `ROL NUTRICIONAL != RECETA`.
+12. `PLANIFICADO != CONSUMIDO`.
+13. `OBJETIVO != PLANIFICADO != CONSUMIDO`.
+14. Una comida diaria puede existir sin receta.
+15. Una comida improvisada no obliga a crear receta/ingredientes.
+16. Modificar una comida de un día no modifica automáticamente su receta maestra.
+17. Cambiar una receta maestra nunca reescribe hechos históricos confirmados.
+18. Comidas `completed/REALIZADA` o `skipped/OMITIDA` nunca se reescriben automáticamente.
+19. `SIN REGISTRAR` no es lo mismo que `OMITIDA`.
+20. `SIN REGISTRAR` es interpretación histórica de ausencia de confirmación, no estado editable persistente aprobado.
+21. No existe estado funcional `NO APLICA`; si un rol no aplica, no existe el bloque.
+22. Cambiar apetito/volumen nunca cambia automáticamente el objetivo energético del día.
+23. Appetite puede replanificar pendientes, nunca hechos realizados/omitidos/manuales protegidos.
+24. Cuando haya alternativa compatible adecuada diferente, el cambio de Appetite debe producir un cambio material cuando sea posible; same-mode no-op puede ser válido.
+25. Aplicar una semana no puede sobrescribir silenciosamente hechos `completed/skipped` ni comida manual protegida.
+26. Aplicación semanal debe ser atómica/idempotente según baseline implementado.
+27. Reprogramar Training mueve únicamente bloques Pre/Post **pendientes** asociados a la sesión.
+28. Reprogramar no mueve ni reescribe REALIZADA/OMITIDA.
+29. Sesión OMITIDA elimina/desactiva Pre/Post pendientes; conserva hechos históricos.
+30. Sesión INCOMPLETA que llegó a iniciarse cuenta como entrenamiento a efectos del contexto Nutrition; Post puede seguir pendiente.
+31. Dos sesiones el mismo día no deben fusionar automáticamente sus pares Pre/Post.
+32. Ingredients usados deben protegerse; eliminar receta no elimina ingredientes automáticamente.
+33. RecipeIngredient activo exige Recipe activa e Ingredient activo.
+34. ShoppingItem activo exige Ingredient activo.
+35. No pueden coexistir Ingredients activos con el mismo nombre normalizado.
+36. No pueden coexistir ShoppingItems activos con la misma identidad lógica `ingredientId + normalizedUnit`.
+37. Runtime y Backup/Restore deben compartir exactamente la policy de identidad Nutrition.
+38. Restore debe rechazar estados lógicamente imposibles para runtime.
+39. NutritionGoal activo es singleton: `activeNutritionGoals <= 1`.
+40. Comida improvisada utiliza identidad lógica/idempotencia para impedir doble submit.
+41. Mutaciones causales de DailyMeal deben releer estado vigente dentro de transacción; una operación stale no puede reescribir un hecho ya confirmado.
+42. Versionado de mutaciones debe ser monotónico; no resurrect; no version regression.
+43. `REJECT` transaccional = zero write + zero version change + zero event.
+44. Seed v2.1 debe ser no destructivo: insert-only, no overwrite, no resurrect; seed v1 histórico preservado.
+45. No reset/reseed destructivo de datos personales para actualizar la app.
+46. Schema 5 se conserva salvo autorización expresa de CENTRAL.
+
+---
+
+# 4. TODAS LAS DECISIONES APROBADAS QUE SIGUEN VIGENTES
+
+## 4.1. Tesis de producto
+
+Nutrition no es una mera biblioteca de recetas. Debe funcionar como un **“nutricionista operativo”**:
+
+- abrir Nutrition;
+- saber qué toca comer;
+- ver qué está planificado;
+- ver qué ya está confirmado;
+- identificar la siguiente comida;
+- acceder a alternativas;
+- adaptar el plan al apetito;
+- confirmar con poca fricción;
+- registrar una improvisación;
+- consultar y ajustar semana;
+- usar recetas/ingredientes/compra como soporte.
+
+**Plan es el núcleo.** Recetas y Compra no deben dominar la experiencia diaria.
+
+## 4.2. Arquitectura funcional
+
+Ámbitos aprobados:
+
+- Plan / día-semana;
+- Recetas;
+- Compra.
+
+Ingredientes se administran dentro del dominio Nutrition pero no necesitan ser un destino principal global.
+
+Suplementación no requiere submódulo completo en vNext.
+
+## 4.3. Estructura de día
+
+### Día con Training
+
+1. Pre-entreno
+2. Post-entreno
+3. Comida principal
+4. Snack
+5. Cena
+
+### Día sin Training
+
+1. Desayuno
+2. Comida principal
+3. Snack
+4. Cena
+
+### Regla de mañana
+
+El Post-entreno puede materialmente hacer de desayuno si el entrenamiento es matutino. No crear `Desayuno + Post-entreno` de forma automática cuando sea una duplicación innecesaria.
+
+## 4.4. Huecos vacíos
+
+Se permite comida/slot vacío. Ejemplo válido:
+
+`Post-entreno · Sin comida seleccionada`.
+
+No obligar a elegir receta para que el día sea válido.
+
+## 4.5. DailyMeal
+
+Comida diaria es la unidad operativa central de Nutrition.
+
+Debe representar una instancia de una fecha concreta y puede contener conceptualmente:
+
+- fecha;
+- rol;
+- vínculo a sesión Training cuando aplica;
+- receta opcional;
+- contenido libre opcional;
+- cantidad prevista;
+- cantidad confirmada;
+- estado;
+- kcal/macros planificados;
+- kcal/macros confirmados;
+- notas;
+- cambios específicos de esa instancia.
+
+El esquema físico completo exacto es autoridad de Ingeniería/CENTRAL y, desde este especialista, **DESCONOCIDO** más allá de los campos/entidades confirmados por QA.
+
+## 4.6. Estados de comida
+
+UI/concepto:
+
+- **PENDIENTE**
+- **REALIZADA**
+- **OMITIDA**
+
+Equivalentes técnicos confirmados en baseline:
+
+- `pending`
+- `completed`
+- `skipped`
+
+`SIN REGISTRAR` = interpretación histórica cuando una comida quedó pendiente sin confirmación al finalizar el día. No confundir con omitida.
+
+## 4.7. Confirmación rápida
+
+Pulsar `Realizada` debe confirmar sin formulario obligatorio y asumir inicialmente que se consumieron aproximadamente las cantidades planificadas.
+
+Después puede ofrecerse `Ajustar cantidades`.
+
+## 4.8. Porciones
+
+Opciones aprobadas cuando sean aplicables:
+
+- `0,5×`
+- `1×`
+- `1,5×`
+- `2×`
+- `Personalizado`
+
+Afectan la instancia, no la receta maestra por defecto.
+
+## 4.9. Comida improvisada
+
+Registro mínimo:
+
+- nombre obligatorio;
+- cantidad/nota opcional;
+- kcal opcionales;
+- proteína opcional;
+- carbohidratos opcionales;
+- grasas opcionales.
+
+No obligar a crear receta ni ingredientes. Puede reemplazar comida planificada o ser una ingesta adicional. `Guardar como receta` puede existir como acción opcional posterior.
+
+## 4.10. Appetite / volumen
+
+Selector aprobado y central:
+
+- **COMPACTO**
+- **NORMAL**
+- **VOLUMINOSO**
+
+### Compacto
+
+Para poco apetito: menor volumen físico, fácil de consumir, suficiente densidad energética; líquidos/semilíquidos cuando proceda.
+
+### Normal
+
+Distribución estándar.
+
+### Voluminoso
+
+Para más apetito: más volumen físico y platos abundantes cuando encajen.
+
+**No equivaler automáticamente** Compacto = más kcal o Voluminoso = menos kcal. La clasificación describe principalmente experiencia/volumen práctico.
+
+## 4.11. Alternativas
+
+Orden de priorización funcional:
+
+1. compatibilidad con el rol;
+2. modo de apetito/volumen;
+3. favoritos;
+4. variedad;
+5. adecuación nutricional razonable al plan.
+
+No se requiere IA. Puede implementarse con reglas deterministas.
+
+## 4.12. Planificación semanal
+
+Aprobada como planificación flexible, no dieta rígida.
+
+Debe existir una vista Semana y propuestas/plantillas como `Semana 1`, `Semana 2`, etc., que el usuario pueda aplicar y luego editar/sustituir.
+
+Aplicar una semana sobre planificación existente:
+
+- no sobrescribir silenciosamente;
+- detectar conflicto;
+- permitir reemplazar solo planificación pendiente si corresponde;
+- nunca sobrescribir hechos REALIZADOS/OMITIDOS.
+
+## 4.13. Recetas
+
+Mantener:
+
+- crear;
+- editar;
+- duplicar;
+- eliminar;
+- buscar;
+- favoritos;
+- cantidades;
+- instrucciones;
+- macros cuando existan;
+- porciones;
+- reutilización.
+
+Separar conceptualmente:
+
+### Tipo
+
+Ejemplos: plato, desayuno, snack, batido.
+
+### Roles compatibles
+
+- Pre-entreno
+- Post-entreno
+- Desayuno
+- Comida principal
+- Snack
+- Cena
+
+Una receta puede tener múltiples roles.
+
+### Volumen
+
+- Compacto
+- Normal
+- Voluminoso
+
+## 4.14. Ingredientes
+
+Catálogo permanente/reutilizable.
+
+Debe permitir:
+
+- crear;
+- editar;
+- reutilizar;
+- crear ingrediente desde editor de receta;
+- usar unidades/cantidades prácticas;
+- tener macros incompletos sin bloquear uso;
+- proteger ingredientes utilizados.
+
+Producto genérico por defecto. Marca/producto específico solo cuando aporte diferencia material de composición, compra, cantidad, preparación o preferencia.
+
+## 4.15. Compra / carrito
+
+Nombre aprobado: **Carrito**, no “cesta”.
+
+Mantener:
+
+- añadir ingredientes individualmente desde receta;
+- editar cantidad;
+- rangos;
+- unidades;
+- marcar/desmarcar;
+- eliminar;
+- limpiar marcados.
+
+No existe obligación de “añadir receta completa al carrito”.
+
+Mismo ingrediente añadido varias veces con unidades compatibles puede consolidarse en una identidad lógica y acumular cantidad.
+
+## 4.16. Macros
+
+Home prioriza solo:
+
+- kcal;
+- proteína;
+- carbohidratos;
+- grasas.
+
+No introducir por defecto dashboards de azúcar, fibra, sodio o micronutrientes.
+
+Datos desconocidos no equivalen a cero.
+
+Se debe distinguir cuando corresponda:
+
+- conocido;
+- introducido por usuario;
+- estimado;
+- calculado.
+
+Datos incompletos deben presentarse como incompletos, no con falsa precisión.
+
+## 4.17. Objetivo nutricional
+
+El objetivo debe ser editable y no hardcodeado.
+
+En la especificación funcional se usó como punto operativo inicial aproximado:
+
+- `≈ 2850 kcal/día`
+- `≈ 130 g proteína/día`
+
+Esto **no es una medición fisiológica exacta** ni contrato técnico de valor persistido. El valor actualmente persistido en `NutritionGoal` en la candidata: **DESCONOCIDO** desde este especialista.
+
+Los `160 g` mostrados en renders exploratorios fueron **DEMO** y no autoridad funcional.
+
+## 4.18. Ritmo de ganancia
+
+Nutrition es autoridad sobre el objetivo/rango nutricional de ganancia; Progreso mide tendencia real.
+
+No codificar una tasa universal inmutable ni aumentar calorías por fluctuaciones diarias aisladas.
+
+La estrategia aprobada es aumento progresivo con equilibrio entre músculo, grasa, rendimiento, salud y adherencia.
+
+## 4.19. Suplementación
+
+Nutrition conserva autoridad conceptual sobre recomendación de suplementos.
+
+Separar:
+
+`PRODUCTO REGISTRADO` de `RECOMENDACIÓN DE USO`.
+
+Evaluación de suplemento:
+
+`NECESIDAD → EVIDENCIA → BENEFICIO → DOSIS → MOMENTO → SEGURIDAD → INTERACCIONES/CONTRAINDICACIONES → PRECIO → COSTE/BENEFICIO → DECISIÓN`.
+
+En vNext queda **POSPUESTO** un submódulo completo de tracker/recordatorios/rachas de suplementos.
+
+## 4.20. Historial
+
+Una comida confirmada debe preservar lo que se registró aquel día. Editar la receta maestra después no puede alterar el pasado.
+
+No fabricar retrospectivamente consumo diario desde la antigua biblioteca de recetas de Notion.
+
+## 4.21. Offline
+
+Desde el punto de vista funcional, las tareas esenciales de Nutrition deben ser utilizables sin conexión:
+
+- consultar plan;
+- confirmar/omitir comida;
+- consultar recetas;
+- editar contenido soportado;
+- ingredientes;
+- carrito;
+- historial local disponible.
+
+Arquitectura offline pertenece a Ingeniería/CENTRAL.
+
+## 4.22. Personal operating context aprobado/relevante
+
+Contexto conocido que guía contenido Nutrition, sin convertirlo en hardcode:
+
+- hombre, 22 años; cumple 23 en diciembre de 2026;
+- 182 cm;
+- 65,8 kg registrados el 26/08/2026;
+- objetivo orientativo: 75–80 kg;
+- objetivo de nutrición: ganar masa muscular, rendimiento y peso progresivamente;
+- 4 sesiones/semana de fuerza/hipertrofia, ~45–75 min;
+- actividad diaria media, camina bastante;
+- rutina deseada aproximada: levantarse 07:00, entrenar 08:00, dormir antes de 00:00;
+- poco apetito al despertar; pre-entreno ligero; apetito fuerte después de entrenar;
+- prefiere 3 comidas principales más picoteos/comidas ligeras cuando haga falta;
+- gustos fuertes: pasta, arroz —especialmente caldoso/meloso—, carnes; desea más variedad de desayunos y platos;
+- restricciones culinarias: **sin cerdo y sin alcohol como ingrediente/cocción**;
+- no alergias/intolerancias conocidas declaradas en el momento de la auditoría;
+- hidratación objetivo personal habitual: intentar al menos ~2 L, con días por debajo;
+- compra habitual: Mercadona, HSN, Amazon;
+- criterio de compra: relación calidad-precio;
+- equipamiento: vitro, air fryer, microondas, báscula de cocina, batidora/minipimer y equipamiento doméstico general.
+
+Este contexto puede cambiar. Nunca debe reemplazar una corrección posterior del usuario.
+
+---
+
+# 5. DECISIONES ANTERIORES SUPERSEDED / DEROGADAS
+
+## 5.1. Nutrition como “Recetas + Catálogo + Carrito”
+
+**Anterior:** la arquitectura existente podía entenderse principalmente como recetas/ingredientes/carrito.  
+**Superseded por:** Nutrition vNext con **Plan como núcleo**, Hoy/Semana y ciclo planificación→consumo→historial.
+
+## 5.2. Taxonomía histórica de Notion como arquitectura
+
+**Anterior:** Desayunos / Pre-entreno / Snack del trabajo / Comidas principales / Antes de dormir / Batidos.  
+**Superseded por:** separar Tipo, Rol compatible y Volumen; migrar contenido, no limitaciones de Notion.
+
+## 5.3. “Antes de dormir” como categoría estructural primaria
+
+**Anterior:** categoría propia.  
+**Superseded por:** recetas preservadas/reclasificadas en roles compatibles; deja de gobernar arquitectura.
+
+## 5.4. “Snack del trabajo” como categoría estructural
+
+**Anterior:** Snack del trabajo.  
+**Superseded por:** `Snack` genérico; el contexto laboral no gobierna la identidad de la receta/comida.
+
+## 5.5. “Batido” como rol temporal
+
+**Anterior:** agrupación de Notion podía funcionar como bloque temporal.  
+**Superseded por:** `Batido` puede ser un **Tipo**; los roles temporales son independientes.
+
+## 5.6. Layout 2 + Layout 5 como mera referencia flexible
+
+**Anterior aprobado:** Layout 2 como referencia de Nutrition Hoy y Layout 5 como referencia de Semana, sin obligación píxel-a-píxel.  
+**Superseded visualmente por:** Design Freeze v2.1 con Golden Renders individuales y **paridad visual estricta**. Los Layout 2/5 conservan valor histórico/funcional de origen, pero **NO son la autoridad visual actual**.
+
+## 5.7. Regla visual “no pixel-perfect”
+
+**Anterior:** renders como referencia funcional no obligatoria píxel-a-píxel.  
+**Superseded por:** v2.1 Golden Freeze: paridad visual estricta, salvo accesibilidad/safe areas/compatibilidad autorizada por gobierno global.
+
+## 5.8. RecipeVisual 6 usages
+
+**Anterior:** PRE-QA intermedio verificó 6 usages.  
+**Superseded por:** última reparación Golden parity conocida: RecipeVisual ownership PASS con **8 usages** e integración Today/Week/Library/detail/editor.
+
+## 5.9. Final Gate v2.1 anterior como estado “actual”
+
+**Anterior histórico:** Final Engineering/PRE-QA gate PASS produjo bundle/evidence con SHA conocidos.  
+**Superseded como estado actual por:** posterior `PREQA-V21-GOLDEN-PARITY-001` repair + E2E FAIL. El bundle anterior sigue siendo evidencia histórica, no el source actual.
+
+## 5.10. Contador demo de proteína 160 g
+
+**Anterior visual:** algunos renders de exploración muestran `160 g`.  
+**Superseded/descartado como dato real:** era DEMO; especificación funcional usó ~130 g como punto operativo inicial editable y no hardcodeado.
+
+---
+
+# 6. DEPENDENCIAS Y CONTRATOS CROSS-MODULE
+
+## 6.1. Nutrition ↔ Hoy / Rutina
+
+### Ownership
+
+- Nutrition: comida, plan, estado y consumo.
+- Hoy: orquestación/presentación y acceso rápido.
+
+### Nutrition debe exponer a Hoy
+
+- identidad de comida relevante;
+- rol;
+- nombre/contenido resumido;
+- receta asociada cuando exista;
+- estado;
+- cantidad;
+- kcal si existen;
+- proteína/carbohidratos/grasas si existen;
+- completitud de datos;
+- progreso consumido diario;
+- objetivo nutricional aplicable.
+
+### Relevancia contextual
+
+Día Training:
+
+1. Pre antes de Training si aplica y está pendiente;
+2. Post después de sesión completada/incompleta si pendiente;
+3. Comida principal;
+4. Snack;
+5. Cena.
+
+Día sin Training:
+
+1. Desayuno;
+2. Comida principal;
+3. Snack;
+4. Cena.
+
+Saltar REALIZADAS/OMITIDAS. Si no hay comida aplicable, Hoy no inventa una.
+
+### Mutación
+
+Hoy puede disparar una acción permitida, pero el registro Nutrition es el que cambia. No duplicar estado.
+
+### Estado del contrato
+
+**RESUELTO / VIGENTE.**
+
+## 6.2. Nutrition ↔ Training
+
+### Training aporta
+
+Necesario:
+
+- identidad de sesión;
+- fecha prevista;
+- fecha efectiva si se reprograma;
+- estado.
+
+Útil cuando existe:
+
+- inicio real;
+- final real.
+
+Puede exponer:
+
+- duración estimada.
+
+Nutrition no depende de duración estimada para crear Pre/Post.
+
+### Reprogramación
+
+Pre/Post se asocian a identidad de sesión.
+
+Si la sesión cambia de fecha:
+
+- Pre/Post PENDIENTES se trasladan automáticamente;
+- se conserva receta/cantidad seleccionada cuando sea razonable;
+- los pendientes del día original dejan de aplicar;
+- Nutrition reajusta solo estructura restante del día original;
+- REALIZADA/OMITIDA nunca se mueve ni reescribe.
+
+Si Pre ya se consumió antes de reprogramar:
+
+- permanece como hecho del día original;
+- puede generarse un nuevo Pre en el nuevo día si la sesión lo requiere;
+- nunca falsificar retrospectivamente la fecha del consumo.
+
+### Sesión OMITIDA
+
+- eliminar/desactivar Pre/Post pendientes;
+- adaptar pendientes restantes a día sin Training;
+- conservar cualquier ingesta REALIZADA u OMITIDA explícitamente.
+
+### Sesión INCOMPLETA
+
+Si llegó a iniciarse:
+
+- existe Training a efectos de contexto Nutrition;
+- Pre conserva significado;
+- Post puede permanecer pendiente.
+
+### Dos sesiones mismo día
+
+- identidades independientes;
+- no fusionar pares Pre/Post únicamente por fecha.
+
+### Regla frontera
+
+**Training puede cambiar contexto/planning. Training nunca puede afirmar consumo.**
+
+### Estado del contrato
+
+**RESUELTO / VIGENTE.**
+
+## 6.3. Nutrition ↔ Progreso
+
+### Nutrition expone hechos semánticos
+
+Por fecha, cuando existan:
+
+- objetivo nutricional;
+- planificación;
+- kcal/P/C/G planificados;
+- consumo confirmado;
+- kcal/P/C/G confirmados;
+- completitud;
+- comidas previstas/realizadas/omitidas/sin registrar;
+- rango objetivo nutricional de ganancia y cambios cuando proceda.
+
+### Progreso decide derivaciones longitudinales
+
+Progreso puede analizar, pero no debe asumir:
+
+- `70 % kcal = 70 % adherencia`;
+- `sin registrar = incumplido`.
+
+Semántica:
+
+- REALIZADA = hecho confirmado;
+- OMITIDA = sabemos que no se realizó;
+- SIN REGISTRAR = desconocido;
+- sin planificación = base insuficiente para inferir adherencia.
+
+No crear score universal nutricional sin nueva decisión.
+
+### Peso
+
+- Progreso posee registro/tendencia de peso.
+- Nutrition posee decisión de objetivo/rango nutricional de ganancia.
+
+### Estado del contrato
+
+**RESUELTO / NO BLOQUEANTE.**
+
+## 6.4. Nutrition ↔ CENTRAL
+
+CENTRAL es autoridad sobre:
+
+- arquitectura;
+- código;
+- DB;
+- schema;
+- migraciones;
+- PWA;
+- persistencia;
+- integración;
+- seguridad;
+- QA orchestration;
+- release;
+- cambios cross-module no resueltos.
+
+Nutrition entrega contratos funcionales. CENTRAL no debe reinterpretarlos unilateralmente; si existe impedimento técnico, debe conservar el objetivo y elevar/proponer alternativa.
+
+## 6.5. Nutrition ↔ Ingeniería
+
+Ingeniería:
+
+- implementa únicamente scope autorizado;
+- no cambia ownership/semántica/historial/Pre/Post por su cuenta;
+- debe usar root-cause y barrido horizontal;
+- debe preservar schema 5 salvo autorización;
+- no toca production ni cierra release por sí sola.
+
+Patrón técnico de mutaciones validado por proyecto:
+
+`transaction → reread current → validate → mutate atomically → version++ → commit → publish freshness`.
+
+## 6.6. Nutrition ↔ QA
+
+QA:
+
+- valida de forma independiente;
+- no modifica código;
+- no declara formalmente la release;
+- no debe recibir candidata salvo autorización de CENTRAL;
+- reabre clase cerrada solo por regresión reproducible.
+
+Ruta de calidad vigente:
+
+`implementación consolidada → self-test → PRE-QA adversarial/root-cause → shadow QA → CENTRAL → QA independiente si CENTRAL autoriza`.
+
+## 6.7. Nutrition ↔ Nutrition
+
+No existe cross-module interno distinto. Regla de self-ownership:
+
+- una única fuente de verdad Nutrition para receta/ingrediente/comida/consumo;
+- no crear copias divergentes para Today/Week/Library/Compra;
+- vistas distintas deben proyectar los mismos hechos canónicos.
+
+---
+
+# 7. MODELO CONCEPTUAL / DATOS / ESTADOS RELEVANTES
+
+## 7.1. Conceptos de dominio
+
+### Recipe
+
+Preparación reusable. No es consumo ni comida diaria.
+
+### Ingredient
+
+Elemento reusable del catálogo permanente.
+
+### RecipeIngredient
+
+Relación Recipe ↔ Ingredient. Si está activa, ambos padres deben estar activos.
+
+### DailyMeal
+
+Instancia operativa de comida en fecha concreta; puede vincularse a Training y/o Recipe, o ser manual/improvisada.
+
+### NutritionDay
+
+Agregado/estructura nutricional de una fecha. Entidad técnica `nutritionDays` confirmada en schema 5.
+
+### NutritionGoal
+
+Objetivo Nutrition activo. Invariante: máximo uno activo.
+
+### ShoppingItem
+
+Elemento del Carrito asociado a Ingredient, con identidad lógica por `ingredientId + normalizedUnit` para activos.
+
+### Appetite mode
+
+Compacto / Normal / Voluminoso.
+
+### Weekly planning
+
+Aplicación/planificación por semana con preservación de hechos confirmados.
+
+## 7.2. Entidades técnicas confirmadas en baseline 759
+
+Conteos del backup oficial v2.0 estable:
+
+- `ingredients`: **51**
+- `recipes`: **44**
+- `recipeIngredients`: **172**
+- `shoppingItems`: **5**
+- `nutritionDays`: **11**
+- `dailyMeals`: **51**
+- `nutritionGoals`: **1**
+
+Otros conteos cross-module relevantes:
+
+- `plannedWorkoutSessions`: 26
+- `workoutSessions`: 10
+
+## 7.3. Schema físico
+
+- DB: `fenix-db`
+- schema vigente: `5`
+- `dailyMeals` no utiliza un índice unique simple `[date+role]`, porque varias identidades Training pueden coexistir en fecha/rol y la identidad incluye sesión.
+- `nutritionDays` usa fecha.
+- `nutritionGoals` no depende de índice artificial nuevo para imponer singleton; se protege por lifecycle transaccional/validator.
+
+El detalle completo de stores/campos/índices es autoridad técnica; desde este handoff de especialista, cualquier elemento no confirmado aquí = **DESCONOCIDO**.
+
+## 7.4. Identidad Nutrition library
+
+Fuente canónica compartida implementada:
+
+`src/features/nutrition/nutritionLibraryIdentity.ts`
+
+Políticas:
+
+`normalizeIngredientName(value)`:
+
+`trim() → toLocaleLowerCase('es')`
+
+`normalizeShoppingUnit(value)`:
+
+`trim() → string no vacía | null`
+
+Unidades son case-sensitive:
+
+- `kg` ≠ `KG`
+
+Runtime y backup validator deben importar la misma policy; no duplicar normalizadores.
+
+## 7.5. Identidad DailyMeal Training
+
+Una comida Training incluye `trainingSessionId` como parte de su identidad funcional. No colapsar sesiones por fecha/rol.
+
+## 7.6. Estado DailyMeal
+
+Técnico confirmado:
+
+- `pending`
+- `completed`
+- `skipped`
+
+UI/semántica:
+
+- PENDIENTE
+- REALIZADA
+- OMITIDA
+
+`SIN REGISTRAR` = derivación histórica, no estado de escritura.
+
+## 7.7. Idempotencia de comida improvisada
+
+La implementación estable usa `submissionId` como identidad de la intención lógica. Reintentos con el mismo token no crean hechos duplicados; tokens distintos pueden representar hechos distintos.
+
+## 7.8. Versionado y causalidad DailyMeal
+
+Validado en RC1.1:
+
+- replacement/portion/status/apply-week/appetite se serializan causalmente;
+- releer estado actual dentro de transacción;
+- si completed/skipped ganó, una mutación stale que esperaba pending debe REJECT;
+- version desde `current.version + 1`;
+- no versión regresiva;
+- hechos confirmados no pueden terminar en combinaciones imposibles de recipe/planned/confirmed snapshots.
+
+---
+
+# 8. UX, COMPORTAMIENTO E INTERACCIÓN APROBADOS
+
+## 8.1. Principio UX
+
+Mobile-first, iPhone prioritario, uso rápido con una mano, pocas pulsaciones, jerarquía clara, sin formularios interminables ni estadísticas decorativas.
+
+## 8.2. Nutrition Hoy — comportamiento
+
+Debe permitir comprender de un vistazo:
+
+- qué comer;
+- qué está planificado;
+- qué se ha confirmado;
+- qué viene después;
+- progreso objetivo/plan/consumo;
+- apetito;
+- alternativas;
+- acceso a Recetas y Compra.
+
+La genealogía funcional fue Layout 2, pero la autoridad visual actual es Golden Render 12.
+
+## 8.3. Nutrition Semana — comportamiento
+
+Debe permitir:
+
+- seleccionar día de la semana;
+- entender plan del día;
+- distinguir Training/non-Training por contexto funcional cuando proceda;
+- consultar comidas y estados;
+- cambiar apetito;
+- ver sustituciones rápidas;
+- acceder a resumen;
+- llegar a Recetas/Compra.
+
+Genealogía funcional: Layout 5; autoridad visual actual: Golden Render 13.
+
+## 8.4. Acciones frecuentes
+
+- Realizada
+- Omitir
+- Alternativas
+- Sustituir/Cambiar
+- Ajustar porción
+- Registrar comida improvisada
+- Ver receta
+- Editar receta
+- Añadir ingrediente al carrito
+- Crear/editar ingrediente
+
+Acciones destructivas/correcciones históricas deben ser explícitas y seguras.
+
+## 8.5. Estado histórico
+
+Días históricos: lectura por defecto; corrección mediante acción explícita tipo `Corregir registro`. No reescritura silenciosa.
+
+## 8.6. Empty states
+
+### Día sin plan
+
+Mostrar claramente que no hay menú planificado y ofrecer acciones válidas de planificación. No inventar consumo.
+
+### Comida sin selección
+
+`Sin comida seleccionada` + elegir receta/alternativas/registrar otra cosa.
+
+### Carrito vacío
+
+`Tu carrito está vacío` + acceso razonable a recetas/ingredientes.
+
+## 8.7. Accesibilidad funcional
+
+- no depender solo de color;
+- completed con texto/check además de verde;
+- pending/omitted inequívocos;
+- áreas táctiles adecuadas;
+- contraste y legibilidad;
+- botones claramente diferenciados.
+
+Gate técnico v2.1 confirma floor de 44 px para controles compartidos y dialogs accesibles.
+
+---
+
+# 9. REQUISITOS VISUALES Y GOLDEN RENDERS
+
+## 9.1. Design System global
+
+Identidad aprobada:
+
+- negro profundo;
+- carbón oscuro;
+- textura carbón extremadamente discreta;
+- rojo FÉNIX `#DE090A`;
+- blanco/gris;
+- verde reservado a completado;
+- cards oscuras redondeadas;
+- estética minimalista, premium y deportiva;
+- legibilidad alta;
+- mobile-first/iPhone.
+
+Bottom navigation obligatoria:
+
+`HOY · TRAINING · NUTRITION · PROGRESO`
+
+Nutrition activo en su módulo.
+
+## 9.2. Design Freeze v2.1
+
+Paquete canónico:
+
+`FENIX_v2.1_GOLDEN_RENDERS_FINAL_26.zip`
+
+SHA-256:
+
+`0f797dd2962f44ec7ae82d46f770d6b70c462927ad6a938728ea86375056bffc`
+
+Reglas:
+
+- un Golden por pantalla/layout;
+- **paridad visual estricta**;
+- no tratar Goldens como “inspiración”;
+- no inventar UI;
+- no añadir una nueva capa global de overrides tipo `final-v2.css` para parchear;
+- owner CSS/Design System v2;
+- retirar overrides obsoletos de superficies tocadas;
+- full-screen detail/editor donde lo exige Golden;
+- geometría iPhone compacta y determinista para visual tests.
+
+## 9.3. Goldens Nutrition
+
+12. Nutrition — Hoy
+13. Nutrition — Semana
+14. Nutrition — Recetas
+15. Nutrition — Compra
+16. Nutrition — Detalle receta
+17. Nutrition — Detalle comida
+18. Nutrition — Crear/Editar receta
+
+Estos siete Goldens gobiernan visualmente Nutrition.
+
+## 9.4. RecipeVisual
+
+Estado más reciente conocido:
+
+- ownership regression: PASS;
+- **8 usages**;
+- bounded SVG/media;
+- pointer-transparent;
+- integración en Today/Week/Library/detail/editor.
+
+### Fotografías de comida
+
+Decisión funcional previa vigente:
+
+**FOTOS DE COMIDA = FUERA DE ALCANCE**.
+
+RecipeVisual no debe interpretarse automáticamente como autorización para fotos de comida. La evidencia técnica conocida lo describe como SVG/media acotado. Si un Golden canónico exigiera materialmente fotografía real de comida y entrara en conflicto con esta regla, eso sería STOP CONDITION de CENTRAL. **No existe evidencia actual de que tal contradicción esté abierta.**
+
+---
+
+# 10. FUNCIONALIDAD YA IMPLEMENTADA Y VALIDADA
+
+## 10.1. CORE v2.0 estable — Nutrition
+
+Validado por QA/PRE-QA acumulado:
+
+- multi-session same-day;
+- Pre/Post de sesiones A/B;
+- identidad `trainingSessionId`;
+- Training reconciliation;
+- Day/Week;
+- causalidad DailyMeal;
+- apply week atómico;
+- apply week idempotente;
+- preservación completed/skipped/manual;
+- Recipe lifecycle;
+- NutritionGoal singleton;
+- improvised meal idempotency;
+- Appetite;
+- Ingredient/Recipe/Shopping runtime lifecycle;
+- Backup/Restore integrity y unicidades lógicas tras RC2.2.
+
+## 10.2. DailyMeal causal mutations
+
+RC1.1 M01–M10 + 200 stress cycles: PASS.
+
+Cobertura incluyó:
+
+- replace vs complete;
+- portion vs complete;
+- complete vs apply week;
+- replace vs appetite;
+- portion vs appetite;
+- skip vs apply;
+- stress mixto.
+
+## 10.3. NutritionGoal
+
+RC2 G01–G08: PASS.
+
+- concurrent saves protegidos;
+- doble submit UI protegido;
+- >1 active previo REJECT;
+- `activeNutritionGoals <= 1`.
+
+## 10.4. Improvised meal
+
+RC2 I01–I06: PASS.
+
+- mismo `submissionId` en 2/10 requests => 1 DailyMeal;
+- retry no duplica;
+- tokens distintos permiten hechos distintos.
+
+## 10.5. Appetite
+
+RC2 A01–A10: PASS.
+
+- Normal→Compacto;
+- Compacto→Voluminoso;
+- Voluminoso→Normal;
+- resto de combinaciones;
+- same-mode no-op permitido;
+- preservación manual/completed/skipped.
+
+## 10.6. Nutrition Library lifecycle
+
+RC2.1 L01–L14 + 350 ciclos de root-cause stress: PASS.
+
+Garantías:
+
+- Ingredient/Recipe/Shopping no TOCTOU inválido;
+- no children activos bajo Ingredient/Recipe eliminado;
+- no duplicate normalized Ingredient activo;
+- no duplicate logical ShoppingItem activo;
+- no resurrect;
+- version monotónica;
+- clear checked atómico/rollback;
+- stale RecipeIngredient no materializa basket item.
+
+## 10.7. Backup/Restore alignment
+
+RC2.2 Q01–Q12: PASS; QA-RC21-001 cerrada por clase.
+
+Runtime↔Backup invariants 5/5 aligned:
+
+1. RecipeIngredient active → Recipe active;
+2. RecipeIngredient active → Ingredient active;
+3. ShoppingItem active → Ingredient active;
+4. Ingredient normalized active name unique;
+5. ShoppingItem `ingredientId + normalizedUnit` unique para activos.
+
+## 10.8. v2.1 Nutrition-specific/peripheral gates ya superados antes del último STOP
+
+- Nutrition seed ownership: PASS — insert-only, no overwrite, no resurrect, seed v1 unchanged;
+- RecipeVisual ownership: PASS — último estado 8 usages;
+- Golden reachability: PASS;
+- Golden visual matrix 26/26: PASS;
+- build/TypeScript/PWA: PASS;
+- lint zero warnings: PASS;
+- Design System/accessibility source gate: PASS;
+- backup negative/corruption gate: PASS;
+- date/timezone policy: PASS;
+- browser harness/hermetic boot: PASS.
+
+### Precaución
+
+El E2E de navegación Recetas posterior falló. Por tanto no considerar toda v2.1 “validada/cerrada”.
+
+---
+
+# 11. FUNCIONALIDAD PENDIENTE / BACKLOG POR PRIORIDAD
+
+## P0 — BLOQUEO ACTUAL DE CANDIDATA
+
+**PREQA-V21-GOLDEN-PARITY-001 / E2E Nutrition Recetas**
+
+Debe resolverse por causa raíz manteniendo Golden parity y contratos. No degradar el Golden para hacer pasar el test ni alterar el test sin demostrar que el test está obsoleto respecto al contrato canónico.
+
+Después del fix:
+
+- barrido horizontal Recetas/Compra y navegación segmentada;
+- test focal;
+- E2E completo;
+- visual 26/26;
+- domain/PRE-QA;
+- build/lint;
+- gate consolidado relevante.
+
+## P1 — CIERRE TÉCNICO v2.1 TRAS P0
+
+Una vez P0 cerrado:
+
+- rerun Final Engineering/PRE-QA gate desde el working tree actual;
+- generar source bundle/evidence bundle actuales;
+- calcular SHA-256 actuales;
+- revisión manual de paridad de los 26 Golden Renders, especialmente Nutrition 12–18;
+- entregar a CENTRAL;
+- QA independiente solo si CENTRAL autoriza.
+
+## P2 — CONTENIDO NUTRITION APROBADO PERO IMPLEMENTACIÓN ACTUAL NO DEMOSTRADA
+
+### Expansión de recetas
+
+El usuario autorizó ampliar variedad con aproximadamente 20–25 preparaciones nuevas, buscando un catálogo final aproximado de 55–65 preparaciones únicas útiles tras limpieza/normalización.
+
+La evidencia v2.1 conocida dice `seed v1 unchanged`; por tanto:
+
+- implementación efectiva de esta expansión en v2.1: **DESCONOCIDO / NO DEMOSTRADO**;
+- no asumir que se completó;
+- no alterar seed histórico destructivamente.
+
+Áreas aprobadas de expansión:
+
+- desayunos/post;
+- pre-entreno ligeros;
+- snacks;
+- arroces caldosos/melosos;
+- pasta;
+- pollo/ternera;
+- patata;
+- legumbres;
+- couscous;
+- air fryer.
+
+### Plantillas semanales concretas
+
+Concepto/función de semanas flexibles está aprobado e implementado funcionalmente en CORE como Day/Week/apply week. El contenido concreto de múltiples semanas personales listas para uso: **DESCONOCIDO**.
+
+## P3 — POSPUESTO / FUERA DE SCOPE vNext
+
+No implementar salvo nueva autorización:
+
+- tracker diario de suplementos;
+- recordatorios de suplementos;
+- rachas de suplementos;
+- fotos de comida;
+- inventario de despensa;
+- control de stock;
+- caducidades;
+- barcode scanner;
+- precios automáticos;
+- comparación automática de supermercados;
+- IA/chat nutricional dentro de la app;
+- score nutricional universal;
+- seguimiento obsesivo de micronutrientes.
+
+---
+
+# 12. BUGS, RIESGOS, DEUDA CONOCIDA Y EDGE CASES
+
+## 12.1. OPEN — E2E Recetas después de Golden parity
+
+**Estado:** OPEN / STOP ACTUAL.
+
+Síntoma:
+
+al navegar Nutrition → Recetas mediante segmento, no aparece el heading accesible esperado `/Recetas/i` en 8 s.
+
+No se ha determinado desde este contexto si la causa raíz es:
+
+- routing/commit de sección;
+- heading/semántica accesible;
+- shell/layout Golden;
+- fixture/estado sintético;
+- test desactualizado;
+- otra.
+
+**Causa raíz: DESCONOCIDO.**
+
+No resolver por guess.
+
+## 12.2. Riesgo de regresión de Golden vs navegación accesible
+
+La última reparación mejoró Golden parity y visual 26/26, pero apareció el fallo E2E de `Recetas`. Cualquier corrección debe preservar simultáneamente:
+
+- Golden 12–18;
+- heading/semántica accesible;
+- navegación Recetas/Compra;
+- RecipeVisual;
+- double-submit guards;
+- no legacy override layer.
+
+## 12.3. Riesgo de falsa identidad Ingredient/Shopping
+
+Clase histórica cerrada, pero invariantes deben mantenerse:
+
+- trim/lower es-ES para ingredient name;
+- trim/null para unit;
+- unit case-sensitive;
+- soft-deleted equivalente no bloquea active legítimo;
+- restore = runtime.
+
+## 12.4. Riesgo de stale DailyMeal
+
+Clase cerrada. Nunca reintroducir lecturas pre-transacción que luego escriben sobre estado actualizado.
+
+## 12.5. Riesgo de reescritura histórica por week/appetite/training
+
+Clase cerrada. `completed/skipped/manual` son hechos protegidos.
+
+## 12.6. Riesgo de duplicado improvised
+
+Clase cerrada. Mantener `submissionId`/idempotencia y UI submit guard.
+
+## 12.7. Riesgo de singleton NutritionGoal
+
+Clase cerrada. Mantener máximo un objetivo activo incluso bajo concurrencia y restore.
+
+## 12.8. Edge cases contractuales
+
+- dos o más sesiones Training mismo día;
+- reprogramación después de consumir Pre;
+- sesión omitida con Pre ya realizado;
+- sesión incompleta con Post pendiente;
+- cambio Appetite tras haber realizado parte del día;
+- aplicar semana sobre días con planificación manual;
+- receta eliminada/editada después de consumo histórico;
+- ingrediente soft-deleted equivalente a uno activo/nuevo;
+- unidad whitespace/null;
+- `kg` vs `KG`;
+- macros parciales/desconocidos;
+- comida sin receta;
+- comida improvisada adicional vs sustitución;
+- doble submit/retry;
+- fallos transaccionales durante clearChecked;
+- restore adversarial con duplicidades lógicas.
+
+---
+
+# 13. INCIDENCIAS QA / PRE-QA HISTÓRICAS QUE AFECTAN NUTRITION
+
+## 13.1. CORE B01 / B02 / RC1 — CLOSED
+
+| ID | Clase | Estado |
+|---|---|---|
+| QA-B01-001 | post-commit invalidation | CLOSED / PASS |
+| QA-B01-002 | Nutrition concurrency / identity | CLOSED / PASS |
+| QA-B01-003 | Today stale persistence | CLOSED / PASS |
+| QA-B01-004 | Training identity collapse | CLOSED / PASS |
+| PREQA-B01-005 | exact dedup | CLOSED / PASS |
+| QA-B01-006 | global stale Nutrition reconciliation | CLOSED / PASS en B01.5 |
+| PREQA-RC1-001 | DailyMeal stale mutations | CLOSED / PASS |
+| PREQA-RC1-002 | backup Training meal lifecycle | CLOSED / PASS |
+| PREQA-RC1-003 | active ExerciseSet order | CLOSED / PASS |
+
+No reabrir salvo regresión reproducible.
+
+## 13.2. RC2 — CLOSED
+
+| ID | Clase | Estado |
+|---|---|---|
+| QA-RC11-001 | Training substitute stale | CLOSED / PASS |
+| QA-RC11-002 | Backup cross-entity validator | CLOSED / PASS |
+| QA-RC11-003 | NutritionGoal singleton | CLOSED / PASS |
+| QA-RC11-004 | improvised meal idempotency / double-submit | CLOSED / PASS |
+| QA-RC11-005 | streak same-day nondeterministic | CLOSED / PASS |
+| QA-RC11-006 | Appetite material change | CLOSED / PASS |
+
+## 13.3. RC2.1 — CLOSED EN RUNTIME
+
+| ID | Clase | Estado |
+|---|---|---|
+| PREQA-RC2-001 | Ingredient/Recipe/Shopping lifecycle TOCTOU | CLOSED / PASS runtime |
+
+## 13.4. RC2.1 → RC2.2 — CLOSED
+
+### QA-RC21-001
+
+- severidad original: ALTA;
+- problema: Backup validator aceptaba duplicidades lógicas Ingredient/ShoppingItem prohibidas por runtime;
+- RC2.1: OPEN / FAIL;
+- RC2.2: **CLOSED BY CLASS / PASS**;
+- source canónico compartido: `nutritionLibraryIdentity.ts`;
+- runtime↔backup: 5/5 invariants aligned;
+- QA focal RC2.2: PASS;
+- nuevas CRÍTICAS/ALTAS/MEDIAS/BAJAS en scope focal: 0.
+
+## 13.5. v2.1 PRE-QA — HISTÓRICAS CERRADAS
+
+### PREQA-V21-RECIPE-VISUAL-001
+
+- repair applied;
+- evidence pre-fix preservada;
+- RecipeVisual ownership posterior PASS;
+- estado: **CLOSED por evidencias posteriores**, salvo regresión demostrada.
+
+### PREQA-V21-E2E-HERMETIC-001
+
+- repair applied;
+- hermetic boot posterior PASS;
+- estado: **CLOSED**, salvo regresión.
+
+### PREQA-V21-VISUAL-001
+
+- repair applied;
+- visual/responsive gates posteriores PASS;
+- estado: **CLOSED**.
+
+### PREQA-V21-VISUAL-MATRIX-002
+
+- repair applied;
+- 26-state visual matrix posterior PASS;
+- estado: **CLOSED**.
+
+### PREQA-V21-CONTRACT-COHERENCE-001
+
+- repair applied;
+- RecipeVisual/matrix/domain posteriores PASS;
+- estado: **CLOSED**.
+
+### PREQA-V21-SETTINGS-RESPONSIVE-001
+
+- repair applied;
+- Settings responsive + visual matrix posteriores PASS;
+- estado: **CLOSED**.
+
+## 13.6. v2.1 PRE-QA — OPEN ACTUAL
+
+### PREQA-V21-GOLDEN-PARITY-001
+
+- Golden parity repair: APPLIED;
+- Golden owner regression: PASS;
+- RecipeVisual: PASS (8 usages);
+- visual matrix 26/26: PASS;
+- build/lint/domain: PASS;
+- E2E hermetic recheck: **FAIL** en navegación `Nutrition → Recetas`;
+- estado actual: **OPEN / STOP**.
+
+No existe evidencia posterior disponible que cierre esta incidencia.
+
+---
+
+# 14. INVARIANTES Y CASOS DE REGRESIÓN QUE NUNCA DEBEN PERDERSE
+
+## 14.1. DailyMeal / Training identity
+
+- misma fecha puede contener varias sesiones/Pre/Post independientes;
+- identidad Training incluye sesión;
+- exact duplicate dedup sin colapsar identidades distintas;
+- anti ping-pong de reconciliación;
+- stale global plan no debe ganar a snapshot vigente;
+- completed/skipped nunca reescritos.
+
+## 14.2. DailyMeal causalidad
+
+Preservar M01–M10 y stress:
+
+- replace vs complete;
+- portion vs complete;
+- complete vs apply;
+- replace vs appetite;
+- portion vs appetite;
+- skip vs apply;
+- `REJECT` sin efectos;
+- version monotónica.
+
+## 14.3. Week apply
+
+- atomic;
+- idempotent;
+- preserve completed/skipped/manual;
+- no overwrite silencioso de hecho confirmado.
+
+## 14.4. Appetite
+
+- cambio material si existe alternativa compatible distinta;
+- same-mode no-op permitido;
+- no tocar manual/completed/skipped;
+- no cambiar objetivo energético por modo.
+
+## 14.5. Improvised
+
+- mismo submission token => un hecho lógico;
+- retry idempotente;
+- tokens distintos pueden crear hechos distintos;
+- double-submit UI guard.
+
+## 14.6. NutritionGoal
+
+- máximo uno activo;
+- saves concurrentes serializados/validados;
+- backup también respeta singleton.
+
+## 14.7. Ingredient/Recipe/Shopping
+
+- RecipeIngredient active → Recipe active;
+- RecipeIngredient active → Ingredient active;
+- ShoppingItem active → Ingredient active;
+- unique normalized active Ingredient;
+- unique logical active ShoppingItem;
+- no resurrect;
+- no version regression;
+- delete vs add/update/toggle revalidado dentro de transacción;
+- clearChecked rollback atómico.
+
+## 14.8. Normalización Q01–Q12
+
+Debe mantenerse:
+
+- `Arroz` / `arroz` activos => REJECT;
+- `Arroz` / `ARROZ` activos => REJECT;
+- activo + equivalente soft-deleted => ACCEPT;
+- nombres distintos => ACCEPT;
+- shopping `kg` / `" kg "` mismo Ingredient => REJECT;
+- `null` / whitespace mismo Ingredient => REJECT;
+- equivalente soft-deleted => ACCEPT;
+- misma unit con Ingredients distintos => ACCEPT;
+- `kg` / `KG` mismo Ingredient => ACCEPT por case-sensitive;
+- corrupt backup duplicate Ingredient => REJECT pre-restore;
+- corrupt backup duplicate ShoppingItem => REJECT pre-restore;
+- baseline 759 => ACCEPT/roundtrip PASS.
+
+## 14.9. Backup/Restore
+
+- prevalidation antes de tocar DB;
+- restore transaccional;
+- postvalidation con mismo validator;
+- semantic diff;
+- rollback ante error;
+- runtime invariants = restore invariants;
+- schema 5 preservado.
+
+## 14.10. UX/Golden
+
+- 7 Goldens Nutrition 12–18 alcanzables;
+- exact visual captures;
+- no overflow;
+- accessible headings/navigation;
+- 44px floor;
+- no native confirm como sustituto final de dialogs DS;
+- no new legacy override layer;
+- RecipeVisual bounded/pointer-transparent;
+- Recetas/Compra navigation sigue operativa bajo Golden parity.
+
+---
+
+# 15. ARTEFACTOS, DOCUMENTOS, BUNDLES, VERSIONES Y SHA-256 CANÓNICOS CONOCIDOS
+
+## 15.1. Gobierno / fuentes locales disponibles
+
+### `FENIX_MANIFIESTO_DE_FUENTES_v1.0.md`
+
+- SHA-256: `2d9db7bdb3cf6286151f67f912a932dfc327926b224695770c97934b84b85a91`
+
+### `FENIX_PROTOCOLO_DE_COORDINACION_v1.0(1).md`
+
+- SHA-256: `9f7c9362c6954a6a9209a37e2d8a8d3c2e94c3711a7e2bf6f30338fd661fc6c4`
+
+### `FENIX_Notion_Export_2026-08-28.zip`
+
+- SHA-256: `38c6f967b2d73b5a80c473024e8acfd8e0a7548ba0debbc2d5ccfbef2f05f1a3`
+- contiene export anidado; Nutrition histórico en `FENIX/Nutrition ...md` y subpáginas.
+
+## 15.2. Fuentes científicas Nutrition disponibles
+
+### `noap-position-paper.pdf`
+
+- Nutrition and Athletic Performance position paper, 2016;
+- SHA-256: `fa0dae8a1ad8ca3b302ba895ccb0ed90cdf365d1e2dfe2245a34a7f5a83caae9`.
+
+### `s12970-017-0177-8‌.pdf`
+
+- ISSN Position Stand: Protein and Exercise, 2017;
+- SHA-256: `7a97a81db0334c95ddd17a2009200e7f38945988b3e1dd5aa70f73a502fe8140`.
+
+### `s40798-023-00651-y.pdf`
+
+- Helms et al., 2023, small vs large energy surpluses;
+- SHA-256: `b16e8a07d6757dfad70f1b544ae6b950b962ea24eb9a2064dce88c476f2eb06a`.
+
+### Fuentes Nippard/Training presentes pero no núcleo Nutrition
+
+- `02_Nippard_2024_Tecnica_Hipertrofia.pdf` — SHA `0dc4bf62f846defa7817fcfa7da4ed0bdc8837a6227efbf13e1f20c43ae3a4c1`
+- `03_Nippard_2025_ROM_Parciales_Elongados.pdf` — SHA `2431fbca41b2dcdd28b31f54ce8f009ce73f3f987c3547a48536c3d38158ad48`
+- `04_Nippard_2025_Tecnica_Estricta_vs_Impulso.pdf` — SHA `4bb4e04b2a99cef8a2d8a596c8b7f3e71f23fd0ea06659c841cd1d2855b2e9bf`
+- `05_Nippard_2026_Mecanismos_Hipertrofia.pdf` — SHA `0deed3eec73c23b1c271ddb45de55903b2c143b1b9238a5ce56b36be6174bf25`
+
+Uso Nutrition: complementario/contextual; no sustituye evidencia nutricional específica.
+
+## 15.3. FÉNIX v2.0 stable
+
+### Source release / RC2.2
+
+`FENIX_v2_CORE_STABLE_v2.0.0-rc.2.2_SOURCE_BUNDLE(2).zip`
+
+- SHA-256: `f98d902d245dcd3cc0a6db5eca4d40afa4b1bca3e7f7f00a9238d16f32fab617`
+- 159 source files observados por QA.
+
+### Release commit/tag
+
+- commit: `deac3890f4d1b794cae8f3acde5a12bf7c35cf94`
+- tag: `v2.0.0`
+
+### Backup oficial
+
+- 759 records;
+- SHA-256: `3686d872e64d83f7fea7053fab9f2e32508bd525c50180431a5b437bad8e8732`.
+
+### RC2.1 fallida histórica
+
+`FENIX_v2_CORE_STABLE_v2.0.0-rc.2.1_SOURCE_BUNDLE(2).zip`
+
+- SHA-256: `179aeb1682edf404cec7086abedf56d27ae7bc974bb3965521a9db9369c2da6a`
+- QA global FAIL por QA-RC21-001; supersedido por RC2.2.
+
+### B01.5
+
+`FENIX_v2_F2-B01_v2.0.0-b01.5_SOURCE_BUNDLE.zip`
+
+- SHA-256: `d5b5316f063af51706bd3ee55beb6a7175f60422526662988cb1348fc839d9e6`
+
+`FENIX_v2_F2-B01_v2.0.0-b01.5_PATCH.zip`
+
+- SHA-256: `bdd9eafa7ff29d074fd1797c87280f4bb216c71c448517905c65bd51e12ae0bc`
+
+## 15.4. FÉNIX v2.1 Goldens
+
+`FENIX_v2.1_GOLDEN_RENDERS_FINAL_26.zip`
+
+- SHA-256: `0f797dd2962f44ec7ae82d46f770d6b70c462927ad6a938728ea86375056bffc`
+
+## 15.5. Layouts exploratorios Nutrition históricos
+
+Imágenes que originaron la preferencia Layout 2/Layout 5, ya supersedidas como autoridad visual por Goldens:
+
+- `IMG_0395.jpeg` — SHA-256 `41c9667135140f0df79d7a0310b528e03aacf2e01242e62e064eb42720097806`
+- `IMG_0396.jpeg` — SHA-256 `4c3b0523fb5a361bf16b1a5fb459b05577bc098166fb4f2a94301b4eb0a6fa13`
+
+## 15.6. v2.1 evidencia histórica pre-Golden-parity actual
+
+### Final gate anterior, ahora histórico
+
+`FENIX_v2.1.0-rc.1_ENGINEERING_EVIDENCE_20260908-104931.zip`
+
+- SHA-256: `912b4ac8dc42bd0b2defa567864b2af0008db53062f93391207f21b9a62abddf`
+
+`FENIX_v2.1.0-rc.1_SOURCE_BUNDLE.zip`
+
+- 213 source files;
+- SHA-256: `1a7898441c5a0c325496901d075839dc025b6b831652b8445790945668ab2c58`
+
+**ATENCIÓN:** estos artefactos preceden la reparación Golden parity más reciente. No son el source actual post-repair.
+
+### PREQA-V21-GOLDEN-PARITY-001 pre-fix visual evidence
+
+`PREQA-V21-GOLDEN-PARITY-001_PRE_FIX_VISUAL_20260908-123014.zip`
+
+- SHA-256: `55263558cc1b69ba2c226402f4fd61b3eb36f0e41a906a8b14ce80324d93073f`
+
+## 15.7. Otras evidencias PRE-QA v2.1 conocidas
+
+`PREQA-V21-RECIPE-VISUAL-001_FAILED_PRE_FIX_20260908-021227.zip`
+
+- SHA-256: `a636722b68581b9c04c11a46799a587011052541f88c429b50fa7c7f54a0180f`
+
+`PREQA-V21-E2E-HERMETIC-001_FAILED_PRE_FIX_20260908-022633.zip`
+
+- SHA-256: `1a5b33f51723de9abc4a6d89750b792be3f12d97be9043ddec68c59d47083c27`
+
+`PREQA-V21-VISUAL-001_FAILED_PRE_FIX_20260908-020053.zip`
+
+- SHA-256: `4b665d3ce05213dc1d1fc21ce182a132d2c0203f060590fe7f933a8e4272993e`
+
+`PREQA-V21-VISUAL-MATRIX-002_FAILED_PRE_FIX_20260908-024532.zip`
+
+- SHA-256: `395a12a7029fceb9a91d9a13931cebb703fcbf22fd552b94fd4310d2a851b2d7`
+
+`PREQA-V21-SETTINGS-RESPONSIVE-001_FAILED_PRE_FIX_20260908-102225.zip`
+
+- SHA-256: `033ba5ef22ea1b8767e86771749da272f3820fe7db8ffbfa024226af61bbe3df`
+
+## 15.8. Current post-Golden-parity source artifact
+
+- nombre bundle actual: **DESCONOCIDO**;
+- SHA-256 actual: **DESCONOCIDO**;
+- razón: el gate más reciente se detuvo en E2E antes de sellar nueva candidata final conocida.
+
+---
+
+# 16. STOP CONDITIONS QUE REQUIEREN DECISIÓN DE CENTRAL
+
+Codex/Ingeniería debe detener y elevar a CENTRAL si ocurre cualquiera de estos casos:
+
+1. una corrección del E2E requiere cambiar comportamiento funcional aprobado de Nutrition;
+2. una corrección requiere degradar o reinterpretar un Golden Render;
+3. un Golden entra en conflicto material con contrato funcional (p. ej. hechos/estados/ownership);
+4. se propone cambiar Pre/Post, asociación a TrainingSession o reglas de reprogramación;
+5. se propone que Training/Hoy infiera consumo;
+6. se propone reescribir completed/skipped/historial;
+7. se requiere cambiar schema 5 o introducir migración;
+8. se propone reset/reseed destructivo;
+9. se propone backend/cloud/login/sync nuevo;
+10. se propone modificar policy de identidad Ingredient/Shopping;
+11. se propone relajar backup validator respecto a runtime;
+12. se propone cambiar semántica `SIN REGISTRAR`/`OMITIDA`;
+13. se propone un score universal de adherencia Nutrition;
+14. se propone añadir fotos de comida contra la decisión vigente;
+15. se propone tracker/recordatorios de suplementos como scope actual;
+16. aparece contradicción entre documento canónico posterior y este handoff sin supersesión explícita;
+17. se detecta necesidad de tocar `production` antes de autorización;
+18. se pretende commit/tag/push mientras siga vigente el STOP actual de PREQA-V21-GOLDEN-PARITY-001;
+19. se quiere enviar a QA independiente sin autorización de CENTRAL;
+20. se necesita una decisión de producto no contenida en contratos existentes.
+
+No convertir un bug implementativo inequívoco en STOP si puede corregirse respetando contratos y Golden.
+
+---
+
+# 17. QUÉ NO DEBE ASUMIR NI REINTERPRETAR CODEX
+
+Codex NO debe asumir que:
+
+- la última ejecución de v2.1 está cerrada: **no lo está**;
+- el source bundle SHA `1a789...` representa el working tree actual post-Golden-parity: **no**;
+- los Layout 2/5 antiguos son Goldens actuales: **no**;
+- `160 g` de proteína del render es objetivo real: **no**;
+- receta = comida: **no**;
+- planificado = consumido: **no**;
+- pending al final del día = omitido: **no**;
+- empezar/acabar Training = comer Pre/Post: **no**;
+- una sesión reprogramada permite mover consumo histórico: **no**;
+- dos sesiones en mismo día pueden colapsarse por date/role: **no**;
+- un Ingredient soft-deleted equivalente debe bloquear uno activo/nuevo: **no**, según contrato Q03;
+- unidades se normalizan a lowercase: **no**; `kg` y `KG` son distintas;
+- macros desconocidos son cero: **no**;
+- cambiar Appetite cambia objetivo energético: **no**;
+- el módulo necesita IA para alternativas: **no**;
+- suplementación registrada equivale a recomendación: **no**;
+- la exportación Notion dicta arquitectura: **no**;
+- seed puede sobrescribir ediciones del usuario: **no**;
+- se puede resetear IndexedDB para actualizar: **no**;
+- QA puede cerrar release o modificar código: **no**;
+- Ingeniería puede cambiar funcionalidad para hacer pasar tests: **no**.
+
+Si un dato físico/técnico no está aquí o en source canónico, tratarlo como **DESCONOCIDO**, no inventarlo.
+
+---
+
+# 18. PRÓXIMA ACCIÓN RECOMENDADA DESDE EL PUNTO ACTUAL
+
+**No continuar ahora en este chat ni ejecutar trabajo adicional hasta autorización de CENTRAL, por instrucción de migración.**
+
+Cuando CENTRAL reactive la ejecución en Codex, la siguiente acción técnica recomendada es:
+
+1. abrir el working tree exacto post-`PREQA-V21-GOLDEN-PARITY-001`;
+2. preservar estado; no reset/clean/checkout;
+3. reproducir el E2E fallido `Nutrition → Recetas`;
+4. determinar causa raíz sin modificar contratos ni Golden;
+5. barrer horizontalmente navegación `Hoy/Semana/Recetas/Compra` y headings/semántica accesible afectados;
+6. aplicar fix mínimo por causa raíz;
+7. ejecutar test focal + E2E + 26/26 visual + domain/PRE-QA + build/lint;
+8. rerun Final Engineering/PRE-QA gate;
+9. producir source/evidence bundles actuales y SHA-256;
+10. entregar a CENTRAL;
+11. esperar autorización de CENTRAL antes de QA independiente, commit/tag/push/release.
+
+**No avanzar contenido de recetas, nuevas funciones ni backlog P2/P3 mientras P0 siga abierto.**
+
+---
+
+# 19. APÉNDICE A — INVENTARIO HISTÓRICO NUTRITION / NOTION
+
+Fuente histórica: `FENIX_Notion_Export_2026-08-28.zip`.
+
+La página principal histórica indicaba: **“Elige una opción de la tabla que toque. Abajo tienes la lista de la compra.”**
+
+Conteo histórico total: **44 opciones**.
+
+## A.1. Desayunos — 6
+
+| Opción | Cantidades históricas | Kcal | Prot. | Carb. | Grasas |
+|---|---|---:|---:|---:|---:|
+| Crema de arroz con frutos del bosque | Crema de arroz 80 g · leche semidesnatada 250 ml · whey 25 g · frutos del bosque 100 g · crema de cacahuete 10 g | 610 | 34 g | 88 g | 14 g |
+| Yogur griego con avena en polvo y frutos del bosque | Yogur griego 2% 250 g · avena en polvo 70 g · frutos del bosque 100 g · miel 15 g · nueces 15 g | 650 | 33 g | 82 g | 21 g |
+| Tostadas con queso crema y mermelada | Pan 120 g · queso crema 60 g · mermelada 35 g · whey 25 g con agua | 620 | 31 g | 92 g | 15 g |
+| Tostadas con queso crema y pavo | Pan 120 g · queso crema 50 g · pavo 100 g · aceite de oliva 10 g | 610 | 39 g | 65 g | 21 g |
+| Tortitas de arroz con crema de cacahuete | Tortitas de arroz 6 uds · crema de cacahuete 45 g · plátano 1 ud · whey 25 g con agua | 670 | 34 g | 82 g | 24 g |
+| Huevos cocidos con atún y mayonesa | Huevos 3 uds · atún escurrido 100 g · mayonesa ligera 35 g · pan 80 g · aceite de oliva 5 g | 650 | 43 g | 45 g | 32 g |
+
+## A.2. Pre-entreno — 6
+
+| Opción | Cantidades históricas | Kcal | Prot. | Carb. | Grasas |
+|---|---|---:|---:|---:|---:|
+| Plátano + mass gainer | 1 plátano · 1/2 ración de mass gainer · agua | 300 | 11 g | 62 g | 2 g |
+| Dátiles + mass gainer | 3 dátiles · 1/2 ración de mass gainer · agua | 370 | 12 g | 83 g | 2 g |
+| Tortitas de arroz + miel | 2–3 tortitas de arroz · miel 15–20 g · agua | 160 | 2 g | 38 g | 1 g |
+| Pan + mermelada | Pan 40–50 g · mermelada 20 g · agua | 165 | 4 g | 35 g | 1 g |
+| Plátano + yogur líquido | 1 plátano · 1 yogur líquido alto en proteína | 240 | 16 g | 42 g | 2 g |
+| Batido casero pre-entreno | Leche 200 ml · 1/2 plátano · 2 dátiles · proteína 20–25 g | 360 | 30 g | 58 g | 5 g |
+
+## A.3. Snack del trabajo — 4
+
+| Opción | Cantidades históricas | Kcal | Prot. | Carb. | Grasas |
+|---|---|---:|---:|---:|---:|
+| Tortitas de arroz | Tortitas de arroz 5 uds · crema de cacahuete 20 g | 290 | 8 g | 38 g | 12 g |
+| Pan de pipas con pavo | Pan de pipas 80 g · pavo 60 g | 390 | 20 g | 42 g | 16 g |
+| Dátiles con almendras | Dátiles 70 g · almendras 20 g | 310 | 6 g | 55 g | 10 g |
+| Higos secos con nueces | Higos secos 80 g · nueces 20 g | 360 | 6 g | 58 g | 14 g |
+
+## A.4. Comidas principales — 11
+
+Históricamente se indicaban como válidas para comida o cena.
+
+| Opción | Cantidades históricas | Kcal | Prot. | Carb. | Grasas |
+|---|---|---:|---:|---:|---:|
+| Macarrones con pollo gratinados | Macarrones secos 120 g · pollo 150 g · queso 40 g · tomate frito 80 g · aceite 10 g | 880 | 55 g | 100 g | 25 g |
+| Macarrones con carne picada | Macarrones secos 120 g · carne picada 150 g · tomate frito 100 g · aceite 10 g | 850 | 45 g | 100 g | 28 g |
+| Ensalada de pasta con atún | Pasta seca 120 g · atún 120 g · maíz 60 g · aceite 15 g · verduras 100 g | 820 | 45 g | 105 g | 24 g |
+| Ensalada de pasta con pollo | Pasta seca 120 g · pollo 150 g · aceite 15 g · maíz 50 g · verduras 100 g | 840 | 52 g | 105 g | 23 g |
+| Lentejas con verduras y pollo | Lentejas cocidas 300 g · pollo 150 g · arroz cocido 120 g · verduras 150 g · aceite 10 g | 820 | 55 g | 105 g | 16 g |
+| Lentejas con verduras y carne | Lentejas cocidas 300 g · carne picada 150 g · verduras 150 g · arroz cocido 100 g · aceite 10 g | 860 | 48 g | 100 g | 28 g |
+| Ensaladilla rusa con pollo | Patata cocida 300 g · pollo 150 g · guisantes y zanahoria 120 g · mayonesa ligera 40 g · aceite 10 g | 790 | 48 g | 80 g | 28 g |
+| Ensaladilla rusa con huevo y atún | Patata cocida 300 g · atún 100 g · huevos 2 uds · guisantes y zanahoria 120 g · mayonesa ligera 35 g | 820 | 45 g | 78 g | 34 g |
+| Garbanzos con carne, sofrito y huevo | Garbanzos cocidos 300 g · carne picada 120 g · huevo 1 ud · sofrito 100 g · aceite 10 g | 870 | 48 g | 85 g | 34 g |
+| Arroz salteado con pollo y sofrito | Arroz seco 120 g · pollo 160 g · sofrito 120 g · huevo 1 ud · aceite 10 g | 850 | 55 g | 105 g | 22 g |
+| Menestra de verduras y gambas | Menestra 350 g · gambas peladas 220 g · arroz cocido 180 g · aceite 15 g · pan 60 g | 780 | 50 g | 92 g | 20 g |
+
+## A.5. Antes de dormir — 7
+
+**Nota canónica:** categoría estructural superseded; contenido histórico se preserva.
+
+| Opción | Cantidades históricas | Kcal | Prot. | Carb. | Grasas |
+|---|---|---:|---:|---:|---:|
+| Yogur griego con avena y frutos del bosque | Yogur griego 2% 200 g · avena en polvo 35 g · frutos del bosque 80 g · miel 10 g | 390 | 24 g | 52 g | 9 g |
+| Tostadas con queso crema | Pan 70 g · queso crema 50 g · pavo 60 g | 420 | 24 g | 42 g | 17 g |
+| Tostadas con queso crema y pavo | Pan 70 g · queso crema 40 g · pavo 90 g | 410 | 30 g | 40 g | 13 g |
+| Tortitas de arroz con crema de cacahuete | Tortitas 4 uds · crema de cacahuete 25 g · whey 20 g con agua | 390 | 25 g | 42 g | 14 g |
+| Dátiles con yogur griego | Dátiles 60 g · yogur griego 2% 170 g | 330 | 20 g | 52 g | 5 g |
+| Higos secos con yogur y nueces | Higos secos 60 g · yogur griego 2% 170 g · nueces 10 g | 360 | 21 g | 45 g | 10 g |
+| Huevos cocidos con atún y mayonesa | Huevos 2 uds · atún 80 g · mayonesa ligera 20 g · pan 40 g | 440 | 34 g | 24 g | 22 g |
+
+## A.6. Batidos — 10
+
+**Nota canónica:** `Batido` puede mantenerse como tipo; no es rol temporal obligatorio.
+
+| Opción | Cantidades históricas | Kcal | Prot. | Carb. | Grasas |
+|---|---|---:|---:|---:|---:|
+| Batido de proteína | Whey 30 g · leche semidesnatada 300 ml · plátano 1 ud | 430 | 35 g | 52 g | 8 g |
+| Batido de plátano y proteína | Whey 30 g · leche 300 ml · plátano 1 ud · avena 30 g | 540 | 39 g | 72 g | 11 g |
+| Batido de frutos del bosque y yogur | Yogur griego 2% 250 g · frutos del bosque 150 g · whey 20 g · miel 15 g | 430 | 39 g | 45 g | 8 g |
+| Batido de avena | Avena 80 g · whey 30 g · leche 300 ml · miel 15 g | 620 | 42 g | 82 g | 13 g |
+| Batido de crema de arroz | Crema de arroz 80 g · whey 30 g · leche 300 ml · cacao 10 g | 610 | 41 g | 85 g | 10 g |
+| Batido de crema de cacahuete | Whey 30 g · leche 300 ml · crema de cacahuete 35 g · plátano 1 ud | 650 | 43 g | 58 g | 27 g |
+| Batido hipercalórico | Leche entera 400 ml · avena 90 g · whey 30 g · crema de cacahuete 40 g · plátano 1 ud · miel 20 g | 950 | 50 g | 115 g | 32 g |
+| Batido post-entreno | Whey 30 g · crema de arroz 70 g · leche 300 ml · plátano 1 ud | 670 | 42 g | 100 g | 9 g |
+| Batido de cacao | Whey 30 g · leche 300 ml · cacao puro 15 g · avena 50 g · miel 10 g | 570 | 42 g | 65 g | 14 g |
+| Batido tropical | Whey 25 g · leche 300 ml · mango 150 g · plátano 1 ud · avena 40 g | 610 | 37 g | 92 g | 10 g |
+
+## A.7. Lista de compra histórica
+
+### Proteínas
+
+- Pollo
+- Pavo
+- Carne picada
+- Atún
+- Huevos
+- Gambas
+
+### Grasas
+
+- Crema de cacahuete
+- Aceite de oliva
+- Frutos secos
+- Aguacate
+
+### Carbohidratos
+
+- Crema de arroz
+- Avena en polvo
+- Pan
+- Pan de pipas
+- Tortitas de arroz
+- Macarrones y pasta
+- Arroz
+- Lentejas
+- Garbanzos
+- Patata
+
+### Lácteos
+
+- Yogur griego
+- Queso crema
+- Queso para gratinar
+- Leche
+
+### Fruta y verdura
+
+- Frutos del bosque
+- Plátanos
+- Dátiles
+- Higos secos
+- Verduras para sofrito
+- Verduras para lentejas
+- Menestra
+
+### Despensa
+
+- Mermelada
+- Miel
+- Tomate frito o sofrito
+- Cacao
+- Mayonesa ligera
+- Especias
+
+### Suplementos históricos registrados en compra
+
+- Proteína whey
+- Mass gainer
+- Creatina
+- Omega-3
+- Magnesio
+
+**Registro histórico de suplemento ≠ recomendación vigente.**
+
+---
+
+# 20. APÉNDICE B — BASE CIENTÍFICA NUTRITION VIGENTE
+
+Este handoff no congela la ciencia. Las recomendaciones importantes futuras deben comprobar evidencia actual.
+
+## B.1. Nutrition and Athletic Performance — 2016
+
+Uso en FÉNIX:
+
+- individualización;
+- suficiencia energética;
+- ajuste de energía/macros a demanda de entrenamiento;
+- distribución/timing de proteína como herramienta práctica;
+- recuperación;
+- evitar suplementación de micronutrientes sin necesidad clínica demostrada.
+
+## B.2. ISSN Protein and Exercise — 2017
+
+Puntos operativos históricos útiles:
+
+- rango general `1.4–2.0 g/kg/d` suficiente para la mayoría de personas activas;
+- dosis orientativas de proteína por toma dependen de contexto; position stand cita ~20–40 g / ~0.25 g/kg como generalización;
+- total diario, calidad y distribución importan;
+- pre/post son oportunidades útiles, no triggers automáticos de consumo.
+
+Debe interpretarse junto a evidencia más reciente y teniendo en cuenta sus disclosures de conflictos de interés.
+
+## B.3. Helms et al. — 2023, energy surplus
+
+Uso en FÉNIX:
+
+- no asumir que un superávit grande produce proporcionalmente más hipertrofia;
+- en el estudio, tasas mayores de ganancia de masa corporal se asociaron principalmente con mayor ganancia de pliegues/grasa;
+- individualizar ritmo de ganancia y revisar con Progreso.
+
+Limitaciones: muestra pequeña y contexto específico; no convertir en ley universal.
+
+## B.4. Nippard/Phillips 2026 mechanisms
+
+Uso complementario:
+
+- hipertrofia depende de interacción entre entrenamiento, dieta, sueño y factores internos;
+- no usar este paper como guía nutricional completa.
+
+---
+
+# 21. FREEZE FINAL DE MIGRACIÓN
+
+A partir de la emisión de este documento:
+
+- 03 · FÉNIX — NUTRITION no debe diseñar nuevas funciones;
+- no debe cambiar decisiones;
+- no debe continuar implementación;
+- no debe resolver el PRE-QA abierto en este chat;
+- no debe generar nuevas especificaciones divergentes;
+- toda reactivación debe venir de CENTRAL dentro del nuevo flujo Codex.
+
+**Estado de handoff:** COMPLETO PARA MIGRACIÓN, con un bloqueo técnico v2.1 explícitamente preservado y sin cierre inventado.
+

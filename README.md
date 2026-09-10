@@ -1,50 +1,44 @@
 # FÉNIX
 
-Aplicación personal local-first y offline-first para gestionar:
+Aplicación personal local-first para rutina diaria, entrenamiento, nutrición y progreso.
 
-- rutina;
-- entrenamiento;
-- nutrición;
-- progreso.
+## Candidata actual
 
-## Estado
+`2.1.0-rc.1` — Ingeniería, aún no release final.
 
-En desarrollo.
+## Runtime
 
-## Stack
+- React + TypeScript + Vite
+- PWA / Workbox
+- Dexie / IndexedDB
+- `fenix-db`, schema 5
+- offline-first
+- sin backend runtime, login o cloud sync
 
-- React
-- TypeScript
-- Vite
-
-La arquitectura completa y las decisiones técnicas están documentadas en `/docs`.
-
-## Desarrollo local
-
-Instalar dependencias:
+## Desarrollo
 
 ```bash
-npm install
-```
-
-Iniciar desarrollo:
-
-```bash
+npm ci
 npm run dev
-```
-
-Comprobar calidad:
-
-```bash
+npm run build
 npm run lint
 ```
 
-Generar compilación de producción:
+## QA
 
 ```bash
-npm run build
+npm run test:v21
+npm run test:core
+npm run test:e2e
+npm run test:visual
 ```
 
-## Principio del proyecto
+Los tests E2E/visual requieren Chromium de Playwright. La candidata de Ingeniería debe superar además backup/restore real, offline, mutation/concurrency/fault matrices y los 26 Golden Renders antes del handoff a CENTRAL.
 
-FÉNIX debe conservar el control de los datos del usuario, funcionar correctamente sin conexión y evitar complejidad que no aporte valor real.
+## Datos
+
+Los datos viven en IndexedDB local. Export/restore JSON está disponible desde **Ajustes → Datos y backup**. No borres IndexedDB para actualizar la app.
+
+## Media
+
+Media Freeze v2.1: 33/33 mappings, 26 RepDB + 7 FÉNIX propios. Attribution/licensing se documenta en `qa/v2.1/LICENSE_ATTRIBUTION_REGISTRY_v2.1.md`.

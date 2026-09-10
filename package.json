@@ -1,13 +1,21 @@
 {
   "name": "fenix",
   "private": true,
-  "version": "0.0.0",
+  "version": "2.1.0-rc.1.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:v21": "node scripts/run-v21-domain-gate.mjs",
+    "test:core": "node scripts/run-core-regression.mjs",
+    "test:e2e": "playwright test -c qa/v2.1/playwright.config.ts --grep-invert @visual",
+    "test:visual": "playwright test -c qa/v2.1/playwright.config.ts --grep @visual",
+    "media:sync": "node scripts/sync-repdb-media.mjs",
+    "predev": "npm run media:sync",
+    "prebuild": "npm run media:sync",
+    "test:release-source": "node scripts/verify-v21-release-source.mjs"
   },
   "dependencies": {
     "dexie": "^4.4.5",
@@ -27,6 +35,8 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.67.0",
     "vite": "^8.2.2",
-    "vite-plugin-pwa": "^1.3.0"
+    "vite-plugin-pwa": "^1.3.0",
+    "@playwright/test": "1.62.1",
+    "@repdb/exercises": "2026.8.1"
   }
 }

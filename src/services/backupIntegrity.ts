@@ -214,7 +214,7 @@ function validateActiveShoppingItemIdentityUniqueness(
     const rawUnit = item.unit
     if (rawUnit !== null && rawUnit !== undefined && typeof rawUnit !== 'string') continue
 
-    const normalizedUnit = normalizeShoppingUnit(rawUnit)
+    const normalizedUnit = normalizeShoppingUnit(rawUnit as string | null | undefined)
     const identity = JSON.stringify([item.ingredientId, normalizedUnit])
     const id = typeof item.id === 'string' ? item.id : 'sin-id'
     const previousId = seen.get(identity)

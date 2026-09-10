@@ -1,0 +1,37 @@
+const paths: Record<string, string> = {
+  chevron: 'm9 4 8 8-8 8',
+  calendar: 'M5 5h14v16H5ZM8 2v6m8-6v6M5 10h14M9 14h1m4 0h1m-6 3h1',
+  work: 'M3 7h18v14H3ZM8 7V3h8v4M3 12c6 3 12 3 18 0M10 12h4v4h-4Z',
+  free: 'M3 12a9 9 0 0 1 18 0H3ZM12 3V1m0 11v9m-4 0h8M2 3l2 2m16-2-2 2',
+  moon: 'M20 15A9 9 0 0 1 9 3a9 9 0 1 0 11 12',
+  energy: 'm13 1-9 13h7l-1 9 10-14h-8Z',
+  grip: 'M3 6h18M3 12h18M3 18h18',
+  book: 'M12 5c-3-3-7-3-10-2v17c4-1 7-1 10 2m0-17c3-3 7-3 10-2v17c-4-1-7-1-10 2V5',
+  play: 'm7 3 14 9-14 9Z',
+  clock: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M12 6v6l4 3',
+  export: 'M12 16V2m-5 5 5-5 5 5M4 13v8h16v-8',
+  import: 'M12 2v14m-5-5 5 5 5-5M4 15v6h16v-6',
+  shield: 'M12 2 3 6v6c0 5 9 10 9 10s9-5 9-10V6l-9-4Zm-5 9 3 3 6-6',
+  file: 'M5 2h9l5 5v15H5ZM14 2v6h5',
+  trash: 'M3 6h18M8 6V3h8v3M5 6l1 16h12l1-16M10 10v8m4-8v8',
+  bulb: 'M8 18h8M9 21h6M8 15c-6-7 1-14 7-10 4 3 3 7 1 10M12 1v1M2 10h2m16 0h2M4 3l2 2m12 0 2-2',
+  routine: 'M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6 7 7m10 10 1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
+  training: 'M6 8v8M18 8v8M3 10v4m18-4v4M6 12h12',
+  nutrition: 'M6 3v7m-3-7v5a3 3 0 0 0 6 0V3M6 11v10M16 3c3 3 3 5 3 9h-3V3m3 9v9',
+  progress: 'M5 20V12m7 8V4m7 16V8',
+  data: 'M4 6c0-4 16-4 16 0s-16 4-16 0m0 0v12c0 4 16 4 16 0V6M4 12c0 4 16 4 16 0',
+  notifications: 'M5 17h14l-2-3V9a5 5 0 0 0-10 0v5l-2 3m5 3h4',
+  pwa: 'M3 8a14 14 0 0 1 18 0M6 12a9 9 0 0 1 12 0m-9 4a4 4 0 0 1 6 0m-3 4h.01',
+  credits: 'M12 10v7m0-11v.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
+  body: 'M8 3h8l1 5 4 12-7 1-2-5-2 5-7-1L7 8Z',
+  weight: 'M5 6h14v15H5ZM9 6V3h6v3m-3 1v3',
+  target: 'M19 10a8 8 0 1 1-5-5m-2 3a4 4 0 1 0 4 4M12 12 21 3m-4 0h4v4',
+  'exercise-leg-press': 'M3 20h18M5 20v-9h6l5 4v5M8 11V7h4v4M16 15l4-4',
+  'exercise-leg-extension': 'M3 20h18M7 20V6h5v5l5 3v6M12 11l-4 5',
+  'exercise-leg-curl': 'M3 20h18M5 16h8l3-7 4 2M8 16l-4-3',
+  'exercise-hip-thrust': 'M3 20h18M5 20v-6h6l4 3h5v-6M11 14l2-4 4 1',
+}
+
+export function SectionIcon({ name }: { name: string }) {
+  return <svg className="ds-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[name] ?? paths.target}/></svg>
+}

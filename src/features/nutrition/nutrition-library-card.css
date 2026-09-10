@@ -1,0 +1,98 @@
+/* Recipe catalogue cards own their layout; media primitive owns only media. */
+
+.nutrition-recipe-card--visual {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  gap: 6px;
+  align-items: start;
+  overflow: hidden;
+}
+
+.nutrition-recipe-card__open {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+}
+
+.nutrition-recipe-card__copy {
+  display: grid;
+  align-content: center;
+  min-width: 0;
+  gap: 5px;
+}
+
+.nutrition-recipe-card__copy > strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 15px;
+  line-height: 1.13;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.nutrition-recipe-card__ingredientCount {
+  color: var(--fenix-text-muted);
+  font-size: 9.5px;
+}
+
+.nutrition-recipe-card--visual > .nutrition-macros {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 600px) {
+
+  .nutrition-library-vnext .nutrition-recipe-card--visual {
+    min-height: 92px;
+    height: 92px;
+    padding: 6px;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .nutrition-recipe-card__open {
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 7px;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .nutrition-recipe-card__open .recipe-visual--card {
+    width: 112px;
+    height: 78px;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .nutrition-recipe-card__copy > strong {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .nutrition-recipe-card--visual > .favorite-button {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .nutrition-recipe-card--visual > .nutrition-macros {
+    margin-top: 0;
+  }
+}
+
+.nutrition-recipe-card__inline-macros{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px;color:var(--fenix-muted);font-size:9px;font-weight:400}
+.nutrition-recipe-card__inline-macros>span+span{border-left:1px solid var(--fenix-border);padding-left:5px}
+.nutrition-recipe-card__copy>strong{-webkit-line-clamp:unset;display:block;overflow:visible;font-weight:500;line-height:1.3}

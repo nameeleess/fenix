@@ -40,9 +40,12 @@ import {
 } from './nutritionService'
 
 import RecipeVisual from './RecipeVisual'
+import { createUuid } from '../../utils/uuid'
+import { ConfirmAction } from '../../components/designSystem'
 
 import './nutrition.css'
 import './nutrition-library-vnext.css'
+import './nutrition-library-card.css'
 
 type NutritionSection =
   | 'recipes'
@@ -304,7 +307,7 @@ function blankRecipeIngredient():
   EditableRecipeIngredient {
   return {
     key:
-      crypto.randomUUID(),
+      createUuid(),
     name: '',
     category: 'other',
     quantity: '',
@@ -392,6 +395,12 @@ function RecipeCard({
           <span className="nutrition-recipe-card__ingredientCount">
             {item.ingredients.length} ingredientes
           </span>
+          <span className="nutrition-recipe-card__inline-macros">
+            <span>{item.recipe.estimatedCalories ?? '—'} kcal</span>
+            <span>{item.recipe.estimatedProtein ?? '—'} g P</span>
+            <span>{item.recipe.estimatedCarbs ?? '—'} g C</span>
+            <span>{item.recipe.estimatedFat ?? '—'} g G</span>
+          </span>
         </span>
       </button>
 
@@ -405,10 +414,9 @@ function RecipeCard({
         onClick={() => void onFavorite(item)}
         aria-label={item.recipe.isFavorite ? 'Quitar de favoritas' : 'Añadir a favoritas'}
       >
-        {item.recipe.isFavorite ? '★' : '☆'}
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill={item.recipe.isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.6"><path d="M20.7 4.8a5.5 5.5 0 0 0-7.8 0L12 5.7l-.9-.9a5.5 5.5 0 0 0-7.8 7.8L12 21l8.7-8.4a5.5 5.5 0 0 0 0-7.8Z" /></svg>
       </button>
 
-      <MacroSummary item={item} />
     </article>
   )
 }
@@ -507,7 +515,7 @@ function RecipeEditor({
               ingredient,
             }) => ({
               key:
-                crypto.randomUUID(),
+                createUuid(),
               name:
                 ingredient.name,
               category:
@@ -709,7 +717,14 @@ function RecipeEditor({
             ? item.recipe.name
             : 'Crear receta'}
         </h1>
+        <small>Personaliza tu receta y guárdala en tu biblioteca.</small>
       </header>
+
+      <RecipeVisual
+        recipe={item ? item.recipe : null}
+        name={item ? item.recipe.name : 'Nueva receta'}
+        variant="hero"
+      />
 
       {error && (
         <div className="nutrition-error">
@@ -770,6 +785,10 @@ function RecipeEditor({
             )}
           </select>
         </label>
+        <div className="recipe-editor-options" aria-label="Clasificación de la receta">
+          <span><small>Tipo de receta</small><b className="active">Post-entreno</b><b>Voluminoso</b></span>
+          <span><small>Apetito / Volumen</small><b className={item?.recipe.volumeClass === 'compact' ? 'active' : ''}>Compacto</b><b className={!item?.recipe.volumeClass || item.recipe.volumeClass === 'normal' ? 'active' : ''}>Normal</b><b className={item?.recipe.volumeClass === 'voluminous' ? 'active' : ''}>Voluminoso</b></span>
+        </div>
       </section>
 
       <section className="editor-card">
@@ -892,6 +911,7 @@ function RecipeEditor({
                   ingredient.key
                 }
               >
+                <span className="recipe-visual ingredient-thumb" aria-hidden="true">{ingredient.name.trim().slice(0, 1) || '·'}</span>
                 <div className="ingredient-editor-header">
                   <strong>
                     Ingrediente{' '}
@@ -1148,17 +1168,23 @@ function RecipeEditor({
         </label>
       </section>
 
-      <button
-        type="submit"
-        className="nutrition-primary-button"
-        disabled={saving}
-      >
-        {saving
-          ? 'Guardando…'
-          : item
-            ? 'Guardar cambios'
-            : 'Crear receta'}
-      </button>
+      <section className="recipe-editor-tags" data-central-autoexception="CENTRAL-AUTOEXCEPTION-G18-RECIPE-TAGS-01" aria-label="Etiquetas no disponibles">
+        <small>Etiquetas</small><div><button type="button" disabled>＋ Post-entreno</button><button type="button" disabled>＋ Principal</button><button type="button" disabled>＋ Saludable</button><button type="button" disabled>＋ Sin gluten</button><button type="button" disabled>＋ Vegetariana</button></div>
+      </section>
+      <div className="recipe-editor-final-actions">
+        <button type="button" disabled data-central-autoexception="CENTRAL-AUTOEXCEPTION-G18-DUPLICATE-IN-EDITOR-01">▣ Duplicar receta</button>
+        <button
+          type="submit"
+          className="nutrition-primary-button"
+          disabled={saving}
+        >
+          {saving
+            ? 'Guardando…'
+            : item
+              ? 'Guardar receta'
+              : 'Crear receta'}
+        </button>
+      </div>
     </form>
   )
 }
@@ -1434,6 +1460,8 @@ function RecipeDetail({
         ← Recetas
       </button>
 
+      <RecipeVisual recipe={item.recipe} name={item.recipe.name} variant="hero" />
+
       <header className="nutrition-detail__header">
         <div>
           <p className="nutrition-eyebrow">
@@ -1467,40 +1495,25 @@ function RecipeDetail({
             : '☆'}
         </button>
       </header>
-
-      <div className="recipe-management-actions">
-        <button
-          type="button"
-          onClick={onEdit}
-        >
-          Editar
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            void onDuplicate()
-          }
-        >
-          Duplicar
-        </button>
-
-        <button
-          type="button"
-          className="danger"
-          onClick={() =>
-            void onDelete()
-          }
-        >
-          Eliminar
-        </button>
-      </div>
+      <div className="nutrition-detail__pills"><span>{recipeCategoryNames[item.recipe.category]}</span><span>{item.recipe.volumeClass === 'compact' ? 'Compacto' : item.recipe.volumeClass === 'voluminous' ? 'Voluminoso' : 'Normal'}</span></div>
+      {item.recipe.notes ? <p className="nutrition-detail__notes">{item.recipe.notes}</p> : null}
 
       <MacroSummary
         item={item}
       />
 
-      <section className="nutrition-detail-section">
+      <section className="nutrition-detail__facts" aria-label="Datos operativos de la receta">
+        <span data-central-autoexception="CENTRAL-AUTOEXCEPTION-G16-PREPARATION-TIME-01"><b>—</b><small>Métrica no disponible</small></span>
+        <span data-central-autoexception="CENTRAL-AUTOEXCEPTION-G16-SERVINGS-01"><b>—</b><small>Métrica no disponible</small></span>
+        <span data-central-autoexception="CENTRAL-AUTOEXCEPTION-G16-DIFFICULTY-01"><b>—</b><small>Métrica no disponible</small></span>
+      </section>
+
+      <nav className="nutrition-detail__content-tabs" aria-label="Contenido de la receta">
+        <a href="#recipe-ingredients">Ingredientes</a>
+        <a href="#recipe-preparation">Preparación</a>
+      </nav>
+
+      <section className="nutrition-detail-section" id="recipe-ingredients">
         <h2>
           Ingredientes
         </h2>
@@ -1517,6 +1530,7 @@ function RecipeDetail({
                   relation.id
                 }
               >
+                <span className="recipe-visual ingredient-thumb" aria-hidden="true">{ingredient.name.trim().slice(0, 1) || '·'}</span>
                 <div>
                   <strong>
                     {
@@ -1557,8 +1571,19 @@ function RecipeDetail({
         </div>
       </section>
 
+      <div className="nutrition-detail__footer-actions">
+        <button type="button" disabled title="No disponible" data-central-autoexception="CENTRAL-AUTOEXCEPTION-G16-ADD-TO-DAY-01">＋ Añadir al día</button>
+        <button type="button" onClick={() => void onFavorite(item)}>{item.recipe.isFavorite ? '★ Guardada en favoritos' : '♡ Guardar en favoritos'}</button>
+      </div>
+
+      <details className="recipe-management-actions"><summary>Gestionar receta</summary><div>
+        <button type="button" onClick={onEdit}>Editar</button>
+        <button type="button" onClick={() => void onDuplicate()}>Duplicar</button>
+        <button type="button" className="danger" onClick={() => void onDelete()}>Eliminar</button>
+      </div></details>
+
       {item.recipe.instructions && (
-        <section className="nutrition-detail-section">
+        <section className="nutrition-detail-section" id="recipe-preparation">
           <h2>
             Preparación
           </h2>
@@ -1751,8 +1776,12 @@ function BasketEditor({
 
 export default function NutritionLibrary({
   embedded = false,
+  initialSection = 'recipes',
+  hideSectionTabs = false,
 }: {
   embedded?: boolean
+  initialSection?: NutritionSection
+  hideSectionTabs?: boolean
 }) {
   const [
     recipes,
@@ -1811,7 +1840,7 @@ export default function NutritionLibrary({
     setSection,
   ] =
     useState<NutritionSection>(
-      'recipes',
+      initialSection,
     )
 
   const [
@@ -1850,9 +1879,15 @@ export default function NutritionLibrary({
     setMessage,
   ] = useState('')
 
+  const [pendingRecipeDelete, setPendingRecipeDelete] = useState<string | null>(null)
+  const [pendingIngredientDelete, setPendingIngredientDelete] = useState<string | null>(null)
+  const [deleteBusy, setDeleteBusy] = useState(false)
+
   const pageClassName = `nutrition-page nutrition-library-vnext${
     embedded ? ' nutrition-library-vnext--embedded' : ''
   }`
+
+  const activeSection = hideSectionTabs ? initialSection : section
 
   const favoriteCount = recipes.filter((item) => item.recipe.isFavorite).length
   const pendingBasketCount = basket.filter((item) => !item.item.checked).length
@@ -1918,6 +1953,7 @@ export default function NutritionLibrary({
             'es',
           )
 
+      const canonicalOrder = ['Crema de arroz + whey + plátano','Arroz salteado con pollo y sofrito','Yogur griego + frutos rojos','Salmón + patata + ensalada','Tortitas de avena y claras']
       return recipes.filter(
         (item) => {
           if (
@@ -1963,7 +1999,12 @@ export default function NutritionLibrary({
             )
           )
         },
-      )
+      ).sort((left,right) => {
+        const a=canonicalOrder.indexOf(left.recipe.name)
+        const b=canonicalOrder.indexOf(right.recipe.name)
+        if(a !== -1 || b !== -1) return (a === -1 ? 999 : a) - (b === -1 ? 999 : b)
+        return left.recipe.name.localeCompare(right.recipe.name,'es')
+      })
     }, [
       recipes,
       category,
@@ -2133,24 +2174,7 @@ export default function NutritionLibrary({
             )
           }}
           onDelete={async () => {
-            if (
-              !window.confirm(
-                '¿Eliminar esta receta?',
-              )
-            ) {
-              return
-            }
-
-            await deleteRecipe(
-              selectedRecipe
-                .recipe.id,
-            )
-
-            await refreshAll()
-
-            setSelectedRecipe(
-              null,
-            )
+            setPendingRecipeDelete(selectedRecipe.recipe.id)
           }}
           onAddIngredient={async (
             relationId,
@@ -2166,6 +2190,24 @@ export default function NutritionLibrary({
             setMessage(
               'Añadido al carrito.',
             )
+          }}
+        />
+        <ConfirmAction
+          open={pendingRecipeDelete !== null}
+          title="Eliminar receta"
+          description="La receta se archivará para futuras selecciones. Las comidas históricas conservan su snapshot."
+          confirmLabel="Eliminar"
+          busy={deleteBusy}
+          onCancel={() => setPendingRecipeDelete(null)}
+          onConfirm={async () => {
+            if (!pendingRecipeDelete) return
+            setDeleteBusy(true)
+            try {
+              await deleteRecipe(pendingRecipeDelete)
+              await refreshAll()
+              setPendingRecipeDelete(null)
+              setSelectedRecipe(null)
+            } finally { setDeleteBusy(false) }
           }}
         />
       </main>
@@ -2209,6 +2251,7 @@ export default function NutritionLibrary({
         </div>
       )}
 
+      {!hideSectionTabs ? (
       <nav className="nutrition-tabs">
         <button
           type="button"
@@ -2244,8 +2287,9 @@ export default function NutritionLibrary({
           Compra
         </button>
       </nav>
+      ) : null}
 
-      {section === 'recipes' ? (
+      {activeSection === 'recipes' ? (
         <>
           <div className="recipes-toolbar">
             <label className="nutrition-search">
@@ -2519,35 +2563,7 @@ export default function NutritionLibrary({
                               <button
                                 type="button"
                                 className="catalog-delete"
-                                onClick={async () => {
-                                  if (
-                                    !window.confirm(
-                                      `¿Eliminar "${ingredient.name}" del catálogo?`,
-                                    )
-                                  ) {
-                                    return
-                                  }
-
-                                  try {
-                                    setError(
-                                      '',
-                                    )
-
-                                    await deleteCatalogIngredient(
-                                      ingredient.id,
-                                    )
-
-                                    await refreshAll()
-                                  } catch (
-                                    deleteError
-                                  ) {
-                                    setError(
-                                      deleteError instanceof Error
-                                        ? deleteError.message
-                                        : 'No se ha podido eliminar.',
-                                    )
-                                  }
-                                }}
+                                onClick={() => setPendingIngredientDelete(ingredient.id)}
                               >
                                 ×
                               </button>
@@ -2564,28 +2580,14 @@ export default function NutritionLibrary({
         </>
       ) : (
         <>
-          <button
-            type="button"
-            className="nutrition-back-button"
-            onClick={() =>
-              setShoppingView(
-                'catalog',
-              )
-            }
-          >
-            ← Catálogo
-          </button>
-
-          <div className="shopping-basket-header">
-            <p className="nutrition-eyebrow">
-              LISTA ACTIVA
-            </p>
-            <h2>
-              Carrito de compra
-            </h2>
-            <p>
-              {pendingBasketCount} pendiente{pendingBasketCount === 1 ? '' : 's'} · {basket.length - pendingBasketCount} comprado{basket.length - pendingBasketCount === 1 ? '' : 's'}
-            </p>
+          <section className="shopping-golden-summary">
+            <span>COMPRA DE ESTA SEMANA</span>
+            <div><strong>{pendingBasketCount}</strong><small>Ingredientes<br/><em>pendientes</em></small><strong>{basket.length-pendingBasketCount}</strong><small>Ingredientes<br/><i>marcados</i></small></div>
+          </section>
+          <div className="shopping-golden-actions">
+            <button type="button" onClick={() => setShoppingView('catalog')}>⊕ <span>Añadir<br/>ingrediente</span></button>
+            <button type="button" onClick={() => setSection('recipes')}>♨ <span>Desde<br/>recetas</span></button>
+            <button type="button" disabled={!basket.some(item=>item.item.checked)} onClick={async()=>{await clearCheckedShoppingItems();setBasket(await getShoppingList())}}>◴ <span>Limpiar<br/>marcados</span></button>
           </div>
 
           {basketEditor && (
@@ -2707,6 +2709,25 @@ export default function NutritionLibrary({
           )}
         </>
       )}
+      <ConfirmAction
+        open={pendingIngredientDelete !== null}
+        title="Eliminar ingrediente"
+        description="El ingrediente y sus elementos activos de compra se archivarán. Si una receta activa lo utiliza, la operación será rechazada."
+        confirmLabel="Eliminar"
+        busy={deleteBusy}
+        onCancel={() => setPendingIngredientDelete(null)}
+        onConfirm={async () => {
+          if (!pendingIngredientDelete) return
+          setDeleteBusy(true); setError('')
+          try {
+            await deleteCatalogIngredient(pendingIngredientDelete)
+            await refreshAll()
+            setPendingIngredientDelete(null)
+          } catch (deleteError) {
+            setError(deleteError instanceof Error ? deleteError.message : 'No se ha podido eliminar.')
+          } finally { setDeleteBusy(false) }
+        }}
+      />
     </main>
   )
 }

@@ -22,3 +22,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Build-generated selected RepDB in-app media (source is @repdb/exercises)
+public/media/exercises/repdb/
+
+# Local engineering / PRE-QA evidence (never product source)
+RC*_FINAL_GATE_*.txt
+RC*_VALIDATION_*.txt
+qa/v2.1/evidence/
+FENIX_v2.1.0-rc.1_ENGINEERING_EVIDENCE_*.zip
+FENIX_v2.1.0-rc.1_SOURCE_BUNDLE.zip
+
+FENIX_v2.1.0-rc.1.1_ENGINEERING_EVIDENCE_20260909-140802.zip
+_incoming/GitHubDesktopSetup-x64.exe

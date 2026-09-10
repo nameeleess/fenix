@@ -1,0 +1,1294 @@
+# FENIX_CODEX_HANDOFF_QA_REVISION_CRITICA_v1.0
+
+**Proyecto:** FÉNIX v2 — EVOLUCIÓN / BUILD & QA  
+**Área:** `02 · FÉNIX v2 — QA / REVISIÓN CRÍTICA`  
+**Tipo:** HANDOFF CANÓNICO PARA MIGRACIÓN A CODEX  
+**Versión del handoff:** `v1.0`  
+**Fecha de consolidación:** 2026-09-08  
+**Estado:** CANÓNICO / CONGELADO PARA MIGRACIÓN
+
+> Este documento preserva el conocimiento vigente del área QA. No autoriza por sí mismo nueva implementación, nueva especificación, cierre formal de release ni ejecución de QA adicional.
+
+---
+
+## 0. FUENTES DE AUTORIDAD Y PRECEDENCIA
+
+Orden de precedencia:
+
+1. Decisión explícita y posterior de CENTRAL.
+2. `PROMPT MAESTRO — FÉNIX v2 / EVOLUCIÓN / BUILD & QA`.
+3. Handoffs y criterios de aceptación emitidos por CENTRAL para un bloque/release concreta.
+4. `FUENTE MAESTRA INICIAL — FÉNIX v2 / BASELINE FUNCIONAL PRE-AUDITORÍA` y decisiones funcionales integradas formalmente por CENTRAL.
+5. Resultado QA independiente reproducido sobre el artefacto autorizado.
+6. Entrega/evidencia de Ingeniería, que apoya pero nunca sustituye QA.
+7. Tests incluidos en el bundle, verificadores de source y documentación auxiliar.
+
+Regla de conflicto:
+
+- una decisión posterior de CENTRAL supersede la anterior solo en el alcance indicado;
+- QA no resuelve contradicciones de producto o contrato;
+- ante contradicción material: **STOP → documentar → devolver a CENTRAL**;
+- no inferir una decisión ausente a partir de código, tests o intención aparente.
+
+---
+
+# 1. ROL, AUTORIDAD Y LÍMITES DEL ESPECIALISTA
+
+## 1.1 Rol
+
+`02 · QA / REVISIÓN CRÍTICA` es la **autoridad independiente de validación** de FÉNIX v2.
+
+Su misión no es demostrar que la aplicación funciona. Su misión es intentar demostrar que puede fallar.
+
+QA debe actuar de forma adversarial e independiente de Ingeniería y del deseo de cerrar una versión.
+
+## 1.2 Qué debe validar
+
+Según el riesgo del bloque/release:
+
+- funcionalidad;
+- persistencia;
+- referencias;
+- invariantes;
+- estados inválidos;
+- navegación;
+- doble interacción;
+- concurrencia;
+- operaciones repetidas;
+- idempotencia;
+- atomicidad;
+- recarga;
+- cierre/reapertura;
+- offline/PWA cuando el entorno lo permita;
+- cambios de dataset;
+- datos antiguos;
+- historial;
+- importación;
+- exportación;
+- backup;
+- restore;
+- rollback;
+- recuperación;
+- cross-module;
+- no-regresión;
+- build/lint/TypeScript cuando el entorno lo permita;
+- coherencia runtime ↔ backup validator;
+- ausencia de escrituras stale;
+- ausencia de children activos huérfanos;
+- ausencia de unicidades lógicas rotas.
+
+## 1.3 Clasificación mínima de incidencias
+
+- `CRÍTICA`
+- `ALTA`
+- `MEDIA`
+- `BAJA`
+
+Una incidencia `CRÍTICA` o `ALTA` que afecte al criterio de aceptación/release **impide recomendar cierre**.
+
+## 1.4 Qué QA NO puede hacer
+
+QA:
+
+- no modifica código;
+- no parchea;
+- no implementa fixes;
+- no redefine producto;
+- no cambia contratos;
+- no cambia estados;
+- no inventa criterios de aceptación;
+- no decide migraciones;
+- no cambia ownership funcional;
+- no declara formalmente una fase cerrada;
+- no declara formalmente una release;
+- no hace commit/tag/push;
+- no sustituye a CENTRAL;
+- no acepta evidencia de Ingeniería como sustituto de reproducción QA;
+- no convierte una limitación externa del sandbox en defecto FÉNIX sin evidencia atribuible al código.
+
+## 1.5 Autoridad formal de cierre
+
+Solo CENTRAL puede decidir:
+
+- qué entra en QA;
+- qué se corrige;
+- qué se cierra;
+- qué release se publica;
+- cuándo una versión pasa a release;
+- cuándo debe intervenir el usuario.
+
+---
+
+# 2. ESTADO EXACTO ACTUAL DEL ÁREA
+
+## 2.1 Último artefacto QA autorizado y validado en este chat
+
+**FÉNIX v2 CORE STABLE `v2.0.0-rc.2.2`**
+
+SOURCE BUNDLE canónico:
+
+`FENIX_v2_CORE_STABLE_v2.0.0-rc.2.2_SOURCE_BUNDLE.zip`
+
+SHA-256:
+
+`f98d902d245dcd3cc0a6db5eca4d40afa4b1bca3e7f7f00a9238d16f32fab617`
+
+Resultado QA final focal:
+
+**PASS**
+
+Recomendación QA emitida:
+
+**APROBAR FÉNIX v2 CORE STABLE v2.0.0-rc.2.2 PARA RELEASE v2.0.0**
+
+Ledger abierto al finalizar ese QA:
+
+- CRÍTICAS: `0`
+- ALTAS: `0`
+- MEDIAS: `0`
+- BAJAS: `0`
+
+## 2.2 Estado formal de release v2.0.0
+
+QA recomendó aprobar.
+
+**La declaración formal posterior de CENTRAL, commit final, tag final y SHA de un artefacto nombrado exactamente `v2.0.0` son DESCONOCIDOS desde el contexto propio de este chat.**
+
+Codex no debe convertir la recomendación QA en declaración formal de release sin una fuente de CENTRAL.
+
+## 2.3 Estado posterior conocido: v2.1
+
+Existe trabajo posterior en FÉNIX v2.1 fuera de este chat.
+
+Conocimiento upstream conocido por QA:
+
+- 26 Golden Renders individuales aprobados para layouts únicos de producto;
+- Media Freeze definitivo de ejercicios: `33/33`;
+- `26 RepDB + 7 FÉNIX propios`;
+- `STOP-MEDIA-01` resuelto por CENTRAL con **opción A**;
+- mapping aprobado: `Curl femoral = RepDB leg-curl (lying canonical)`.
+
+Estos hechos **NO significan que QA haya validado una build v2.1**.
+
+En este chat no consta un handoff canónico de CENTRAL autorizando a QA un bundle v2.1 posterior a la migración.
+
+Estado QA v2.1:
+
+**PENDIENTE DE AUTORIZACIÓN/HANDOFF DE CENTRAL.**
+
+---
+
+# 3. CONTRATOS FUNCIONALES VIGENTES Y REGLAS QUE NO PUEDEN ROMPERSE
+
+## 3.1 Principios globales
+
+1. Corrección funcional > velocidad.
+2. Integridad de datos > comodidad de implementación.
+3. Ningún cambio destruye historial válido.
+4. Ningún módulo se apropia de responsabilidades de otro.
+5. Implementación no inventa comportamiento funcional.
+6. Todo comportamiento cross-module requiere contrato.
+7. Compilar o verse bien no implica cierre.
+8. Toda implementación material requiere QA independiente.
+9. Una regresión demostrada reabre el responsable.
+10. Debe existir recuperación/rollback razonable.
+11. No reescribir código sano sin razón material.
+12. Evitar complejidad técnica innecesaria.
+13. No sacrificar validación para avanzar.
+
+## 3.2 Propiedad funcional
+
+### Training
+
+Autoridad sobre sesiones, planificación de entrenamiento, rutina asociada, ejercicios, series, ejecución, estados de sesión, reprogramación, omisión, inicio, final, duración y datos de rendimiento.
+
+Training expone estado. No decide nutrición ni progreso derivado.
+
+### Nutrition
+
+Autoridad sobre comidas, recetas, cantidades, estructura diaria, macros, consumo, alternativas, planificación alimentaria y adaptación nutricional al contexto Training.
+
+Nutrition puede consumir estado Training.
+
+### Progreso
+
+Autoridad sobre mediciones, peso, tendencias, evolución, adherencia, rachas y estadísticas derivadas.
+
+Progreso consume hechos reales. No modifica hechos fuente para obtener una estadística deseada.
+
+### Hoy
+
+Capa de orquestación/presentación. Consulta, prioriza, muestra siguiente acción y refleja Training/Nutrition/Progreso. No se convierte en owner de los otros módulos.
+
+## 3.3 Historial
+
+Debe diferenciarse conceptualmente:
+
+`plantilla → planificación → instancia/ejecución → hecho histórico`
+
+Editar una definición reusable no puede reescribir hechos históricos sin migración explícita aprobada.
+
+Una nueva etapa personal no implica borrar información previa.
+
+## 3.4 Persistencia
+
+- Database canónica: `fenix-db`.
+- Schema vigente en CORE validado: `5`.
+- No introducir schema 6 sin decisión explícita de CENTRAL.
+- RC1/RC1.1/RC2/RC2.1/RC2.2 no introdujeron migraciones.
+- No reset.
+- No reseed.
+- No limpieza silenciosa.
+- No cloud/sync/login como supuesto de CORE.
+- local-first y offline siguen siendo requisitos estructurales.
+
+---
+
+# 4. DECISIONES APROBADAS QUE SIGUEN VIGENTES
+
+## 4.1 Training session identity
+
+Múltiples PlannedWorkoutSession pueden coexistir el mismo día, incluso con distinto template o mismo template, siempre que sus IDs sean distintos.
+
+No introducir unicidad destructiva por `scheduledDate + workoutTemplateId`.
+
+Todas las identidades deben conservarse y poder operar individualmente.
+
+## 4.2 Estados de sesión
+
+Estados conceptuales vigentes:
+
+- pending/prevista;
+- reprogrammed/reprogramada;
+- omitted/omitida;
+- in_progress/en curso;
+- completed/completada;
+- incomplete/incompleta.
+
+Las operaciones terminales deben respetar máquina de estados y lifecycle.
+
+## 4.3 Única WorkoutSession activa
+
+Invariant:
+
+`active WorkoutSession count <= 1`
+
+Starts concurrentes deben serializarse sin children residuales de requests perdedoras.
+
+## 4.4 Planned ↔ Execution
+
+Si una planificación está `in_progress`, debe existir linkage coherente con su ejecución.
+
+No se permite reparación silenciosa ante execution inexistente, soft-deleted, terminal incompatible, de otra planned, template incompatible o `in_progress` sin executionSessionId.
+
+## 4.5 Training ExerciseSet
+
+Para ExerciseSet activo:
+
+- parent WorkoutSessionExercise existe;
+- parent válido;
+- WorkoutSession existe;
+- linkage consistente.
+
+Un set completed debe cumplir dominio `complete`.
+
+Para working completed:
+
+- `reps` entero finito `>= 1`;
+- `weight` null o finito `>= 0`;
+- `rir` null o finito `0..10`.
+
+Para warmup completed:
+
+- `rir === null`.
+
+`completedAt != null` nunca puede coexistir con `reps=0/null`.
+
+Order activo único por `workoutSessionExerciseId + setType`.
+
+No exigir consecutividad; soft-deleted no cuentan.
+
+## 4.6 Training child lifecycle
+
+Mutaciones de sets que compiten con lifecycle deben decidir sobre estado vigente dentro de frontera transaccional suficiente.
+
+Históricamente se endurecieron add, toggle, remove y substitute.
+
+No permitir requests stale que:
+
+- creen child bajo parent descartado;
+- cambien completedAt después de terminalización;
+- borren completion posterior;
+- reasignen retrospectivamente un set completed a otro ejercicio.
+
+## 4.7 Fecha Training
+
+Aceptar únicamente fecha real `YYYY-MM-DD`.
+
+Ejemplos canónicos:
+
+- `2026-02-29` REJECT
+- `2028-02-29` ACCEPT
+- `1900-02-29` REJECT
+- `2000-02-29` ACCEPT
+- día/mes `00` REJECT
+- espacios REJECT
+- ISO timestamp completo REJECT
+- formatos no padded REJECT
+
+No imponer regla artificial pasado/futuro.
+
+## 4.8 Training → Nutrition
+
+Las comidas Training se asocian a identidad de sesión, no solo al día.
+
+Identidad canónica:
+
+- No Training: `date + role`
+- Pre/Post Training: `date + role + trainingSessionId`
+
+Pre/Post de sesiones A/B distintas deben coexistir.
+
+Pending Training meals de una sesión vigente deben converger a:
+
+`meal.date === plannedWorkoutSession.scheduledDate`
+
+Si una sesión se omite:
+
+- pending Pre/Post dejan de aplicar;
+- hechos completed/skipped no se reescriben.
+
+## 4.9 Nutrition reconciliation global
+
+La reconciliación Training→Nutrition es global y debe estar causalmente protegida.
+
+Day A, Day B y Week no pueden ejecutar planners globales incompatibles en paralelo.
+
+Debe existir exclusión global, coherencia transaccional con `plannedWorkoutSessions + dailyMeals`, publicación post-commit solo si hubo cambio y no-op sin loop.
+
+## 4.10 DailyMeal causal mutations
+
+`replaceDailyMealRecipe()`, `setDailyMealPortion()` y `setDailyMealStatus()` deben decidir sobre el DailyMeal vigente dentro de transacción.
+
+Una request stale no puede producir `Recipe B / planned B / confirmed A`.
+
+Completed/skipped son hechos protegidos.
+
+Versionado desde `current.version + 1`.
+
+Reject = zero write/version/event. Success = event post-commit.
+
+## 4.11 Apply week
+
+Debe ser atómico, idempotente, preservar completed/skipped/manual, ser causal con Training y hacer rollback total ante fallo intermedio.
+
+## 4.12 NutritionGoal singleton
+
+Invariant:
+
+`activeNutritionGoals <= 1`
+
+Concurrent saves deben serializarse. Corrupción previa `>1 active` debe ser detectada/rechazada según contrato estabilizado.
+
+## 4.13 Improvised meal idempotency
+
+Una intención lógica usa `submissionId`.
+
+Mismo submissionId:
+
+- 2 requests → 1 DailyMeal;
+- 10 requests → 1 DailyMeal;
+- retry → no duplicación.
+
+Tokens distintos representan intenciones legítimamente distintas.
+
+## 4.14 Appetite
+
+Modos vigentes:
+
+- Compacto;
+- Normal;
+- Voluminoso.
+
+Cuando exista alternativa compatible adecuada distinta, cambiar de modo debe producir cambio material en propuestas pending gestionadas.
+
+Mismo modo puede ser no-op.
+
+Preservar manual/completed/skipped.
+
+## 4.15 Recipe / Ingredient / Shopping runtime
+
+Ingredient identity canónica:
+
+`normalizeIngredientName = trim() -> toLocaleLowerCase('es')`
+
+Shopping unit:
+
+`normalizeShoppingUnit = trim() -> non-empty string | null`
+
+No lowercase para unit.
+
+Por tanto:
+
+- `"kg"` y `" kg "` = misma identidad;
+- `null` y `" "` = misma identidad;
+- `"kg"` y `"KG"` = distintas según contrato vigente.
+
+Runtime invariants:
+
+- RecipeIngredient activo → Recipe activa.
+- RecipeIngredient activo → Ingredient activo.
+- ShoppingItem activo → Ingredient activo.
+- normalized active Ingredient name único.
+- ShoppingItem lógico activo único por `ingredientId + normalizeShoppingUnit(unit)`.
+
+## 4.16 Backup validator debe reflejar runtime
+
+Restore no puede introducir estados que runtime prohíbe.
+
+La misma policy de identidad Nutrition Library debe ser compartida por runtime y backup validator.
+
+Prevalidation y postvalidation usan el mismo `validateFenixBackup()`.
+
+## 4.17 Progreso — tendencia de peso
+
+Canónico:
+
+- `2 current + 2 previous` → datos insuficientes;
+- `3 current + 3 previous` → tendencia disponible;
+- missing days neutral.
+
+Separar dato real de cálculo derivado.
+
+## 4.18 Progreso — racha
+
+Racha = sesiones previstas consecutivas cumplidas.
+
+- completed incrementa;
+- descanso programado neutral;
+- reprogrammed neutral hasta resolverse;
+- reprogrammed + completed cuenta;
+- omitted rompe;
+- incomplete rompe;
+- extra neutral;
+- futura neutral.
+
+Orden canónico determinista:
+
+`scheduledDate -> createdAt -> id`
+
+Racha derivada; no persistirla como fuente primaria.
+
+---
+
+# 5. DECISIONES ANTERIORES SUPERSEDED / DEROGADAS
+
+| Anterior | Sustitución vigente |
+|---|---|
+| Reconciliación Nutrition serializada solo por fecha | Exclusión global única + transacción `plannedWorkoutSessions + dailyMeals` + event post-commit; B01.5 |
+| Dedup Training por `date+role` | `date+role+trainingSessionId` |
+| Exact duplicate escapaba si ya estaba en target | Planner por identidad exacta, survivor `createdAt->id`, anti ping-pong |
+| Today guard solo antes de write | Guard post-write dentro de transacción, rollback stale |
+| `saveSetDraft()` siempre `draft` | Relectura vigente y modo `draft/complete` por completedAt |
+| `addExerciseSet()` fuera de lifecycle parent | Transacción session+snapshot+sets + nextOrder atómico |
+| `toggleSetCompletion()` sin session lifecycle | Revalidación session/snapshot/set en transacción |
+| `removeExerciseSet()` read→update separado | Hardening RC1; R01–R10 |
+| `substituteSessionExercise()` con snapshot pre-transacción | Hardening RC2; S01–S10 |
+| Backup Planned↔Execution unidireccional | Validator bidireccional/cross-entity RC2 |
+| NutritionGoal active leído antes de transacción | Singleton transaccional RC2 |
+| Improvised append sin idempotency token | `submissionId` |
+| Streak sin tie por id | `scheduledDate->createdAt->id` |
+| Appetite sin garantizar alternativa material | Excluir current cuando hay alternativa adecuada |
+| Runtime Ingredient/Shopping y backup con normalizadores separados | Policy compartida `nutritionLibraryIdentity.ts` en RC2.2 |
+| Media Freeze `25 RepDB + 8 propios` | `26 RepDB + 7 propios = 33/33`; STOP-MEDIA-01 opción A |
+
+---
+
+# 6. DEPENDENCIAS Y CONTRATOS CROSS-MODULE
+
+## 6.1 CENTRAL ↔ QA
+
+CENTRAL entrega a QA scope autorizado, versión, artefacto canónico, SHA-256, baseline, acceptance criteria, incidencias a revalidar, clases que deben permanecer cerradas y out-of-scope.
+
+QA devuelve PASS/FAIL, hash probado, evidence ledger, incidencias, severidad, reproducción, matriz AC, limitaciones y recomendación.
+
+CENTRAL decide el cierre formal.
+
+## 6.2 Ingeniería ↔ QA
+
+Ingeniería entrega versión inequívoca, source bundle, delta, migraciones, contratos afectados, riesgos, tests ejecutados, build/lint/TS y handoff.
+
+QA no confía solo en los tests entregados; ataca código real y busca casos fuera de helpers.
+
+## 6.3 Training → Hoy
+
+Hoy puede consumir session id, nombre, estado, duración estimada, inicio/fin real, duración real, rutina, movilidad y métricas de presentación.
+
+Hoy no modifica la sesión.
+
+Focus debe ser determinista sin eliminar `sessions[]`.
+
+## 6.4 Training → Nutrition
+
+Training produce identidad/fecha/estado/timing. Nutrition consume contexto. Pending Pre/Post siguen a la sesión. Completed/skipped históricos no se reescriben.
+
+## 6.5 Training → Progreso
+
+Progreso consume hechos Training para racha/rendimiento/adherencia/stats derivadas. No modifica Training.
+
+## 6.6 Nutrition → Hoy
+
+Hoy muestra comida relevante/progreso sin tomar ownership. En multi-session, comida Training relevante debe coincidir por `trainingSessionId`.
+
+## 6.7 Nutrition → Progreso
+
+Cuando corresponda, Progreso consume hechos/adherencia reales. No reescribe Nutrition.
+
+## 6.8 Progreso → Hoy
+
+Hoy muestra resumen derivado usando la policy canónica, no una realidad paralela.
+
+---
+
+# 7. MODELO CONCEPTUAL / DATOS / ESTADOS RELEVANTES PARA QA
+
+## 7.1 Database
+
+`fenix-db`
+
+Schema validado: `5`
+
+## 7.2 Baseline oficial de QA
+
+Backup:
+
+`fenix-backup-2026-09-06T13-27-03-525Z.json`
+
+SHA-256:
+
+`3686d872e64d83f7fea7053fab9f2e32508bd525c50180431a5b437bad8e8732`
+
+Metadata:
+
+- format: `fenix-backup`
+- formatVersion: `1`
+- databaseName: `fenix-db`
+- schemaVersion: `5`
+- totalRecords: `759`
+
+Counts canónicos conocidos:
+
+- appMeta: 8
+- exercises: 33
+- workoutTemplates: 6
+- workoutTemplateExercises: 60
+- workoutSessions: 10
+- exerciseSets: 177
+- ingredients: 51
+- recipes: 44
+- recipeIngredients: 172
+- shoppingItems: 5
+- dailyRoutineTemplates: 1
+- dailyRoutineTemplateItems: 5
+- dailyRoutines: 5
+- dailyRoutineTasks: 26
+- workShifts: 0
+- plannedWorkoutSessions: 26
+- workoutSessionExercises: 65
+- nutritionDays: 11
+- dailyMeals: 51
+- nutritionGoals: 1
+- weeklyNutritionPlans: 0
+- weeklyNutritionPlanMeals: 0
+- weightEntries: 0
+- bodyMeasurements: 0
+- progressGoals: 2
+- progressFeaturedExercises: 0
+
+## 7.3 Histórico crítico protegido
+
+PlannedWorkoutSession:
+
+`775635cc-ec59-4b44-a566-d722ae4664d7`
+
+- template: `Lower B`
+- original/scheduled date: `2026-09-04`
+- status: `pending`
+- executionSessionId: `null`
+- isFormalStrength: `true`
+- isExtra: `false`
+- rescheduleCount: `0`
+- resolvedAt: `null`
+
+Nunca resolver automáticamente por repair/migration/reset/reseed/planning improvement.
+
+## 7.4 Entidades relevantes a invariantes QA
+
+- PlannedWorkoutSession
+- WorkoutSession
+- WorkoutSessionExercise
+- ExerciseSet
+- WorkoutTemplate / WorkoutTemplateExercise
+- NutritionDay
+- DailyMeal
+- NutritionGoal
+- Recipe
+- RecipeIngredient
+- Ingredient
+- ShoppingItem
+- DailyRoutine / DailyRoutineTask
+- WeightEntry
+- body measurements/progress entities
+- appMeta
+- backup envelope/counts
+
+---
+
+# 8. UX, COMPORTAMIENTO E INTERACCIÓN APROBADOS RELEVANTES A QA
+
+QA no es owner de UX, pero debe validar que la interacción no rompa contratos.
+
+## 8.1 Uso principal
+
+- iPhone/mobile-first.
+- Dark.
+- rápida.
+- mínima fricción.
+- operaciones frecuentes no deben requerir formularios largos.
+
+## 8.2 Navegación principal
+
+Bottom navigation:
+
+- Hoy
+- Training
+- Nutrition
+- Progreso
+
+Ajustes existe como superficie adicional cuando corresponda.
+
+## 8.3 Training same-day
+
+La UI debe permitir distinguir sesiones same-day. No colapsar identidades por fecha. Acciones deben dirigirse al `session.id` correcto.
+
+## 8.4 Doble interacción
+
+QA debe intentar doble tap, 2/10 requests simultáneas, submit repetido, acción child mientras finish/discard está en vuelo, focus/background alrededor de writes y navegación antes de commit.
+
+Los controles `busy` pueden ser protección UX, pero no sustituyen invariantes de servicio/transacción.
+
+## 8.5 Backup/Restore
+
+Backup inválido debe rechazar antes de tocar DB.
+
+Restore: prevalidate → transacción atómica → postvalidate → semantic diff → rollback ante error.
+
+## 8.6 Offline
+
+Offline es requisito funcional importante. Si el entorno QA no permite runtime real, registrar limitación; no inventar PASS físico ni FAIL de producto.
+
+---
+
+# 9. REQUISITOS VISUALES Y GOLDEN RENDERS QUE GOBIERNAN QA
+
+## 9.1 Dirección visual global vigente
+
+- negro profundo;
+- carbón oscuro;
+- textura carbón discreta;
+- rojo FÉNIX `#DE090A`;
+- blanco/gris;
+- verde para completado;
+- aspecto premium/minimalista;
+- mobile-first;
+- jerarquía visual fuerte.
+
+La corrección funcional prevalece sobre la estética.
+
+## 9.2 Golden Renders aprobados conocidos para v2.1
+
+Existen **26 Golden Renders individuales**:
+
+### Hoy
+1. Hoy — principal
+2. Hoy — día 0
+
+### Training
+3. Training — Hoy
+4. Training — Rutinas
+5. Training — Ejercicios
+6. Training — Historial
+7. Training — Sesión en curso
+8. Training — Detalle de rutina
+9. Training — Detalle de ejercicio
+10. Training — Crear/Editar rutina
+11. Training — Crear/Editar ejercicio
+
+### Nutrition
+12. Nutrition — Hoy
+13. Nutrition — Semana
+14. Nutrition — Recetas
+15. Nutrition — Compra
+16. Nutrition — Detalle de receta
+17. Nutrition — Detalle de comida
+18. Nutrition — Crear/Editar receta
+
+### Progreso
+19. Progreso — Resumen
+20. Progreso — Peso
+21. Progreso — Rendimiento
+22. Progreso — Adherencia
+23. Progreso — Cuerpo/Medidas
+
+### Ajustes
+24. Ajustes — Principal
+25. Ajustes — Rutina diaria
+26. Ajustes — Datos / Backup-Restore
+
+Los posters/collages no sustituyen a los renders individuales como referencia de layout.
+
+**SHA-256 exactos de los 26 Golden Renders: DESCONOCIDO.**
+
+## 9.3 Media Freeze ejercicios v2.1
+
+- 33/33 ejercicios mapeados.
+- 26 assets RepDB.
+- 7 assets propios FÉNIX.
+- Curl femoral = RepDB `leg-curl` (lying canonical).
+
+QA no debe cambiar mappings visuales.
+
+**SHA-256 individuales de los 33 assets: DESCONOCIDO.**
+
+---
+
+# 10. FUNCIONALIDAD YA IMPLEMENTADA Y VALIDADA POR QA
+
+## 10.1 F2-B01 — Core State & Contracts
+
+Validado: post-commit freshness, cross-module reread, DailyMeal concurrency, canonical Training meal identity, exact dedup, anti ping-pong, Today rollback, global Nutrition reconciliation, canonical streak, schema 5/no reset.
+
+## 10.2 F2-B02 — Training Integrity
+
+Validado: start atomicity, active-session uniqueness, Planned/Execution linkage, terminal transitions, finish/discard, date validation, same-day identities, SetValues, save/toggle transactions, add lifecycle, active order uniqueness, toggle lifecycle, remove lifecycle.
+
+## 10.3 RC1
+
+Validado: Training remove/lifecycle, Nutrition integrity, Hoy/Progreso core, Backup/Recovery architecture, PWA/mobile source hardening y smoke fixes.
+
+## 10.4 RC1.1
+
+Validado: DailyMeal causal mutations, backup pending Training meal lifecycle, backup active ExerciseSet order, schema 5 invariants.
+
+## 10.5 RC2
+
+Validado: Training substitution causality, Backup cross-entity, NutritionGoal singleton, Improvised idempotency, streak determinism, Appetite material change, consolidated stress.
+
+## 10.6 RC2.1
+
+Validado runtime: Ingredient delete↔Recipe, Ingredient delete↔Basket, basket concurrent aggregation, Ingredient create/update uniqueness, shopping mutation sweep, clear checked rollback, stale RecipeIngredient→basket, runtime parent/child invariants, logical uniqueness Ingredient/ShoppingItem.
+
+## 10.7 RC2.2
+
+Validado final: shared normalization policy, backup logical Ingredient uniqueness, backup logical ShoppingItem uniqueness, soft-delete exclusions, unit case-sensitive contract, prevalidation, postvalidation y runtime↔backup alignment.
+
+Resultado QA final: **PASS**.
+
+---
+
+# 11. FUNCIONALIDAD PENDIENTE / BACKLOG, ORDENADA POR PRIORIDAD
+
+## P0 — QA posterior a migración
+
+1. No ejecutar nuevo QA hasta recibir autorización explícita de CENTRAL/Codex-CENTRAL.
+2. Para cualquier nueva build v2.1 exigir source bundle canónico, SHA-256, delta, baseline, acceptance criteria, out-of-scope, schema/migrations y referencias Golden/Media.
+3. Ejecutar pre-QA adversarial y QA integral según riesgo de v2.1.
+
+## P1 — después de CORE STABLE
+
+Del Prompt Maestro:
+
+- mejoras avanzadas de UX;
+- analítica;
+- visualizaciones;
+- optimizaciones;
+- notificaciones;
+- widgets;
+- automatizaciones;
+- funciones secundarias.
+
+QA no decide prioridad ni diseño.
+
+## P2
+
+Mejoras no necesarias para operación diaria.
+
+## v2.1
+
+El detalle completo de backlog funcional v2.1 **no pertenece a este chat QA y es DESCONOCIDO aquí**, salvo 26 Golden Renders, Media Freeze 33/33 y STOP-MEDIA-01 cerrado.
+
+---
+
+# 12. BUGS, RIESGOS, DEUDA CONOCIDA Y EDGE CASES
+
+## 12.1 Bugs abiertos al final de RC2.2
+
+**NINGUNO reproducido por QA.**
+
+## 12.2 Riesgos residuales de cobertura
+
+Históricamente el sandbox QA no pudo siempre completar `npm ci`, construir frontend, ejecutar PWA física en Chromium o montar el backup File Library como path binario.
+
+Cuando ocurrió, build/lint/TS se apoyaron en evidencia Ingeniería con caveat y los invariantes se atacaron mediante source + harnesses deterministas.
+
+Codex, si dispone de un entorno completo, debe preferir reproducción física.
+
+## 12.3 Chunk principal >500 kB
+
+Warning conocido durante entregas B02/RC. Tratado como conocido, no bloqueante y fuera de scope de esos bloques.
+
+No convertirlo automáticamente en blocker sin nueva decisión de CENTRAL.
+
+## 12.4 Riesgo de divergencia de policies
+
+RC2.2 introdujo policy compartida Nutrition Library. No volver a copiar normalizadores en runtime/backup/restore.
+
+## 12.5 Edge cases que deben permanecer en regresión
+
+- same-day sessions;
+- identical createdAt;
+- multiple Training identities;
+- completed vs pending Nutrition;
+- reprogram X→Y→Z→W;
+- omitted concurrente;
+- stale child mutations;
+- exact duplicate Pre/Post;
+- same-token improvised retry;
+- unit null vs whitespace;
+- unit `kg` vs `KG`;
+- active + soft-deleted duplicate identities;
+- baseline historic pending session.
+
+---
+
+# 13. INCIDENCIAS QA / PRE-QA HISTÓRICAS Y ESTADO
+
+## F2-B01
+
+| ID | Clase | Estado canónico |
+|---|---|---|
+| QA-B01-001 | invalidación causal post-commit | CLOSED |
+| QA-B01-002 | DailyMeal materialization/concurrency | CLOSED |
+| QA-B01-003 | Today stale persistence | CLOSED |
+| QA-B01-004 | colapso cross-session Training meals | CLOSED |
+| PREQA-B01-005 | exact Training identity dedup | CLOSED |
+| QA-B01-006 | stale global Nutrition reconciliation | CLOSED |
+
+Última corrección B01 relevante: `v2.0.0-b01.5`.
+
+## F2-B02
+
+| ID | Clase | Estado canónico |
+|---|---|---|
+| PREQA-B02-001 | completed ExerciseSet domain | CLOSED |
+| QA-B02-001 | addExerciseSet orphan lifecycle | CLOSED |
+| QA-B02-002 | duplicate order concurrent adds | CLOSED |
+| QA-B02-003 | stale toggle tras terminalización | CLOSED |
+| QA-B02-004 | stale remove rompe lifecycle | CLOSED |
+
+QA-B02-004 quedó absorbida/corregida en RC1 y cubierta por R-series.
+
+## RC1.1 PRE-QA
+
+| ID | Clase | Estado |
+|---|---|---|
+| PREQA-RC1-001 | DailyMeal stale mutations | CLOSED |
+| PREQA-RC1-002 | pending Training meal lifecycle backup | CLOSED |
+| PREQA-RC1-003 | active ExerciseSet order backup | CLOSED |
+
+## QA Integral #1 → RC2
+
+| ID | Severidad original | Clase | Estado |
+|---|---:|---|---|
+| QA-RC11-001 | ALTA | Training substitute stale | CLOSED |
+| QA-RC11-002 | ALTA | Backup cross-entity incompleto | CLOSED |
+| QA-RC11-003 | ALTA | NutritionGoal singleton | CLOSED |
+| QA-RC11-004 | MEDIA | Improvised double-submit | CLOSED |
+| QA-RC11-005 | MEDIA | streak same-day nondeterminista | CLOSED |
+| QA-RC11-006 | MEDIA | Appetite no-op material | CLOSED |
+
+## PREQA-RC2
+
+| ID | Clase | Estado |
+|---|---|---|
+| PREQA-RC2-001 | Ingredient/Recipe/Shopping lifecycle TOCTOU | CLOSED en runtime |
+
+## QA Integral Final #2
+
+| ID | Severidad original | Clase | Estado |
+|---|---:|---|---|
+| QA-RC21-001 | ALTA | backup logical Ingredient/Shopping uniqueness | CLOSED en RC2.2 |
+
+## Ledger QA al finalizar RC2.2
+
+- CRÍTICAS abiertas: `0`
+- ALTAS abiertas: `0`
+- MEDIAS abiertas: `0`
+- BAJAS abiertas: `0`
+
+---
+
+# 14. INVARIANTES Y CASOS DE REGRESIÓN QUE NUNCA DEBEN PERDERSE
+
+## 14.1 B01
+
+- streak policy;
+- freshness policy;
+- C01 post-commit;
+- C02 Nutrition concurrency;
+- C03 Today latest-wins;
+- C04/C05 stress/counts;
+- D01-D07 Training identity reconciliation;
+- D08-D12 Today rollback;
+- E01 exact dedup/anti ping-pong;
+- F01-F10 global Nutrition reconciliation;
+- source/correction/global invariants.
+
+## 14.2 B02
+
+- T01–T48 Training integrity / Set domain;
+- U01–U12 add parent/order;
+- V01–V10 toggle lifecycle;
+- R01–R10 remove lifecycle;
+- active orphan scan;
+- active order uniqueness;
+- max one active WorkoutSession.
+
+## 14.3 RC1
+
+- N01–N08 Nutrition integrity;
+- Hoy focus 0/1/2+/active/terminal;
+- weight trend 2+2 / 3+3;
+- Backup atomicity/recovery;
+- PWA source hardening;
+- smoke fixes.
+
+## 14.4 RC1.1
+
+- M01–M10 DailyMeal causality + stress;
+- pending Training meal backup B01–B06;
+- active ExerciseSet order C01–C04.
+
+## 14.5 RC2
+
+- S01–S10 Training substitute;
+- K01–K12 Backup cross-entity;
+- G01–G08 NutritionGoal;
+- I01–I06 Improvised idempotency;
+- P01–P08 Streak determinism;
+- A01–A10 Appetite;
+- consolidated stress 500.
+
+## 14.6 RC2.1
+
+- L01–L14 Nutrition Library causality;
+- root-cause stress 350;
+- runtime parent/child scans.
+
+## 14.7 RC2.2
+
+- Q01 `Arroz/arroz` active → REJECT
+- Q02 `Arroz/ARROZ` active → REJECT
+- Q03 active + equivalent soft-deleted → ACCEPT
+- Q04 different names → ACCEPT
+- Q05 same Ingredient `kg/" kg "` → REJECT
+- Q06 same Ingredient `null/whitespace` → REJECT
+- Q07 equivalent ShoppingItem + one soft-deleted → ACCEPT
+- Q08 same unit + different Ingredients → ACCEPT
+- Q09 `kg/KG` → ACCEPT
+- Q10 corrupt duplicate Ingredient pre-restore → REJECT
+- Q11 corrupt duplicate ShoppingItem pre-restore → REJECT
+- Q12 official baseline 759 → PASS
+
+## 14.8 Runtime↔Backup matrix
+
+Debe seguir PASS/PASS:
+
+1. RecipeIngredient active → Recipe active.
+2. RecipeIngredient active → Ingredient active.
+3. ShoppingItem active → Ingredient active.
+4. normalized active Ingredient name unique.
+5. ShoppingItem `ingredientId + normalizedUnit` unique.
+
+## 14.9 Histórico crítico
+
+Siempre verificar:
+
+`775635cc-ec59-4b44-a566-d722ae4664d7`
+
+`2026-09-04 · Lower B · pending`
+
+No resolver automáticamente.
+
+---
+
+# 15. ARTEFACTOS, DOCUMENTOS, BUNDLES, VERSIONES Y SHA-256 CANÓNICOS CONOCIDOS
+
+## Gobierno
+
+- `PROMPT MAESTRO — FÉNIX v2.docx` — SHA-256: **DESCONOCIDO**
+- `FÉNIX v2 — Baseline Funcional.docx` — SHA-256: **DESCONOCIDO**
+
+## Backup baseline oficial
+
+`fenix-backup-2026-09-06T13-27-03-525Z.json`
+
+SHA-256:
+
+`3686d872e64d83f7fea7053fab9f2e32508bd525c50180431a5b437bad8e8732`
+
+759 records.
+
+## F2-B01
+
+- `v2.0.0-b01.2` SOURCE SHA: `9dc46dc6fd83f7bb80e9320afac236133bfb6cfde09f204eaf8a808e4af88587`
+- `v2.0.0-b01.4` SOURCE SHA: `284d8d1187214ad651c49a7691a9db6587ee328b24b7544bfabd10e3b2e3cb65`
+- `v2.0.0-b01.5` SOURCE SHA: `d5b5316f063af51706bd3ee55beb6a7175f60422526662988cb1348fc839d9e6`
+
+## F2-B02
+
+- `v2.0.0-b02.2` SOURCE SHA: `976968e9938406dbc78c0835fbe269cbae199b52835f27f234a96eb65a85b47d`
+- `v2.0.0-b02.3` SOURCE SHA: `31c3df7865be4804d061bb4b9b9f1b2f15b8871789842d700c84db69f3e06b68`
+- `v2.0.0-b02.4` SOURCE SHA: `f0ae29382ca19f14aabd8d9418d0dc392f84a490a0684d19aa3c5ae51f03839a`
+
+## RC1
+
+SOURCE bundle exact SHA-256: **DESCONOCIDO**
+
+## RC1.1
+
+`FENIX_v2_CORE_STABLE_v2.0.0-rc.1.1_SOURCE_BUNDLE.zip`
+
+SHA-256:
+
+`e7159c2c1c9a6df1ea1117eacbded42d68c7e56345ecf634f345702ffaf6f0f5`
+
+PATCH SHA-256:
+
+`a00b00a512121676c3091b0654024a850ea4caaf8b1d199a73d74b6e2a6d5ff9`
+
+## RC2
+
+SOURCE bundle exact SHA-256: **DESCONOCIDO**
+
+## RC2.1
+
+`FENIX_v2_CORE_STABLE_v2.0.0-rc.2.1_SOURCE_BUNDLE.zip`
+
+SOURCE SHA:
+
+`179aeb1682edf404cec7086abedf56d27ae7bc974bb3965521a9db9369c2da6a`
+
+PATCH SHA:
+
+`00af07fa42766db78f369cae1a10d21fb5fe765d599756919914419489e8edaa`
+
+## RC2.2 — último artefacto QA validado
+
+`FENIX_v2_CORE_STABLE_v2.0.0-rc.2.2_SOURCE_BUNDLE.zip`
+
+SOURCE SHA:
+
+`f98d902d245dcd3cc0a6db5eca4d40afa4b1bca3e7f7f00a9238d16f32fab617`
+
+PATCH:
+
+`FENIX_v2_CORE_STABLE_v2.0.0-rc.2.2_PATCH.zip`
+
+PATCH SHA:
+
+`a4bbafebcf7f409ad1ff80f975894f682aff89e70ff49c8b03b47f119d5317d0`
+
+SOURCE count: `159 archivos`
+
+## Final v2.0.0 formal artifact
+
+- Nombre exacto: **DESCONOCIDO**
+- SHA: **DESCONOCIDO**
+- Commit: **DESCONOCIDO**
+- Tag: **DESCONOCIDO**
+- Estado formal CENTRAL: **DESCONOCIDO desde QA**, pese a recomendación QA PASS.
+
+## Golden Renders / Media
+
+Hashes exactos: **DESCONOCIDO**
+
+No inventarlos.
+
+---
+
+# 16. STOP CONDITIONS QUE REQUIEREN DECISIÓN DE CENTRAL
+
+Detener decisión y escalar a CENTRAL si ocurre cualquiera:
+
+1. Contradicción material entre fuentes/contratos.
+2. Necesidad de cambiar ownership funcional.
+3. Necesidad de inventar un nuevo estado.
+4. Necesidad de cambiar semántica de estado.
+5. Necesidad de introducir schema 6/migración.
+6. Necesidad de reset/reseed/repair destructivo.
+7. Cambio que reescriba historia válida.
+8. Cambio de identidad canónica de DailyMeal Training.
+9. Cambio de unicidades lógicas Ingredient/Shopping.
+10. Cambio de normalización `kg/KG`.
+11. Cambio de policy de racha.
+12. Cambio de tratamiento same-day.
+13. Cambio de Golden Render canónico.
+14. Cambio de Media Freeze/mapping ejercicio.
+15. Detección de CRÍTICA/ALTA en QA.
+16. Artefacto cuyo SHA no coincide con handoff.
+17. Bundle no inequívoco o mezclado con producción no autorizada.
+18. Cambios fuera de scope material.
+19. Build/test que requiere asumir dependencias no incluidas.
+20. Release declaration/tag/commit final.
+21. Duda sobre si un comportamiento es defecto o nueva feature.
+22. Incapacidad de distinguir falso positivo de historial legítimo.
+23. Necesidad de resolver unilateralmente una decisión A/B.
+24. Cualquier situación en la que Codex deba interpretar intención para suplir una decisión ausente.
+
+---
+
+# 17. QUÉ NO DEBE ASUMIR NI REINTERPRETAR CODEX
+
+Codex NO debe asumir:
+
+- que QA puede cerrar formalmente una release;
+- que `v2.0.0` fue formalmente publicada solo porque QA recomendó aprobar;
+- que schema 5 puede evolucionar sin CENTRAL;
+- que same-day significa una sesión por fecha;
+- que Pre/Post se identifican solo por `date+role`;
+- que un collage visual sustituye Golden Render individual;
+- que “más bonito” permite cambiar contrato;
+- que un test verde elimina necesidad de QA adversarial;
+- que busy UI sustituye transacción;
+- que completed/skipped pueden reconciliarse como pending;
+- que reprogramar permite reescribir hechos consumidos;
+- que una sesión omitted puede borrar consumo histórico;
+- que `kg` y `KG` son equivalentes;
+- que soft-deleted participa en unicidad activa;
+- que order debe ser consecutivo;
+- que streak puede depender del orden incidental del array;
+- que un set completed puede volver a domain draft;
+- que una sesión terminal puede recibir mutaciones operativas stale;
+- que Restore puede aceptar algo que runtime no puede generar;
+- que el backup oficial puede repararse automáticamente;
+- que el histórico Lower B puede resolverse para limpiar estado;
+- que v2.1 está QA-validada;
+- que el Media Freeze puede cambiarse;
+- que los SHA desconocidos pueden derivarse del nombre del fichero;
+- que un fallo de instalación del sandbox es defecto FÉNIX.
+
+---
+
+# 18. PRÓXIMA ACCIÓN RECOMENDADA DESDE EL PUNTO ACTUAL
+
+## 18.1 Durante migración
+
+1. Añadir este archivo al repositorio como fuente permanente.
+2. Mantener QA congelada.
+3. No iniciar implementación ni test adicional desde este handoff.
+4. Codex debe leer también Prompt Maestro, Baseline Funcional, fuentes/handoffs de CENTRAL y handoffs canónicos de Hoy/Training/Nutrition/Progreso/Ingeniería.
+5. Reconstruir un índice común de contratos sin modificar decisiones.
+
+## 18.2 Al reanudar el proyecto
+
+Esperar un mensaje/handoff explícito de CENTRAL/Codex-CENTRAL.
+
+Para v2.1, el siguiente QA solo debe empezar cuando se entreguen:
+
+- versión;
+- SOURCE BUNDLE exacto;
+- SHA-256;
+- baseline objetivo;
+- delta;
+- contratos afectados;
+- acceptance criteria;
+- out-of-scope;
+- schema/migrations;
+- referencia exacta a Golden Renders;
+- referencia exacta a Media Freeze;
+- evidencia de Ingeniería.
+
+## 18.3 Estrategia QA recomendada cuando sea autorizado
+
+Por el aprendizaje acumulado, preferir:
+
+**una implementación consolidada → pre-QA fuerte → QA integral adversarial único**
+
+en lugar de micro-rondas por una incidencia cada vez, siempre que CENTRAL autorice ese ciclo.
+
+El QA integral debe seguir buscando causas nuevas aunque encuentre una incidencia temprano, para devolver a Ingeniería un ledger consolidado.
+
+## 18.4 Acción inmediata
+
+**NO AVANZAR MÁS TRABAJO DEL PROYECTO DESDE ESTA ÁREA HASTA NUEVA AUTORIZACIÓN DE CENTRAL.**
+
+---
+
+# 19. CONTRADICCIONES / DATOS NO DETERMINABLES
+
+## 19.1 Release formal v2.0.0
+
+Versión A:
+- QA final RC2.2 = PASS.
+- QA recomendó aprobar para release.
+
+Versión B:
+- no consta en este chat la emisión posterior de cierre formal/tag/commit de CENTRAL.
+
+**No resolver. Estado: DESCONOCIDO.**
+
+## 19.2 Estado exacto de implementación v2.1
+
+Se conoce:
+- Golden Renders aprobados;
+- Media Freeze 33/33;
+- STOP-MEDIA-01 cerrado.
+
+No consta en QA un artefacto v2.1 canónico ya autorizado para test.
+
+**Estado QA v2.1: PENDIENTE / artefacto QA DESCONOCIDO.**
+
+## 19.3 SHA de Prompt Maestro / Baseline / Golden Renders / assets media
+
+**DESCONOCIDO.**
+
+No inventar.
+
+---
+
+# 20. CHECKLIST DE ARRANQUE PARA CODEX-QA
+
+Antes de ejecutar cualquier QA nuevo:
+
+- [ ] CENTRAL autorizó explícitamente QA.
+- [ ] Tengo versión exacta.
+- [ ] Tengo SOURCE BUNDLE exacto.
+- [ ] SHA coincide.
+- [ ] Scope está definido.
+- [ ] Out-of-scope está definido.
+- [ ] AC están definidos.
+- [ ] Sé qué clases históricas deben permanecer cerradas.
+- [ ] Sé si schema cambia.
+- [ ] Tengo backup baseline o evidencia equivalente.
+- [ ] Tengo Golden Renders aplicables.
+- [ ] Tengo Media Freeze aplicable.
+- [ ] He separado evidencia Ingeniería de evidencia QA.
+- [ ] He preparado ataques fuera de tests entregados.
+- [ ] Continuaré auditando todo el scope aunque encuentre una incidencia antes del final.
+- [ ] No modificaré código.
+- [ ] No cerraré formalmente release.
+
+---
+
+**FIN — FENIX_CODEX_HANDOFF_QA_REVISION_CRITICA_v1.0**

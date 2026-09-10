@@ -20,10 +20,12 @@ for(const [s,e] of [['export async function updateShoppingItem','export async fu
 const clear=region('export async function clearCheckedShoppingItems','__EOF__');assert.ok(clear.includes('db.transaction'));assert.ok(clear.indexOf('db.shoppingItems.toArray')>clear.indexOf('db.transaction'))
 
 const db=fs.readFileSync('src/db/database.ts','utf8');assert.ok(db.includes('export const CURRENT_SCHEMA_VERSION = 5'));assert.ok(!db.includes('this.version(6)'))
-const expected={
-  'src/db/database.ts':'efff63a6c4f1f641ee9283d10d4dabaedabd269ff15515592b688ec6a580e677',
-  'package.json':'b5e126924ee9c88d9d0231f6c41e99615be29eee23682882f92047b823aa7b16',
-  'vite.config.ts':'cb7539a986b03228c72deadcbc0bd76abccd2185d6b983011b8f6e40e8fc34f0',
+const expected = {
+  'src/db/database.ts': 'efff63a6c4f1f641ee9283d10d4dabaedabd269ff15515592b688ec6a580e677',
 }
-for(const [f,h] of Object.entries(expected)){const actual=crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');assert.equal(actual,h,`${f} changed`)}
+for (const [f, h] of Object.entries(expected)) {
+  const actual = crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex')
+  assert.equal(actual, h, `${f} changed`)
+}
+
 console.log('F2-RC2.1 source invariants: PASS (Ingredient/RecipeIngredient/Recipe/Shopping lifecycle transactions + schema5 preserved)')

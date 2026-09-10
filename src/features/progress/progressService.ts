@@ -1,4 +1,7 @@
 import { db } from '../../db/database'
+import { getLocalDateKey, shiftDateKey } from '../../utils/date'
+import { createUuid } from '../../utils/uuid'
+export { getLocalDateKey } from '../../utils/date'
 import { publishCommittedMutation } from '../../app/freshnessEvents'
 import type {
   BodyMeasurement,
@@ -54,26 +57,12 @@ function entityBase() {
   const now = new Date().toISOString()
 
   return {
-    id: crypto.randomUUID(),
+    id: createUuid(),
     createdAt: now,
     updatedAt: now,
     deletedAt: null,
     version: 1,
   }
-}
-
-export function getLocalDateKey(date = new Date()) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-
-  return `${year}-${month}-${day}`
-}
-
-function shiftDateKey(dateKey: string, days: number) {
-  const date = new Date(`${dateKey}T12:00:00`)
-  date.setDate(date.getDate() + days)
-  return getLocalDateKey(date)
 }
 
 function mean(values: number[]) {
@@ -309,36 +298,58 @@ export async function addWeightEntry(input: {
   fatMassKg?: number | null
   muscleMassKg?: number | null
   biaSource?: string | null
+  allowAdditionalSameDay?: boolean
 }) {
-  if (!Number.isFinite(input.weightKg) || input.weightKg <= 0) {
-    throw new Error('Introduce un peso válido.')
-  }
+  if (!Number.isFinite(input.weightKg) || input.weightKg <= 0) throw new Error('Introduce un peso válido.')
 
   const recordedAt = input.recordedAt ?? new Date().toISOString()
   const date = getLocalDateKey(new Date(recordedAt))
+  let result: WeightEntry | null = null
 
-  const entry: WeightEntry = {
-    ...entityBase(),
-    date,
-    recordedAt,
-    weightKg: round(input.weightKg, 2),
-    comparable: input.comparable,
-    exceptionNote: input.exceptionNote?.trim() || null,
-    notes: input.notes?.trim() || null,
-    bodyFatPercent: input.bodyFatPercent ?? null,
-    fatMassKg: input.fatMassKg ?? null,
-    muscleMassKg: input.muscleMassKg ?? null,
-    biaSource: input.biaSource?.trim() || null,
-  }
+  await db.transaction('rw', db.weightEntries, async () => {
+    const sameDay = (await db.weightEntries.where('date').equals(date).toArray())
+      .filter((item) => item.deletedAt === null)
+      .sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt) || b.id.localeCompare(a.id))
+    const existing = !input.allowAdditionalSameDay && input.comparable
+      ? sameDay.find((item) => item.comparable)
+      : undefined
+    const normalized = {
+      date,
+      recordedAt,
+      weightKg: round(input.weightKg, 2),
+      comparable: input.comparable,
+      exceptionNote: input.exceptionNote?.trim() || null,
+      notes: input.notes?.trim() || null,
+      bodyFatPercent: input.bodyFatPercent ?? null,
+      fatMassKg: input.fatMassKg ?? null,
+      muscleMassKg: input.muscleMassKg ?? null,
+      biaSource: input.biaSource?.trim() || null,
+    }
 
-  await db.weightEntries.add(entry)
+    if (existing) {
+      const updated: WeightEntry = {
+        ...existing,
+        ...normalized,
+        updatedAt: new Date().toISOString(),
+        version: existing.version + 1,
+      }
+      await db.weightEntries.put(updated)
+      result = updated
+      return
+    }
+
+    const entry: WeightEntry = { ...entityBase(), ...normalized }
+    await db.weightEntries.add(entry)
+    result = entry
+  })
+
   publishCommittedMutation('progress')
-  return entry
+  if (!result) throw new Error('No se ha podido guardar el peso.')
+  return result
 }
 
 export async function getWeightHistory() {
   const entries = await db.weightEntries.toArray()
-
   return entries
     .filter((entry) => entry.deletedAt === null)
     .sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))
@@ -346,8 +357,7 @@ export async function getWeightHistory() {
 
 export async function updateWeightEntry(
   id: string,
-  patch: Partial<Pick<
-    WeightEntry,
+  patch: Partial<Pick<WeightEntry,
     | 'weightKg'
     | 'recordedAt'
     | 'comparable'
@@ -356,41 +366,35 @@ export async function updateWeightEntry(
     | 'bodyFatPercent'
     | 'fatMassKg'
     | 'muscleMassKg'
-    | 'biaSource'
-  >>,
+    | 'biaSource'>>,
 ) {
-  const current = await db.weightEntries.get(id)
-
-  if (!current) {
-    throw new Error('Registro de peso no encontrado.')
-  }
-
-  const recordedAt = patch.recordedAt ?? current.recordedAt
-
-  await db.weightEntries.update(id, {
-    ...patch,
-    date: getLocalDateKey(new Date(recordedAt)),
-    updatedAt: new Date().toISOString(),
-    version: current.version + 1,
+  await db.transaction('rw', db.weightEntries, async () => {
+    const current = await db.weightEntries.get(id)
+    if (!current || current.deletedAt !== null) throw new Error('Registro de peso no encontrado.')
+    if (patch.weightKg !== undefined && (!Number.isFinite(patch.weightKg) || patch.weightKg <= 0)) {
+      throw new Error('Introduce un peso válido.')
+    }
+    const recordedAt = patch.recordedAt ?? current.recordedAt
+    await db.weightEntries.update(id, {
+      ...patch,
+      date: getLocalDateKey(new Date(recordedAt)),
+      updatedAt: new Date().toISOString(),
+      version: current.version + 1,
+    })
   })
-
   publishCommittedMutation('progress')
 }
 
 export async function deleteWeightEntry(id: string) {
-  const current = await db.weightEntries.get(id)
-
-  if (!current) {
-    return
-  }
-
-  await db.weightEntries.update(id, {
-    deletedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    version: current.version + 1,
+  let changed = false
+  await db.transaction('rw', db.weightEntries, async () => {
+    const current = await db.weightEntries.get(id)
+    if (!current || current.deletedAt !== null) return
+    const now = new Date().toISOString()
+    await db.weightEntries.update(id, { deletedAt: now, updatedAt: now, version: current.version + 1 })
+    changed = true
   })
-
-  publishCommittedMutation('progress')
+  if (changed) publishCommittedMutation('progress')
 }
 
 export async function addBodyMeasurement(input: {
@@ -400,20 +404,11 @@ export async function addBodyMeasurement(input: {
   notes?: string | null
   recordedAt?: string
 }) {
-  const values = [input.waistCm, input.rightArmCm, input.leftArmCm].filter(
-    (value): value is number => value !== null,
-  )
-
-  if (values.length === 0) {
-    throw new Error('Introduce al menos una medida corporal.')
-  }
-
-  if (values.some((value) => !Number.isFinite(value) || value <= 0)) {
-    throw new Error('Introduce medidas válidas.')
-  }
+  const values = [input.waistCm, input.rightArmCm, input.leftArmCm].filter((value): value is number => value !== null)
+  if (values.length === 0) throw new Error('Introduce al menos una medida corporal.')
+  if (values.some((value) => !Number.isFinite(value) || value <= 0)) throw new Error('Introduce medidas válidas.')
 
   const recordedAt = input.recordedAt ?? new Date().toISOString()
-
   const measurement: BodyMeasurement = {
     ...entityBase(),
     date: getLocalDateKey(new Date(recordedAt)),
@@ -423,82 +418,90 @@ export async function addBodyMeasurement(input: {
     leftArmCm: input.leftArmCm,
     notes: input.notes?.trim() || null,
   }
-
-  await db.bodyMeasurements.add(measurement)
+  await db.transaction('rw', db.bodyMeasurements, async () => {
+    await db.bodyMeasurements.add(measurement)
+  })
   publishCommittedMutation('progress')
   return measurement
 }
 
 export async function getBodyMeasurements() {
   const items = await db.bodyMeasurements.toArray()
-
-  return items
-    .filter((item) => item.deletedAt === null)
-    .sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))
+  return items.filter((item) => item.deletedAt === null).sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))
 }
 
-export async function deleteBodyMeasurement(id: string) {
-  const current = await db.bodyMeasurements.get(id)
-
-  if (!current) {
-    return
-  }
-
-  await db.bodyMeasurements.update(id, {
-    deletedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    version: current.version + 1,
+export async function updateBodyMeasurement(
+  id: string,
+  patch: Partial<Pick<BodyMeasurement, 'waistCm' | 'rightArmCm' | 'leftArmCm' | 'notes' | 'recordedAt'>>,
+) {
+  await db.transaction('rw', db.bodyMeasurements, async () => {
+    const current = await db.bodyMeasurements.get(id)
+    if (!current || current.deletedAt !== null) throw new Error('Medición corporal no encontrada.')
+    const waistCm = patch.waistCm === undefined ? current.waistCm : patch.waistCm
+    const rightArmCm = patch.rightArmCm === undefined ? current.rightArmCm : patch.rightArmCm
+    const leftArmCm = patch.leftArmCm === undefined ? current.leftArmCm : patch.leftArmCm
+    const values = [waistCm, rightArmCm, leftArmCm].filter((value): value is number => value !== null)
+    if (values.length === 0 || values.some((value) => !Number.isFinite(value) || value <= 0)) {
+      throw new Error('Introduce al menos una medida válida.')
+    }
+    const recordedAt = patch.recordedAt ?? current.recordedAt
+    await db.bodyMeasurements.update(id, {
+      ...patch,
+      date: getLocalDateKey(new Date(recordedAt)),
+      updatedAt: new Date().toISOString(),
+      version: current.version + 1,
+    })
   })
-
   publishCommittedMutation('progress')
 }
 
+export async function deleteBodyMeasurement(id: string) {
+  let changed = false
+  await db.transaction('rw', db.bodyMeasurements, async () => {
+    const current = await db.bodyMeasurements.get(id)
+    if (!current || current.deletedAt !== null) return
+    const now = new Date().toISOString()
+    await db.bodyMeasurements.update(id, { deletedAt: now, updatedAt: now, version: current.version + 1 })
+    changed = true
+  })
+  if (changed) publishCommittedMutation('progress')
+}
+
 export async function getFeaturedExerciseOptions() {
-  const [exercises, featured] = await Promise.all([
-    db.exercises.toArray(),
-    db.progressFeaturedExercises.toArray(),
-  ])
-
-  const activeFeatured = featured
-    .filter((item) => item.deletedAt === null)
-    .sort((a, b) => a.order - b.order)
-
+  const [exercises, featured] = await Promise.all([db.exercises.toArray(), db.progressFeaturedExercises.toArray()])
+  const activeFeatured = featured.filter((item) => item.deletedAt === null).sort((a, b) => a.order - b.order)
   const selected = new Set(activeFeatured.map((item) => item.exerciseId))
-
   return exercises
     .filter((exercise) => exercise.deletedAt === null)
     .sort((a, b) => a.name.localeCompare(b.name, 'es'))
-    .map((exercise) => ({
-      exercise,
-      selected: selected.has(exercise.id),
-    }))
+    .map((exercise) => ({ exercise, selected: selected.has(exercise.id) }))
 }
 
 export async function setFeaturedExercises(exerciseIds: string[]) {
   const uniqueIds = [...new Set(exerciseIds)].slice(0, 5)
-  const current = await db.progressFeaturedExercises.toArray()
-  const now = new Date().toISOString()
 
-  await db.transaction('rw', db.progressFeaturedExercises, async () => {
-    for (const item of current) {
-      if (item.deletedAt === null) {
-        await db.progressFeaturedExercises.update(item.id, {
-          deletedAt: now,
-          updatedAt: now,
-          version: item.version + 1,
-        })
-      }
+  await db.transaction('rw', db.progressFeaturedExercises, db.exercises, async () => {
+    const exercises = await db.exercises.bulkGet(uniqueIds)
+    if (exercises.some((item) => !item || item.deletedAt !== null)) {
+      throw new Error('La selección contiene un ejercicio no disponible.')
     }
-
+    const current = await db.progressFeaturedExercises.toArray()
+    const now = new Date().toISOString()
+    const active = current.filter((item) => item.deletedAt === null)
+    if (active.length > 0) {
+      await db.progressFeaturedExercises.bulkPut(active.map((item) => ({
+        ...item,
+        deletedAt: now,
+        updatedAt: now,
+        version: item.version + 1,
+      })))
+    }
     const next: ProgressFeaturedExercise[] = uniqueIds.map((exerciseId, index) => ({
       ...entityBase(),
       exerciseId,
       order: index + 1,
     }))
-
-    if (next.length > 0) {
-      await db.progressFeaturedExercises.bulkAdd(next)
-    }
+    if (next.length > 0) await db.progressFeaturedExercises.bulkAdd(next)
   })
 
   publishCommittedMutation('progress')

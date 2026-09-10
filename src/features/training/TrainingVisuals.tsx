@@ -1,5 +1,8 @@
+import { LicensedExerciseMotion } from './media/LicensedExerciseMotion'
+import { useId, useState } from 'react'
 import type { Exercise } from '../../types/training'
 import type { TrainingTemplateView } from './trainingService'
+import { getExerciseMedia } from './media/exerciseMediaRegistry'
 
 type MuscleZone =
   | 'chest'
@@ -40,50 +43,48 @@ function activeZones(muscles: string[]) {
   return new Set(muscles.flatMap(zonesForMuscle))
 }
 
-function Zone({
-  zone,
-  active,
-  d,
-}: {
-  zone: MuscleZone
-  active: Set<MuscleZone>
-  d: string
-}) {
-  return <path className={active.has(zone) ? 'anatomy-zone is-active' : 'anatomy-zone'} d={d} />
-}
-
-function AnatomyFigure({
-  active,
-  back = false,
-}: {
-  active: Set<MuscleZone>
-  back?: boolean
-}) {
-  return (
-    <svg viewBox="0 0 94 178" aria-hidden="true">
-      <circle className="anatomy-base" cx="47" cy="15" r="10" />
-      <path className="anatomy-base" d="M36 28c-8 5-11 15-11 29l4 35 6 24 3 49h9l1-48h-2V90h2v27l1 48h9l3-49 6-24 4-35c0-14-3-24-11-29l-8-4H44l-8 4Z" />
-      {!back ? (
-        <>
-          <Zone zone="shoulders" active={active} d="M35 31 24 41l4 17 12-8-1-17Zm24 0 11 10-4 17-12-8 1-17Z" />
-          <Zone zone="chest" active={active} d="M39 34h16l5 17-13 8-13-8 5-17Z" />
-          <Zone zone="arms" active={active} d="M25 45 19 70l6 22 7-2-3-25 5-20Zm44 0 6 25-6 22-7-2 3-25-5-20Z" />
-          <Zone zone="core" active={active} d="M40 56h14l4 31-11 9-11-9 4-31Z" />
-          <Zone zone="quads" active={active} d="M35 95 39 117l2 42h7l-1-42-1-22Zm24 0-4 22-2 42h-7l1-42 1-22Z" />
-          <Zone zone="calves" active={active} d="M38 122 39 165h8l-1-43Zm18 0-1 43h-8l1-43Z" />
-        </>
-      ) : (
-        <>
-          <Zone zone="shoulders" active={active} d="M35 31 24 41l4 17 12-8-1-17Zm24 0 11 10-4 17-12-8 1-17Z" />
-          <Zone zone="back" active={active} d="M38 34h18l8 19-6 31-11 8-11-8-6-31 8-19Z" />
-          <Zone zone="arms" active={active} d="M25 45 19 70l6 22 7-2-3-25 5-20Zm44 0 6 25-6 22-7-2 3-25-5-20Z" />
-          <Zone zone="glutes" active={active} d="M35 88c2 12 6 18 12 18s10-6 12-18l-12-5-12 5Z" />
-          <Zone zone="hamstrings" active={active} d="M35 103 39 124l2 35h7l-1-42-1-14Zm24 0-4 21-2 35h-7l1-42 1-14Z" />
-          <Zone zone="calves" active={active} d="M38 127 39 165h8l-1-38Zm18 0-1 38h-8l1-38Z" />
-        </>
-      )}
-    </svg>
-  )
+/** Decorative anatomical map; dynamic highlights consume the exercise's existing muscle facts. */
+function AnatomyFigure({ active, back = false }: { active: Set<MuscleZone>; back?: boolean }) {
+  const id = useId().replace(/:/g, '')
+  const zones: Array<[MuscleZone, string]> = [
+    ['shoulders', 'M37 44Q25 45 23 57L24 66Q33 66 39 57ZM83 44Q95 45 97 57L96 66Q87 66 81 57Z'],
+    ['arms', 'M25 65Q20 68 20 78L23 91Q31 86 34 73L35 63ZM95 65Q100 68 100 78L97 91Q89 86 86 73L85 63Z'],
+    ['arms', 'M23 92Q17 105 16 119L22 121Q29 111 30 95ZM97 92Q103 105 104 119L98 121Q91 111 90 95Z'],
+    ...(back ? [
+      ['back', 'M48 40 41 43 43 64 58 73 59 48ZM72 40 79 43 77 64 62 73 61 48Z'],
+      ['back', 'M39 64Q37 84 44 103L58 112 58 77ZM81 64Q83 84 76 103L62 112 62 77Z'],
+      ['back', 'M49 97 47 113 59 123 59 100ZM71 97 73 113 61 123 61 100Z'],
+      ['glutes', 'M45 117Q36 128 38 145 51 153 59 142L59 123ZM75 117Q84 128 82 145 69 153 61 142L61 123Z'],
+      ['hamstrings', 'M38 150Q36 165 39 186L49 191Q54 169 57 150ZM82 150Q84 165 81 186L71 191Q66 169 63 150Z'],
+      ['hamstrings', 'M50 150 48 180 53 188 58 161ZM70 150 72 180 67 188 62 161Z'],
+    ] as Array<[MuscleZone,string]> : [
+      ['chest', 'M40 48Q48 43 58 48L58 69Q43 72 36 61ZM80 48Q72 43 62 48L62 69Q77 72 84 61Z'],
+      ['core', 'M47 74Q52 70 58 74V82H48ZM73 74Q68 70 62 74V82H72Z'],
+      ['core', 'M49 84H58V93H50ZM71 84H62V93H70Z'],
+      ['core', 'M50 95H58V105H51ZM70 95H62V105H69Z'],
+      ['core', 'M51 108H58V120L54 117ZM69 108H62V120L66 117Z'],
+      ['core', 'M38 74 47 84 49 112 43 106ZM82 74 73 84 71 112 77 106Z'],
+      ['quads', 'M41 129Q33 147 38 168L44 185Q53 166 52 147L48 128ZM79 129Q87 147 82 168L76 185Q67 166 68 147L72 128Z'],
+      ['quads', 'M54 130Q61 137 58 160L52 179 47 183Q55 156 54 130ZM66 130Q59 137 62 160L68 179 73 183Q65 156 66 130Z'],
+      ['quads', 'M43 173Q44 189 50 188L53 174 49 161ZM77 173Q76 189 70 188L67 174 71 161Z'],
+    ] as Array<[MuscleZone,string]>),
+    ['calves', back ? 'M40 195Q31 212 41 226L47 229Q53 211 49 196ZM80 195Q89 212 79 226L73 229Q67 211 71 196Z' : 'M40 195Q37 214 43 231L47 231 49 196ZM80 195Q83 214 77 231L73 231 71 196Z'],
+  ]
+  return <svg viewBox="0 0 120 260" aria-hidden="true">
+    <defs>
+      <linearGradient id={`${id}-body`} x1="0" x2="1"><stop stopColor="#141719"/><stop offset=".4" stopColor="#424649"/><stop offset=".65" stopColor="#2b2e30"/><stop offset="1" stopColor="#101315"/></linearGradient>
+      <radialGradient id={`${id}-muscle`} cx="40%" cy="28%" r="75%"><stop stopColor="#414548"/><stop offset=".55" stopColor="#292d2f"/><stop offset="1" stopColor="#101315"/></radialGradient>
+      <radialGradient id={`${id}-active`} cx="35%" cy="25%" r="75%"><stop stopColor="#ff4b4e"/><stop offset=".5" stopColor="#f20c1a"/><stop offset="1" stopColor="#8c020b"/></radialGradient>
+    </defs>
+    <g fill={`url(#${id}-body)`} stroke="#44484a" strokeWidth=".7">
+      <path d="M51 30 49 39Q31 39 24 48 18 61 20 81L15 111 13 125 16 135 19 130 20 135 23 129 24 121 32 104 35 84 42 106 40 120Q32 141 36 166L39 189 36 214 39 240 35 249 43 252 50 250 50 239 52 218 51 190 58 159 60 142 62 159 69 190 68 218 70 239 70 250 77 252 85 249 81 240 84 214 81 189 84 166Q88 141 80 120L78 106 85 84 88 104 96 121 97 129 100 135 101 130 104 135 107 125 105 111 100 81Q102 61 96 48 89 39 71 39L69 30Z"/>
+      <path d="M50 8Q60 2 70 8L72 21 68 32 62 36H58L52 32 48 21Z"/>
+      <path d="m51 23 6 3m12-3-6 3m-6 4h6M59 14l-2 9h5M49 13q11-7 22 0" fill="none" stroke="#151819"/>
+      {zones.map(([zone,d],index) => <path key={index} d={d} fill={`url(#${id}-${active.has(zone) ? 'active' : 'muscle'})`} stroke={active.has(zone) ? '#63040a' : '#141719'} strokeWidth=".75" />)}
+      <path d="M60 39v83M42 191q4 5 8 0m20 0q4 5 8 0M43 230l-1 12m35-12 1 12M24 75l4 4m68-4-4 4M41 117l12 8m26-8-12 8" fill="none" stroke="#101214"/>
+      <path d="m51 37 5 9m13-9-5 9M39 53l1 10m41-10-1 10M21 114l-2 11m82-11 2 11" fill="none" stroke="#5d6265" opacity=".45"/>
+    </g>
+  </svg>
 }
 
 export function RoutineMuscleMap({
@@ -139,321 +140,53 @@ export function ExerciseMuscleMap({ exercise }: { exercise: Exercise }) {
   )
 }
 
-type MotionKind =
-  | 'press'
-  | 'fly'
-  | 'pull'
-  | 'row'
-  | 'raise'
-  | 'curl'
-  | 'triceps'
-  | 'squat'
-  | 'leg-extension'
-  | 'leg-curl'
-  | 'hip-thrust'
-  | 'calf'
-  | 'cat-cow'
-  | 'open-book'
-  | 'hip-switch'
-  | 'hip-flexor'
-  | 'wall-slide'
-  | 'bird-dog'
-  | 'dead-bug'
-  | 'side-plank'
-  | 'breathing'
-  | 'generic'
-
-function motionKind(exercise: Exercise): MotionKind {
-  const id = exercise.id
-
-  if (id.includes('cat-cow')) return 'cat-cow'
-  if (id.includes('open-book')) return 'open-book'
-  if (id.includes('90-90')) return 'hip-switch'
-  if (id.includes('hip-flexor')) return 'hip-flexor'
-  if (id.includes('wall-slide')) return 'wall-slide'
-  if (id.includes('bird-dog')) return 'bird-dog'
-  if (id.includes('dead-bug')) return 'dead-bug'
-  if (id.includes('side-plank')) return 'side-plank'
-  if (id.includes('breathing')) return 'breathing'
-  if (id.includes('bench') || id.includes('incline-dumbbell-press')) return 'press'
-  if (id.includes('fly')) return 'fly'
-  if (id.includes('pulldown') || id.includes('pull-up')) return 'pull'
-  if (id.includes('row')) return 'row'
-  if (id.includes('lateral-raise')) return 'raise'
-  if (id.includes('curl')) return 'curl'
-  if (id.includes('triceps')) return 'triceps'
-  if (id.includes('hack') || id.includes('leg-press')) return 'squat'
-  if (id.includes('leg-extension')) return 'leg-extension'
-  if (id.includes('leg-curl')) return 'leg-curl'
-  if (id.includes('hip-thrust')) return 'hip-thrust'
-  if (id.includes('calf')) return 'calf'
-
-  return 'generic'
-}
-
-function MotionArtwork({ kind }: { kind: MotionKind }) {
-  switch (kind) {
-    case 'press':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M18 61h73M28 61l-6 13M82 61l6 13" />
-          <circle className="motion-person" cx="45" cy="44" r="7" />
-          <path className="motion-person" d="M50 48 66 54 81 50M65 54 73 64M58 51 49 62" />
-          <g className="motion-moving motion-moving--press">
-            <path className="motion-accent" d="M27 30h63M34 24v12M83 24v12" />
-            <path className="motion-person" d="M57 47 46 32M69 52 76 32" />
-          </g>
-        </svg>
-      )
-    case 'fly':
-      return (
-        <svg viewBox="0 0 120 84">
-          <circle className="motion-person" cx="60" cy="20" r="7" />
-          <path className="motion-person" d="M60 27v31M60 58 46 76M60 58 74 76" />
-          <g className="motion-moving motion-moving--fly">
-            <path className="motion-accent" d="M60 36 28 50M60 36 92 50" />
-            <circle className="motion-equipment" cx="26" cy="51" r="3" />
-            <circle className="motion-equipment" cx="94" cy="51" r="3" />
-          </g>
-        </svg>
-      )
-    case 'pull':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M24 11h72M31 8v6M89 8v6" />
-          <circle className="motion-person" cx="60" cy="31" r="7" />
-          <path className="motion-person" d="M60 38v26M60 64 49 79M60 64 71 79" />
-          <g className="motion-moving motion-moving--pull">
-            <path className="motion-accent" d="M57 38 39 19M63 38 81 19" />
-          </g>
-        </svg>
-      )
-    case 'row':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M17 67h58M25 67l9-25h40" />
-          <circle className="motion-person" cx="62" cy="31" r="7" />
-          <path className="motion-person" d="M59 38 45 51 39 69M45 51 65 63M65 63 82 74" />
-          <g className="motion-moving motion-moving--row">
-            <path className="motion-accent" d="M52 45 82 49" />
-            <circle className="motion-equipment" cx="87" cy="49" r="5" />
-          </g>
-        </svg>
-      )
-    case 'raise':
-      return (
-        <svg viewBox="0 0 120 84">
-          <circle className="motion-person" cx="60" cy="17" r="7" />
-          <path className="motion-person" d="M60 24v34M60 58 48 78M60 58 72 78" />
-          <g className="motion-moving motion-moving--raise">
-            <path className="motion-accent" d="M58 35 30 35M62 35 90 35" />
-            <circle className="motion-equipment" cx="27" cy="35" r="4" />
-            <circle className="motion-equipment" cx="93" cy="35" r="4" />
-          </g>
-        </svg>
-      )
-    case 'curl':
-      return (
-        <svg viewBox="0 0 120 84">
-          <circle className="motion-person" cx="60" cy="16" r="7" />
-          <path className="motion-person" d="M60 23v34M60 57 49 78M60 57 71 78M48 33l7 24M72 33l-7 24" />
-          <g className="motion-moving motion-moving--curl">
-            <path className="motion-accent" d="M55 56 44 43M65 56 76 43" />
-            <circle className="motion-equipment" cx="42" cy="41" r="4" />
-            <circle className="motion-equipment" cx="78" cy="41" r="4" />
-          </g>
-        </svg>
-      )
-    case 'triceps':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M60 6v18" />
-          <circle className="motion-person" cx="60" cy="22" r="7" />
-          <path className="motion-person" d="M60 29v31M60 60 48 79M60 60 72 79" />
-          <g className="motion-moving motion-moving--triceps">
-            <path className="motion-accent" d="M47 36 52 55M73 36 68 55" />
-            <path className="motion-equipment" d="M43 34h34" />
-          </g>
-        </svg>
-      )
-    case 'squat':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M19 68h82M28 12v57M92 12v57M28 17h64" />
-          <g className="motion-moving motion-moving--squat">
-            <circle className="motion-person" cx="60" cy="28" r="7" />
-            <path className="motion-person" d="M60 35v22M60 43 43 47M60 43 77 47M60 57 45 67M60 57 75 67" />
-          </g>
-        </svg>
-      )
-    case 'leg-extension':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M27 58h40M31 58v20M67 58v20" />
-          <circle className="motion-person" cx="55" cy="27" r="7" />
-          <path className="motion-person" d="M55 34 50 54 67 59" />
-          <g className="motion-moving motion-moving--leg-extension">
-            <path className="motion-accent" d="M67 59 93 59" />
-            <circle className="motion-equipment" cx="96" cy="59" r="5" />
-          </g>
-        </svg>
-      )
-    case 'leg-curl':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M20 56h70M25 56v17M85 56v17" />
-          <circle className="motion-person" cx="35" cy="39" r="6" />
-          <path className="motion-person" d="M41 41 64 52" />
-          <g className="motion-moving motion-moving--leg-curl">
-            <path className="motion-accent" d="M64 52 86 41" />
-            <circle className="motion-equipment" cx="90" cy="39" r="5" />
-          </g>
-        </svg>
-      )
-    case 'hip-thrust':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M17 54h30M20 54v20" />
-          <circle className="motion-person" cx="43" cy="39" r="6" />
-          <g className="motion-moving motion-moving--hip">
-            <path className="motion-person" d="M48 42 68 47 85 66M68 47 54 68" />
-            <path className="motion-accent" d="M53 45h30" />
-          </g>
-        </svg>
-      )
-    case 'calf':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M30 73h60" />
-          <g className="motion-moving motion-moving--calf">
-            <circle className="motion-person" cx="60" cy="17" r="7" />
-            <path className="motion-person" d="M60 24v32M60 56 48 73M60 56 72 73M47 72h12M61 72h12" />
-          </g>
-        </svg>
-      )
-    case 'cat-cow':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M18 70h84" />
-          <g className="motion-moving motion-moving--catcow">
-            <circle className="motion-person" cx="35" cy="43" r="6" />
-            <path className="motion-accent" d="M41 44Q60 28 80 45" />
-            <path className="motion-person" d="M45 45 38 67M75 45 82 67" />
-          </g>
-        </svg>
-      )
-    case 'open-book':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M15 70h90" />
-          <circle className="motion-person" cx="45" cy="48" r="6" />
-          <path className="motion-person" d="M51 50 69 56M69 56 85 67M66 56 50 69" />
-          <g className="motion-moving motion-moving--openbook">
-            <path className="motion-accent" d="M56 52 72 30 91 24" />
-          </g>
-        </svg>
-      )
-    case 'hip-switch':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M16 71h88" />
-          <circle className="motion-person" cx="60" cy="29" r="7" />
-          <path className="motion-person" d="M60 36v20" />
-          <g className="motion-moving motion-moving--hipswitch">
-            <path className="motion-accent" d="M60 55 38 65M60 55 82 65M38 65 28 54M82 65 92 54" />
-          </g>
-        </svg>
-      )
-    case 'hip-flexor':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M15 72h90" />
-          <circle className="motion-person" cx="55" cy="21" r="7" />
-          <path className="motion-person" d="M55 28v24" />
-          <g className="motion-moving motion-moving--hipflexor">
-            <path className="motion-accent" d="M55 52 38 70M55 52 78 58 91 70" />
-          </g>
-        </svg>
-      )
-    case 'wall-slide':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M91 8v69" />
-          <circle className="motion-person" cx="70" cy="22" r="7" />
-          <path className="motion-person" d="M70 29v32M70 61 59 78M70 61 81 78" />
-          <g className="motion-moving motion-moving--wallslide">
-            <path className="motion-accent" d="M68 38 55 23M72 38 85 23" />
-          </g>
-        </svg>
-      )
-    case 'bird-dog':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M15 70h90" />
-          <circle className="motion-person" cx="44" cy="43" r="6" />
-          <path className="motion-person" d="M50 45 70 52M52 48 41 68M68 52 61 69" />
-          <g className="motion-moving motion-moving--birddog">
-            <path className="motion-accent" d="M50 45 25 35M70 52 96 39" />
-          </g>
-        </svg>
-      )
-    case 'dead-bug':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M15 70h90" />
-          <circle className="motion-person" cx="55" cy="52" r="6" />
-          <path className="motion-person" d="M61 53 76 59" />
-          <g className="motion-moving motion-moving--deadbug">
-            <path className="motion-accent" d="M54 48 38 28M76 59 95 38M59 50 75 30M52 57 33 66" />
-          </g>
-        </svg>
-      )
-    case 'side-plank':
-      return (
-        <svg viewBox="0 0 120 84">
-          <path className="motion-equipment" d="M15 72h90" />
-          <g className="motion-moving motion-moving--sideplank">
-            <circle className="motion-person" cx="37" cy="48" r="6" />
-            <path className="motion-accent" d="M43 49 69 57 91 67M55 53 48 70" />
-          </g>
-        </svg>
-      )
-    case 'breathing':
-      return (
-        <svg viewBox="0 0 120 84">
-          <circle className="motion-person" cx="60" cy="24" r="7" />
-          <path className="motion-person" d="M60 31v31M60 62 48 78M60 62 72 78" />
-          <g className="motion-moving motion-moving--breathing">
-            <circle className="motion-accent motion-breath" cx="60" cy="45" r="13" />
-          </g>
-        </svg>
-      )
-    default:
-      return (
-        <svg viewBox="0 0 120 84">
-          <circle className="motion-person" cx="60" cy="18" r="7" />
-          <path className="motion-person" d="M60 25v34M60 59 48 79M60 59 72 79M60 38 42 50M60 38 78 50" />
-          <circle className="motion-accent motion-pulse" cx="60" cy="43" r="28" />
-        </svg>
-      )
-  }
-}
-
 export function ExerciseVisual({
   exercise,
   guided,
+  interactive = false,
 }: {
   exercise: Exercise
   guided: boolean
+  interactive?: boolean
 }) {
-  const kind = motionKind(exercise)
+  const definition = getExerciseMedia(exercise.id)
+  const [motion, setMotion] = useState(guided)
+  const [paused, setPaused] = useState(false)
+  const [failed, setFailed] = useState(false)
 
   return (
-    <div className="training-exercise-visual">
-      <div className={`training-exercise-motion training-exercise-motion--${kind}`} aria-hidden="true">
-        <MotionArtwork kind={kind} />
-        <span>{guided ? 'MOV' : exercise.primaryMuscle.slice(0, 3).toUpperCase()}</span>
+    <div className="training-exercise-visual training-exercise-visual--v21" data-exercise-id={exercise.id}>
+      <div className="training-exercise-visual__media">
+        {definition && !motion && !failed ? (
+          <picture>
+            <img
+              src={definition.staticAsset}
+              alt={`Ilustración de ${exercise.name}`}
+              loading="lazy"
+              decoding="async"
+              onError={(event) => {
+                const candidates = [definition.staticAsset, ...(definition.fallbackAssets ?? (definition.fallbackAsset ? [definition.fallbackAsset] : []))]
+                const current = candidates.findIndex(path => event.currentTarget.src.endsWith(path))
+                if (current >= 0 && candidates[current + 1]) {
+                  event.currentTarget.src = candidates[current + 1]
+                } else {
+                  setFailed(true)
+                }
+              }}
+            />
+          </picture>
+        ) : null}
+        {motion || !definition || failed ? <LicensedExerciseMotion key={exercise.id} exercise={exercise} paused={paused || !motion} /> : null}
+        {definition?.source === 'user-licensed' ? <small className="training-exercise-visual__credit">Gymvisual</small> : definition?.source === 'repdb' ? (
+          <small className="training-exercise-visual__credit">RepDB</small>
+        ) : definition ? (
+          <small className="training-exercise-visual__credit">FÉNIX</small>
+        ) : null}
       </div>
+      {interactive ? <div className="training-motion-controls">
+        <button type="button" onClick={() => { setMotion(!motion); setPaused(false) }}>{motion ? 'Ver imagen' : 'Ver movimiento'}</button>
+        {motion ? <button type="button" aria-pressed={paused} onClick={() => setPaused(!paused)}>{paused ? 'Reanudar movimiento' : 'Pausar movimiento'}</button> : null}
+      </div> : null}
       <ExerciseMuscleMap exercise={exercise} />
     </div>
   )

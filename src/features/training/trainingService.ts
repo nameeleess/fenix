@@ -1,4 +1,7 @@
 import { db } from '../../db/database'
+import { formatWeekdayShort, getLocalDateKey, parseDateKey, shiftDateKey, startOfWeek } from '../../utils/date'
+import { createUuid } from '../../utils/uuid'
+export { getLocalDateKey } from '../../utils/date'
 import { publishCommittedMutation } from '../../app/freshnessEvents'
 import type {
   Exercise,
@@ -94,7 +97,7 @@ function nowIso() {
   return new Date().toISOString()
 }
 
-function createEntityBase(id = crypto.randomUUID()) {
+function createEntityBase(id: string = createUuid()) {
   const now = nowIso()
 
   return {
@@ -104,43 +107,6 @@ function createEntityBase(id = crypto.randomUUID()) {
     deletedAt: null,
     version: 1,
   }
-}
-
-export function getLocalDateKey(date = new Date()) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-
-  return `${year}-${month}-${day}`
-}
-
-function parseDateKey(dateKey: string) {
-  const [year, month, day] = dateKey.split('-').map(Number)
-  return new Date(year, month - 1, day, 12, 0, 0, 0)
-}
-
-function shiftDateKey(dateKey: string, amount: number) {
-  const date = parseDateKey(dateKey)
-  date.setDate(date.getDate() + amount)
-  return getLocalDateKey(date)
-}
-
-function startOfWeek(dateKey: string) {
-  const date = parseDateKey(dateKey)
-  const weekday = date.getDay()
-  const mondayOffset = weekday === 0 ? -6 : 1 - weekday
-  date.setDate(date.getDate() + mondayOffset)
-  return getLocalDateKey(date)
-}
-
-function formatWeekday(dateKey: string) {
-  return new Intl.DateTimeFormat('es-ES', {
-    weekday: 'short',
-  })
-    .format(parseDateKey(dateKey))
-    .replace('.', '')
-    .slice(0, 2)
-    .toUpperCase()
 }
 
 function roundLoad(value: number) {
@@ -252,7 +218,7 @@ export async function getTrainingHome(
 
     return {
       date,
-      weekdayLabel: formatWeekday(date),
+      weekdayLabel: formatWeekdayShort(date),
       dayNumber: parseDateKey(date).getDate(),
       sessions,
       session: sessions[0] ?? null,
@@ -1595,21 +1561,20 @@ export async function updateRoutineExercise(
     restSeconds: number
   },
 ) {
-  const config = await db.workoutTemplateExercises.get(configId)
-
-  if (!config || config.deletedAt !== null) {
-    throw new Error('Configuración no encontrada.')
-  }
-
   if (values.targetSets < 1 || values.minReps < 1 || values.maxReps < values.minReps) {
     throw new Error('Revisa series y rango de repeticiones.')
   }
 
-  await db.workoutTemplateExercises.update(config.id, {
-    ...values,
-    targetRir: values.targetRirMin,
-    updatedAt: nowIso(),
-    version: config.version + 1,
+  await db.transaction('rw', db.workoutTemplateExercises, async () => {
+    const config = await db.workoutTemplateExercises.get(configId)
+    if (!config || config.deletedAt !== null) throw new Error('Configuración no encontrada.')
+
+    await db.workoutTemplateExercises.update(config.id, {
+      ...values,
+      targetRir: values.targetRirMin,
+      updatedAt: nowIso(),
+      version: config.version + 1,
+    })
   })
 
   publishCommittedMutation('training')
@@ -1618,7 +1583,7 @@ export async function updateRoutineExercise(
 export async function getExerciseCatalog() {
   return (await db.exercises.toArray())
     .filter((exercise) => exercise.deletedAt === null)
-    .sort((a, b) => a.name.localeCompare(b.name))
+    .sort((a, b) => a.name.localeCompare(b.name, 'es'))
 }
 
 export async function updateExercisePersonalContext(
@@ -1628,18 +1593,399 @@ export async function updateExercisePersonalContext(
     personalNotes: string | null
   },
 ) {
-  const exercise = await db.exercises.get(exerciseId)
+  await db.transaction('rw', db.exercises, async () => {
+    const exercise = await db.exercises.get(exerciseId)
+    if (!exercise || exercise.deletedAt !== null) throw new Error('Ejercicio no encontrado.')
 
-  if (!exercise || exercise.deletedAt !== null) {
-    throw new Error('Ejercicio no encontrado.')
-  }
-
-  await db.exercises.update(exercise.id, {
-    tolerance: values.tolerance,
-    personalNotes: values.personalNotes,
-    updatedAt: nowIso(),
-    version: exercise.version + 1,
+    await db.exercises.update(exercise.id, {
+      tolerance: values.tolerance,
+      personalNotes: values.personalNotes,
+      updatedAt: nowIso(),
+      version: exercise.version + 1,
+    })
   })
 
+  publishCommittedMutation('training')
+}
+
+export interface WorkoutTemplateExerciseInput {
+  id?: string
+  exerciseId: string
+  order: number
+  targetSets: number
+  minReps: number
+  maxReps: number
+  targetRirMin: number | null
+  targetRirMax: number | null
+  restSeconds: number
+  referenceWeight?: number | null
+  alternativeExerciseIds?: string[]
+  supersetGroupId?: string | null
+  targetSeconds?: number | null
+}
+
+export interface WorkoutTemplateDraft {
+  name: string
+  dayOfWeek: number | null
+  type: WorkoutTemplate['type']
+  description: string | null
+  estimatedDurationMinutes: number | null
+  isFormalStrength: boolean
+  exercises: WorkoutTemplateExerciseInput[]
+}
+
+function validateTemplateDraft(input: WorkoutTemplateDraft) {
+  if (!input.name.trim()) throw new Error('La rutina necesita un nombre.')
+  if (input.dayOfWeek !== null && (!Number.isInteger(input.dayOfWeek) || input.dayOfWeek < 0 || input.dayOfWeek > 6)) {
+    throw new Error('El día de la semana no es válido.')
+  }
+  const seenOrders = new Set<number>()
+  for (const item of input.exercises) {
+    if (!Number.isFinite(item.order) || item.order < 0 || seenOrders.has(item.order)) {
+      throw new Error('El orden de ejercicios debe ser único y válido.')
+    }
+    seenOrders.add(item.order)
+    if (item.targetSets < 1 || item.minReps < 1 || item.maxReps < item.minReps || item.restSeconds < 0) {
+      throw new Error('Revisa series, repeticiones y descanso de la rutina.')
+    }
+  }
+}
+
+export async function createWorkoutTemplate(input: WorkoutTemplateDraft) {
+  validateTemplateDraft(input)
+  const templateId = createUuid()
+
+  await db.transaction(
+    'rw',
+    db.workoutTemplates,
+    db.workoutTemplateExercises,
+    db.exercises,
+    async () => {
+      const exercises = new Map(
+        (await db.exercises.bulkGet(input.exercises.map((item) => item.exerciseId)))
+          .filter((item): item is Exercise => Boolean(item))
+          .map((item) => [item.id, item]),
+      )
+      for (const item of input.exercises) {
+        const exercise = exercises.get(item.exerciseId)
+        if (!exercise || exercise.deletedAt !== null) throw new Error('La rutina contiene un ejercicio no disponible.')
+      }
+
+      const template: WorkoutTemplate = {
+        ...createEntityBase(templateId),
+        name: input.name.trim(),
+        dayOfWeek: input.dayOfWeek,
+        type: input.type,
+        description: input.description?.trim() || null,
+        estimatedDurationMinutes: input.estimatedDurationMinutes,
+        isFormalStrength: input.isFormalStrength,
+      }
+      await db.workoutTemplates.add(template)
+
+      const configs: WorkoutTemplateExercise[] = input.exercises.map((item) => ({
+        ...createEntityBase(item.id ?? createUuid()),
+        workoutTemplateId: templateId,
+        exerciseId: item.exerciseId,
+        order: item.order,
+        targetSets: item.targetSets,
+        minReps: item.minReps,
+        maxReps: item.maxReps,
+        targetRir: item.targetRirMin,
+        targetRirMin: item.targetRirMin,
+        targetRirMax: item.targetRirMax,
+        restSeconds: item.restSeconds,
+        referenceWeight: item.referenceWeight ?? null,
+        alternativeExerciseIds: [...new Set(item.alternativeExerciseIds ?? [])],
+        supersetGroupId: item.supersetGroupId?.trim() || null,
+        targetSeconds: item.targetSeconds ?? null,
+      }))
+      if (configs.length > 0) await db.workoutTemplateExercises.bulkAdd(configs)
+    },
+  )
+
+  publishCommittedMutation('training')
+  return (await getTrainingTemplates()).find((item) => item.template.id === templateId) ?? null
+}
+
+export async function updateWorkoutTemplate(templateId: string, input: WorkoutTemplateDraft) {
+  validateTemplateDraft(input)
+
+  await db.transaction(
+    'rw',
+    db.workoutTemplates,
+    db.workoutTemplateExercises,
+    db.exercises,
+    async () => {
+      const template = await db.workoutTemplates.get(templateId)
+      if (!template || template.deletedAt !== null) throw new Error('Rutina no encontrada.')
+
+      const currentConfigs = (await db.workoutTemplateExercises.where('workoutTemplateId').equals(template.id).toArray())
+        .filter((item) => item.deletedAt === null)
+      const currentById = new Map(currentConfigs.map((item) => [item.id, item]))
+      const incomingIds = new Set(input.exercises.flatMap((item) => item.id ? [item.id] : []))
+      const exercises = new Map(
+        (await db.exercises.bulkGet(input.exercises.map((item) => item.exerciseId)))
+          .filter((item): item is Exercise => Boolean(item))
+          .map((item) => [item.id, item]),
+      )
+      for (const item of input.exercises) {
+        const exercise = exercises.get(item.exerciseId)
+        if (!exercise || exercise.deletedAt !== null) throw new Error('La rutina contiene un ejercicio no disponible.')
+        if (item.id && !currentById.has(item.id)) throw new Error('La rutina ha cambiado. Recarga antes de guardar.')
+      }
+
+      const now = nowIso()
+      const nextConfigs: WorkoutTemplateExercise[] = input.exercises.map((item) => {
+        const current = item.id ? currentById.get(item.id) : undefined
+        if (current) {
+          return {
+            ...current,
+            exerciseId: item.exerciseId,
+            order: item.order,
+            targetSets: item.targetSets,
+            minReps: item.minReps,
+            maxReps: item.maxReps,
+            targetRir: item.targetRirMin,
+            targetRirMin: item.targetRirMin,
+            targetRirMax: item.targetRirMax,
+            restSeconds: item.restSeconds,
+            referenceWeight: item.referenceWeight ?? null,
+            alternativeExerciseIds: [...new Set(item.alternativeExerciseIds ?? [])],
+            supersetGroupId: item.supersetGroupId?.trim() || null,
+            targetSeconds: item.targetSeconds ?? null,
+            updatedAt: now,
+            version: current.version + 1,
+          }
+        }
+        return {
+        ...createEntityBase(item.id ?? createUuid()),
+          workoutTemplateId: template.id,
+          exerciseId: item.exerciseId,
+          order: item.order,
+          targetSets: item.targetSets,
+          minReps: item.minReps,
+          maxReps: item.maxReps,
+          targetRir: item.targetRirMin,
+          targetRirMin: item.targetRirMin,
+          targetRirMax: item.targetRirMax,
+          restSeconds: item.restSeconds,
+          referenceWeight: item.referenceWeight ?? null,
+          alternativeExerciseIds: [...new Set(item.alternativeExerciseIds ?? [])],
+          supersetGroupId: item.supersetGroupId?.trim() || null,
+          targetSeconds: item.targetSeconds ?? null,
+        }
+      })
+      const archived = currentConfigs
+        .filter((item) => !incomingIds.has(item.id))
+        .map((item) => ({ ...item, deletedAt: now, updatedAt: now, version: item.version + 1 }))
+
+      await db.workoutTemplates.update(template.id, {
+        name: input.name.trim(),
+        dayOfWeek: input.dayOfWeek,
+        type: input.type,
+        description: input.description?.trim() || null,
+        estimatedDurationMinutes: input.estimatedDurationMinutes,
+        isFormalStrength: input.isFormalStrength,
+        updatedAt: now,
+        version: template.version + 1,
+      })
+      if (nextConfigs.length > 0) await db.workoutTemplateExercises.bulkPut(nextConfigs)
+      if (archived.length > 0) await db.workoutTemplateExercises.bulkPut(archived)
+    },
+  )
+
+  publishCommittedMutation('training')
+}
+
+export async function duplicateWorkoutTemplate(templateId: string) {
+  const duplicateId = createUuid()
+
+  await db.transaction(
+    'rw',
+    db.workoutTemplates,
+    db.workoutTemplateExercises,
+    db.exercises,
+    async () => {
+      const source = await db.workoutTemplates.get(templateId)
+      if (!source || source.deletedAt !== null) throw new Error('Rutina no encontrada.')
+
+      const sourceConfigs = (await db.workoutTemplateExercises.where('workoutTemplateId').equals(source.id).toArray())
+        .filter((item) => item.deletedAt === null)
+        .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+      const exercises = new Map(
+        (await db.exercises.bulkGet(sourceConfigs.map((item) => item.exerciseId)))
+          .filter((item): item is Exercise => Boolean(item))
+          .map((item) => [item.id, item]),
+      )
+      for (const config of sourceConfigs) {
+        const exercise = exercises.get(config.exerciseId)
+        if (!exercise || exercise.deletedAt !== null) {
+          throw new Error('La rutina contiene un ejercicio no disponible.')
+        }
+      }
+
+      const duplicate: WorkoutTemplate = {
+        ...createEntityBase(duplicateId),
+        name: `${source.name} · copia`,
+        dayOfWeek: null,
+        type: source.type,
+        description: source.description,
+        estimatedDurationMinutes: source.estimatedDurationMinutes ?? null,
+        isFormalStrength: source.isFormalStrength ?? false,
+      }
+      await db.workoutTemplates.add(duplicate)
+
+      if (sourceConfigs.length > 0) {
+        await db.workoutTemplateExercises.bulkAdd(
+          sourceConfigs.map((config) => ({
+            ...createEntityBase(createUuid()),
+            workoutTemplateId: duplicateId,
+            exerciseId: config.exerciseId,
+            order: config.order,
+            targetSets: config.targetSets,
+            minReps: config.minReps,
+            maxReps: config.maxReps,
+            targetRir: config.targetRirMin ?? config.targetRir ?? null,
+            targetRirMin: config.targetRirMin ?? config.targetRir ?? null,
+            targetRirMax: config.targetRirMax ?? config.targetRir ?? null,
+            restSeconds: config.restSeconds,
+            referenceWeight: config.referenceWeight,
+            alternativeExerciseIds: [...new Set(config.alternativeExerciseIds ?? [])],
+            supersetGroupId: config.supersetGroupId ?? null,
+            targetSeconds: config.targetSeconds ?? null,
+          })),
+        )
+      }
+    },
+  )
+
+  publishCommittedMutation('training')
+  return (await getTrainingTemplates()).find((item) => item.template.id === duplicateId) ?? null
+}
+
+export async function archiveWorkoutTemplate(templateId: string) {
+  await db.transaction(
+    'rw',
+    db.workoutTemplates,
+    db.workoutTemplateExercises,
+    db.plannedWorkoutSessions,
+    async () => {
+      const template = await db.workoutTemplates.get(templateId)
+      if (!template || template.deletedAt !== null) return
+      const operational = (await db.plannedWorkoutSessions.where('workoutTemplateId').equals(template.id).toArray())
+        .some((item) => item.deletedAt === null && (item.status === 'pending' || item.status === 'in_progress'))
+      if (operational) throw new Error('No puedes archivar una rutina con sesiones pendientes o en curso.')
+      const now = nowIso()
+      const configs = (await db.workoutTemplateExercises.where('workoutTemplateId').equals(template.id).toArray())
+        .filter((item) => item.deletedAt === null)
+        .map((item) => ({ ...item, deletedAt: now, updatedAt: now, version: item.version + 1 }))
+      await db.workoutTemplates.update(template.id, { deletedAt: now, updatedAt: now, version: template.version + 1 })
+      if (configs.length > 0) await db.workoutTemplateExercises.bulkPut(configs)
+    },
+  )
+  publishCommittedMutation('training')
+}
+
+export interface CustomExerciseDraft {
+  name: string
+  primaryMuscle: string
+  secondaryMuscles: string[]
+  equipment: string
+  exerciseType: Exercise['exerciseType']
+  tolerance: ExerciseTolerance | null
+  personalNotes: string | null
+  techniqueNotes: string | null
+  mediaPath: string | null
+  mediaType: Exercise['mediaType']
+}
+
+function normalizeExerciseName(value: string) {
+  return value.trim().toLocaleLowerCase('es')
+}
+
+function validateCustomExerciseDraft(input: CustomExerciseDraft) {
+  if (!input.name.trim()) throw new Error('El ejercicio necesita un nombre.')
+  if (!input.primaryMuscle.trim()) throw new Error('Indica el músculo principal.')
+  if (!input.equipment.trim()) throw new Error('Indica el equipamiento.')
+}
+
+export function isSystemExercise(exercise: Exercise) {
+  return exercise.id.startsWith('ex-')
+}
+
+export async function createCustomExercise(input: CustomExerciseDraft) {
+  validateCustomExerciseDraft(input)
+  const id = createUuid()
+  await db.transaction('rw', db.exercises, async () => {
+    const normalized = normalizeExerciseName(input.name)
+    const duplicate = (await db.exercises.toArray()).some(
+      (item) => item.deletedAt === null && normalizeExerciseName(item.name) === normalized,
+    )
+    if (duplicate) throw new Error('Ya existe un ejercicio activo con ese nombre.')
+    const exercise: Exercise = {
+      ...createEntityBase(id),
+      name: input.name.trim(),
+      primaryMuscle: input.primaryMuscle.trim(),
+      secondaryMuscles: input.secondaryMuscles.map((item) => item.trim()).filter(Boolean),
+      equipment: input.equipment.trim(),
+      exerciseType: input.exerciseType,
+      spineLoad: 'low',
+      tolerance: input.tolerance,
+      personalNotes: input.personalNotes?.trim() || null,
+      techniqueNotes: input.techniqueNotes?.trim() || null,
+      mediaPath: input.mediaPath?.trim() || null,
+      mediaType: input.mediaType,
+    }
+    await db.exercises.add(exercise)
+  })
+  publishCommittedMutation('training')
+  return db.exercises.get(id)
+}
+
+export async function updateCustomExercise(exerciseId: string, input: CustomExerciseDraft) {
+  validateCustomExerciseDraft(input)
+  await db.transaction('rw', db.exercises, async () => {
+    const current = await db.exercises.get(exerciseId)
+    if (!current || current.deletedAt !== null) throw new Error('Ejercicio no encontrado.')
+    if (isSystemExercise(current)) throw new Error('Los ejercicios del sistema no se editan; usa contexto personal o crea uno propio.')
+    const normalized = normalizeExerciseName(input.name)
+    const duplicate = (await db.exercises.toArray()).some(
+      (item) => item.id !== current.id && item.deletedAt === null && normalizeExerciseName(item.name) === normalized,
+    )
+    if (duplicate) throw new Error('Ya existe un ejercicio activo con ese nombre.')
+    await db.exercises.update(current.id, {
+      name: input.name.trim(),
+      primaryMuscle: input.primaryMuscle.trim(),
+      secondaryMuscles: input.secondaryMuscles.map((item) => item.trim()).filter(Boolean),
+      equipment: input.equipment.trim(),
+      exerciseType: input.exerciseType,
+      tolerance: input.tolerance,
+      personalNotes: input.personalNotes?.trim() || null,
+      techniqueNotes: input.techniqueNotes?.trim() || null,
+      mediaPath: input.mediaPath?.trim() || null,
+      mediaType: input.mediaType,
+      updatedAt: nowIso(),
+      version: current.version + 1,
+    })
+  })
+  publishCommittedMutation('training')
+}
+
+export async function archiveCustomExercise(exerciseId: string) {
+  await db.transaction(
+    'rw',
+    db.exercises,
+    db.workoutTemplateExercises,
+    async () => {
+      const current = await db.exercises.get(exerciseId)
+      if (!current || current.deletedAt !== null) return
+      if (isSystemExercise(current)) throw new Error('Los ejercicios del sistema no pueden archivarse.')
+      const inActiveTemplate = (await db.workoutTemplateExercises.where('exerciseId').equals(current.id).toArray())
+        .some((item) => item.deletedAt === null)
+      if (inActiveTemplate) throw new Error('Retira primero este ejercicio de las rutinas activas.')
+      const now = nowIso()
+      await db.exercises.update(current.id, { deletedAt: now, updatedAt: now, version: current.version + 1 })
+    },
+  )
   publishCommittedMutation('training')
 }

@@ -1,0 +1,1935 @@
+# FENIX_CODEX_HANDOFF_PROGRESO_v1.0
+
+**Proyecto:** FÉNIX  
+**Área:** `04 · FÉNIX — PROGRESO`  
+**Destino:** Codex / repositorio canónico  
+**Versión del handoff:** `v1.0`  
+**Fecha de corte:** `2026-09-08`  
+**Estado de este documento:** CANÓNICO PARA MIGRACIÓN  
+**Regla de migración:** preservar decisiones vigentes; no diseñar ni reinterpretar.  
+**STOP posterior a este handoff:** el especialista Progreso no debe continuar trabajo del proyecto hasta nueva autorización de CENTRAL.
+
+---
+
+# 0. RESUMEN CANÓNICO
+
+`04 · FÉNIX — PROGRESO` es el propietario funcional de las **métricas derivadas longitudinales, tendencias, adherencia y racha**, no de los datos de ejecución de Hoy, Training o Nutrition.
+
+Principio rector:
+
+> **PROGRESO NO DEBE MAXIMIZAR LA CANTIDAD DE DATOS. DEBE MAXIMIZAR LA CALIDAD DE LAS DECISIONES QUE ESOS DATOS PERMITEN TOMAR.**
+
+La implementación vigente del producto debe preservar:
+
+- peso como señal corporal principal;
+- tendencia semanal basada en calidad suficiente de datos;
+- `SIN REGISTRAR ≠ INCUMPLIMIENTO`;
+- adherencias separadas por dominio;
+- racha de Training por **sesiones formales previstas**, no por días;
+- rendimiento longitudinal solo sobre comparaciones válidas de Training;
+- BIA como referencia secundaria, nunca como fuente de falsa precisión;
+- pocas métricas simultáneas;
+- insights prudentes y no causales;
+- no duplicar fuentes de verdad;
+- historia real no reescrita por cambios posteriores;
+- Golden Renders v2.1 exactos para las cinco superficies de Progreso.
+
+Estado técnico conocido:
+
+- `FÉNIX v2.0.0` es el baseline CORE STABLE formal.
+- `production` permanece en v2.0.0.
+- `v2.1.0-rc.1` existe en `main` y contiene la evolución de Progreso v2.1.
+- Progreso v2.1 tiene gates de mutación/concurrencia y visuales PASS conocidos.
+- **v2.1.0 no debe considerarse release cerrada desde este handoff.** El último cierre formal global de release v2.1 es DESCONOCIDO/no confirmado aquí.
+- No se debe inventar un nuevo layout ni modificar contratos durante la migración.
+
+---
+
+# 1. ROL, AUTORIDAD Y LÍMITES DEL ESPECIALISTA
+
+## 1.1 Rol
+
+El especialista `04 · FÉNIX — PROGRESO` actúa como:
+
+- analista de progreso;
+- analista de tendencias;
+- especialista en métricas;
+- diseñador funcional de dashboards;
+- analista longitudinal;
+- especialista en visualización funcional;
+- analista de adherencia;
+- product designer funcional del módulo Progreso.
+
+## 1.2 Misión
+
+Transformar datos acumulados en FÉNIX en información útil para responder, cuando exista evidencia suficiente:
+
+- ¿Estoy avanzando?
+- ¿En qué?
+- ¿Desde cuándo?
+- ¿Mi peso cambia en la dirección esperada?
+- ¿Estoy ejecutando el sistema con suficiente consistencia?
+- ¿Estoy progresando en ejercicios relevantes?
+- ¿Qué cambió frente al periodo anterior?
+- ¿Hay algo que requiera atención?
+- ¿O faltan datos para concluir?
+
+## 1.3 Autoridad funcional
+
+Progreso puede:
+
+- combinar datos de fuentes propietarias;
+- comparar periodos;
+- calcular tendencias;
+- calcular adherencias;
+- calcular la racha de Training;
+- resumir;
+- visualizar;
+- detectar anomalías descriptivas;
+- señalar estancamientos descriptivos;
+- producir insights simples y prudentes;
+- decidir qué métricas merecen exposición;
+- decidir requisitos funcionales de calidad de dato.
+
+## 1.4 Límites
+
+Progreso **NO** puede redefinir:
+
+### Training
+- qué constituye una sesión;
+- lifecycle de sesión;
+- qué working sets son válidos;
+- qué significa una sustitución;
+- qué ejecuciones son comparables;
+- qué constituye un PR;
+- qué cambio de rendimiento es técnicamente equivalente.
+
+### Nutrition
+- qué decisión nutricional adoptar;
+- el ritmo nutricional objetivo;
+- qué es una sustitución/comida cumplida nutricionalmente;
+- qué significa adherencia Nutrition.
+
+### Hoy / Rutina
+- estructura de la rutina;
+- semántica de tarea diaria;
+- qué tareas son aplicables en una fecha.
+
+### CENTRAL / Ingeniería
+- arquitectura;
+- modelo físico de datos;
+- IndexedDB/Dexie;
+- persistencia;
+- migraciones;
+- código;
+- seguridad;
+- privacidad;
+- offline;
+- backups;
+- testing;
+- integración;
+- rendimiento;
+- despliegue.
+
+## 1.5 Regla de autoridad
+
+Orden aplicable:
+
+1. decisión expresa del usuario;
+2. Prompt Maestro / gobierno global FÉNIX;
+3. especialista de dominio sobre contenido y lógica funcional;
+4. CENTRAL sobre arquitectura/implementación/integridad técnica.
+
+Si una implementación literal compromete datos o arquitectura, CENTRAL puede proponer una alternativa técnica, pero debe preservar el objetivo funcional y escalar cualquier cambio material.
+
+---
+
+# 2. ESTADO EXACTO ACTUAL DEL ÁREA
+
+## 2.1 Estado funcional
+
+La auditoría funcional de Progreso vNext fue **APROBADA** por el usuario.
+
+La `ESPECIFICACIÓN APROBADA PARA IMPLEMENTACIÓN — 04 · FÉNIX — PROGRESO vNext` fue emitida y autorizada.
+
+La dirección UX inicial de aquella especificación fue aprobada.
+
+Posteriormente FÉNIX v2.1 introdujo un **Design Freeze / Golden Render Freeze** global más estricto que gobierna visualmente Progreso.
+
+## 2.2 Estado v2.0.0
+
+Baseline formal:
+
+- release: `FÉNIX v2 CORE STABLE — v2.0.0`
+- commit: `deac3890f4d1b794cae8f3acde5a12bf7c35cf94`
+- tag: `v2.0.0`
+- `production`: apunta a ese commit
+- DB: `fenix-db`
+- schema: `5`
+- migraciones: `NONE`
+- source release SHA-256: `f98d902d245dcd3cc0a6db5eca4d40afa4b1bca3e7f7f00a9238d16f32fab617`
+
+En v2.0.0 se preservan para Progreso:
+
+- tendencia `7d vs 7d`;
+- mínimo 3 registros válidos por periodo;
+- último valor real cuando la cobertura es insuficiente;
+- serie de 28 días;
+- racha canónica;
+- sesiones formales de fuerza;
+- varias sesiones same-day contadas por identidad;
+- no-regresión Hoy + Progreso PASS.
+
+## 2.3 Estado v2.1 conocido
+
+Objetivo de release:
+
+- `v2.1.0`
+
+Candidata conocida:
+
+- `v2.1.0-rc.1`
+
+Rama de trabajo:
+
+- `main`
+
+`production`:
+
+- no debe tocarse durante v2.1 hasta cierre formal.
+
+Scope v2.1 conocido de Progreso:
+
+- peso;
+- medidas;
+- rendimiento;
+- adherencia;
+- Cuerpo;
+- objetivos;
+- corrección real separada de eliminación;
+- hardening de mutaciones;
+- featured exercises;
+- cinco Golden surfaces específicas.
+
+Gates v2.1 conocidos que incluyen Progreso:
+
+- `Progress mutation sweep: PASS (weight/body/featured transactions + correction/delete separation)`
+- `concurrency matrix: PASS (Progress P01-P04 + horizontal tx closure)`
+- `Golden reachability source gate: PASS`
+- `visual matrix: PASS (26 independent states ...)`
+- Golden visual matrix `26/26`: PASS en ejecuciones conocidas.
+- Design System/accessibility source gate: PASS.
+
+## 2.4 Estado de release v2.1 al corte
+
+**NO declarar v2.1.0 cerrada desde este documento.**
+
+La evidencia más reciente conocida muestra reparaciones de Golden parity y visual matrix aplicadas con PASS en sus contratos, pero también existe una ejecución posterior del gate completo que alcanzó un fallo E2E en una superficie de Nutrition (`Recetas`).
+
+Por tanto:
+
+- Progreso específico: implementación/hardening/Golden surfaces tienen PASS conocidos.
+- release global v2.1: **NO CONFIRMADA COMO CERRADA**.
+- commit/tag/push final v2.1: **DESCONOCIDO / no autorizado desde este contexto**.
+- SHA-256 definitivo del source bundle posterior a la última reparación Golden parity: **DESCONOCIDO**.
+
+Codex no debe inferir que `v2.1.0-rc.1` está formalmente liberada.
+
+---
+
+# 3. CONTRATOS FUNCIONALES VIGENTES Y REGLAS QUE NO PUEDEN ROMPERSE
+
+## 3.1 Principio de utilidad
+
+Toda métrica o gráfico debe responder una pregunta útil.
+
+Si una métrica no mejora una decisión, no debe mostrarse por defecto.
+
+## 3.2 Verdad y calidad del dato
+
+Distinguir siempre:
+
+- `DATO REAL`
+- `DERIVADO`
+- `ESTIMACIÓN`
+- `NO DISPONIBLE`
+- `DATOS INSUFICIENTES`
+
+No inventar datos faltantes.
+
+## 3.3 Sin registrar
+
+Regla absoluta:
+
+> **SIN REGISTRAR ≠ INCUMPLIMIENTO**
+
+`SIN REGISTRAR` significa que el sistema desconoce el resultado.
+
+Nunca debe:
+
+- disminuir automáticamente adherencia;
+- romper una racha;
+- convertirse en omisión;
+- producir penalización;
+- ser visualizado como fallo.
+
+Sí puede reducir cobertura/confianza e impedir una conclusión.
+
+## 3.4 Historia
+
+No reescribir historia.
+
+Si cambia:
+
+- rutina;
+- objetivo;
+- plantilla;
+- ejercicio;
+- receta;
+- configuración;
+
+los registros antiguos deben seguir representando lo que realmente ocurrió y el contexto vigente en aquel momento.
+
+## 3.5 Tendencia de peso
+
+Para tendencia semanal:
+
+- mínimo `3` registros válidos/comparables en últimos `7` días.
+
+Para comparar dos periodos:
+
+- ambos periodos deben tener mínimo `3` registros válidos.
+
+Si no hay calidad suficiente:
+
+- mostrar último valor real si existe;
+- mostrar `Tendencia: datos insuficientes`.
+
+Serie corta aprobada:
+
+- aproximadamente `28 días` / `3–4 semanas`.
+
+## 3.6 Racha Training
+
+La racha es por sesiones, no por días.
+
+Orden canónico implementado conocido:
+
+`scheduledDate → createdAt → id`
+
+Varias sesiones formales en la misma fecha siguen siendo identidades distintas.
+
+## 3.7 No duplicación
+
+Progreso consume datos de otros módulos y genera derivados.
+
+No crea copias funcionales independientes de:
+
+- tareas de Hoy;
+- sesiones de Training;
+- ejercicios Training;
+- comidas/recetas Nutrition.
+
+## 3.8 Corrección ≠ eliminación
+
+En v2.1:
+
+- una corrección real no debe implementarse como una eliminación semánticamente indistinguible;
+- corrección y delete son operaciones separadas;
+- cambiar un dato base debe recalcular derivados afectados.
+
+---
+
+# 4. DECISIONES APROBADAS VIGENTES
+
+## 4.1 Peso y objetivos
+
+Objetivo final aprobado:
+
+- `78 kg`
+
+Hito aprobado:
+
+- mínimo `70 kg` para **inicios de octubre de 2026**.
+
+No inventar una fecha exacta dentro de “inicios de octubre”.
+
+El ritmo objetivo de ganancia:
+
+- lo define `Nutrition`;
+- Progreso lo consume;
+- Progreso no lo prescribe.
+
+Objetivos deben ser versionados temporalmente:
+
+- un objetivo nuevo no reinterpreta retrospectivamente el pasado.
+
+## 4.2 Captura de peso
+
+Flujo cotidiano:
+
+- `peso + guardar`.
+
+Fecha/hora:
+
+- automáticas;
+- editables según la UX aprobada.
+
+Protocolo habitual aceptado por el usuario:
+
+- por la mañana;
+- tras ir al baño;
+- antes de comer/beber;
+- condiciones comparables.
+
+Mediciones fuera de protocolo:
+
+- se permiten;
+- se conservan como dato real;
+- pueden marcarse como menos comparables.
+
+No existe necesidad funcional de múltiples pesajes cotidianos por día.
+
+## 4.3 Medidas corporales
+
+vNext incluye:
+
+- cintura;
+- brazo derecho;
+- brazo izquierdo.
+
+Frecuencia orientativa:
+
+- aproximadamente mensual;
+- no obligatoria.
+
+Primer registro:
+
+- línea base;
+- no tendencia.
+
+Fotografías:
+
+- futura versión;
+- fuera de alcance actual.
+
+## 4.4 BIA / báscula doméstica
+
+La báscula/app externa puede conservar su propio historial.
+
+FÉNIX no debe obligar a transcribir múltiples métricas diariamente.
+
+Como referencia secundaria pueden considerarse:
+
+- % grasa;
+- masa grasa;
+- masa muscular estimada.
+
+Siempre identificables como:
+
+- `Estimación BIA`.
+
+No usar como KPIs principales:
+
+- IMC;
+- agua corporal;
+- masa ósea;
+- BMR;
+- edad metabólica;
+- grasa visceral estimada;
+- porcentaje de proteína;
+- múltiples “scores” corporales.
+
+Nunca afirmar desde BIA:
+
+- “has ganado exactamente X gramos de músculo”.
+
+## 4.5 Rendimiento
+
+Progreso debe mostrar longitudinalidad de ejercicios relevantes.
+
+Resumen:
+
+- `3–5` ejercicios destacados como máximo.
+
+El usuario puede modificar cuáles están destacados.
+
+No usar automáticamente:
+
+- tonelaje global;
+- sets totales;
+- volumen total;
+- número total de PR;
+
+como sinónimo de progreso.
+
+RIR/RPE:
+
+- contexto de interpretación;
+- no KPI independiente.
+
+Warm-up sets:
+
+- pueden existir en Training;
+- no participan por defecto en la progresión longitudinal.
+
+Working sets válidos:
+
+- son la base habitual de análisis cuando Training los considere comparables.
+
+## 4.6 PR
+
+Training define qué es PR.
+
+Progreso puede:
+
+- marcar un PR reconocido;
+- ubicarlo cronológicamente;
+- mostrarlo como hito del ejercicio.
+
+No crear:
+
+- contador de PR como KPI;
+- ranking;
+- score de PR.
+
+## 4.7 Adherencias separadas
+
+No existe un porcentaje global FÉNIX.
+
+Separación:
+
+- Adherencia Rutina;
+- Adherencia Training;
+- Adherencia Nutrition solo si Nutrition proporciona contrato válido.
+
+## 4.8 Adherencia Rutina
+
+La tarjeta de Hoy debe representar:
+
+- la rutina diaria de Hoy.
+
+Ventana reciente:
+
+- `7 días`.
+
+Tendencia:
+
+- `4 semanas`.
+
+Estados conceptuales:
+
+- cumplido;
+- omitido/no cumplido conocido;
+- sin registrar;
+- no aplica.
+
+Adherencia conocida:
+
+`cumplidas / (cumplidas + omitidas)`
+
+`SIN REGISTRAR` queda separado.
+
+Ejemplo permitido:
+
+`12/14 cumplidas · 3 sin registrar`
+
+## 4.9 Adherencia Training
+
+Solo sesiones formales de fuerza previstas ya resueltas.
+
+Estados incluidos en denominador:
+
+- `COMPLETADA`
+- `INCOMPLETA`
+- `OMITIDA`
+
+Fórmula:
+
+`COMPLETADAS / (COMPLETADAS + INCOMPLETAS + OMITIDAS)`
+
+La UI debe conservar componentes, por ejemplo:
+
+`10 completadas · 1 incompleta · 1 omitida`
+
+No asignar `0,5` a incompleta.
+
+Excluidos:
+
+- Daily Mobility;
+- Recuperación;
+- descanso;
+- extras;
+- inicios accidentales;
+- futuras;
+- reprogramadas todavía pendientes.
+
+## 4.10 Racha Training
+
+Definición funcional:
+
+> Número de sesiones formales de fuerza previstas consecutivas completadas desde la última sesión formal prevista no completada.
+
+Unidad:
+
+- sesiones.
+
+Incrementa:
+
+- `COMPLETADA`.
+
+Rompen:
+
+- `OMITIDA`;
+- `INCOMPLETA`.
+
+Neutrales:
+
+- descanso programado;
+- Daily Mobility;
+- Recuperación;
+- sesión extraordinaria no planificada;
+- inicio accidental descartado;
+- sesión futura;
+- reprogramación válida pendiente.
+
+Reprogramación:
+
+- conserva identidad;
+- no crea artificialmente fallo original + sesión nueva.
+
+Si una sesión histórica intermedia no está resuelta:
+
+- `Racha · pendiente de confirmar`.
+
+## 4.11 Insights
+
+Insights automáticos simples:
+
+- aprobados.
+
+Condiciones:
+
+- deterministas cuando sea posible;
+- transparentes;
+- prudentes;
+- no medicalizantes;
+- no causales sin evidencia;
+- solo cuando aportan valor.
+
+Ejemplos válidos:
+
+- `Faltan pesajes para valorar esta semana.`
+- `Todavía no hay suficientes ejecuciones comparables.`
+- `La tendencia de peso está dentro del rango definido por Nutrition.`
+- `El ritmo lleva dos periodos válidos por debajo del objetivo.`
+- `La adherencia de Rutina ha mejorado frente al periodo anterior.`
+
+No:
+
+- prescribir kcal;
+- reprogramar Training;
+- atribuir causalidad dieta→rendimiento;
+- diagnosticar.
+
+## 4.12 Hoy v1
+
+Hoy recibe únicamente dos indicadores principales de Progreso:
+
+1. tendencia de peso;
+2. adherencia reciente de Rutina.
+
+La racha no debe convertirse en tercer KPI principal de Hoy.
+
+---
+
+# 5. DECISIONES SUPERSEDED / DEROGADAS
+
+## 5.1 “Render funcional, no píxel a píxel”
+
+### Decisión antigua
+La especificación Progreso vNext de 2026-09-03 estableció que los layouts exploratorios eran referencia funcional y que CENTRAL no debía reproducirlos píxel a píxel.
+
+### Sustitución
+En FÉNIX v2.1 se aprobó un Design Freeze superior:
+
+- `26/26 Golden Renders individuales`;
+- **paridad visual estricta**;
+- no “inspiración”;
+- no inventar UI;
+- Golden Render por layout/pantalla.
+
+Por tanto, para v2.1:
+
+> La regla de “referencia funcional flexible” queda superseded por la paridad Golden estricta, salvo accesibilidad/safe areas/compatibilidad autorizadas por CENTRAL.
+
+## 5.2 Híbrido Layout 3 + Layout 1 + Layout 5
+
+### Decisión antigua
+Se aprobó inicialmente:
+
+- Layout 3 como referencia de resumen;
+- Layout 1 como referencia de peso;
+- Layout 5 como referencia de adherencia/rendimiento;
+- Layout 4 como inspiración de microcopy.
+
+### Sustitución
+Los Golden Renders individuales v2.1 `19–23` pasan a ser la referencia visual canónica.
+
+La lógica funcional detrás del híbrido sigue siendo útil solo en la medida en que esté materializada en los Goldens.
+
+No reconstruir el híbrido original si difiere del Golden.
+
+## 5.3 Exploración visual de cinco layouts
+
+Los cinco layouts exploratorios generados antes del Design Freeze:
+
+- NO son Golden;
+- NO son fuente visual canónica;
+- NO deben usarse para reabrir diseño;
+- quedan superseded por `FENIX_v2.1_GOLDEN_RENDERS_FINAL_26.zip`.
+
+## 5.4 “Una corrección puede ser edit/delete sin separación fuerte”
+
+La especificación inicial permitía editar/eliminar y recalcular.
+
+v2.1 refina/supersede la semántica de implementación:
+
+- `corrección real ≠ eliminar`;
+- correction/delete separation obligatoria.
+
+Ambas operaciones pueden existir, pero Codex no debe implementar una corrección como delete/recreate indistinguible.
+
+## 5.5 Regla antigua de racha por día
+
+Cualquier versión antigua de racha basada en días naturales:
+
+- DEROGADA.
+
+Sustitución:
+
+- sesiones formales previstas consecutivas.
+
+## 5.6 Contador Media Freeze `25 RepDB + 8 FÉNIX`
+
+No es de Progreso directamente, pero afecta al repositorio global.
+
+SUPERSEDED por:
+
+- `26 RepDB + 7 FÉNIX = 33/33`.
+
+No reintroducir `25+8`.
+
+---
+
+# 6. DEPENDENCIAS Y CONTRATOS CROSS-MODULE
+
+## 6.1 Hoy / Rutina → Progreso
+
+Hoy es propietario de:
+
+- tareas aplicables;
+- tareas completadas;
+- tareas omitidas;
+- no aplica;
+- sin resultado;
+- fecha;
+- tareas añadidas solo para una fecha;
+- contexto suficiente para saber qué era exigible.
+
+Progreso consume esos estados para adherencia.
+
+Progreso no modifica la semántica original de las tareas.
+
+### Progreso → Hoy
+
+Expone:
+
+#### Tendencia de peso
+- valor reciente/último real;
+- tendencia;
+- variación si existe;
+- estado de calidad;
+- serie breve ~28 días.
+
+#### Adherencia reciente
+- exclusivamente Rutina;
+- últimos 7 días;
+- completadas;
+- omitidas;
+- sin registrar;
+- no aplica cuando corresponda.
+
+Hoy NO recalcula.
+
+## 6.2 Training → Progreso
+
+Training es fuente de verdad sobre:
+
+- identidad de sesión;
+- formal/no formal;
+- planned session;
+- fecha inicialmente prevista;
+- fecha efectiva;
+- reprogramación;
+- estado;
+- sesión realizada;
+- plantilla;
+- ejercicios;
+- working sets;
+- warm-up sets;
+- carga;
+- reps;
+- RIR;
+- sustituciones;
+- contexto de comparabilidad;
+- PR reconocidos;
+- Daily Mobility;
+- Recuperación;
+- extras;
+- inicio accidental.
+
+Progreso calcula:
+
+- racha;
+- adherencia Training;
+- tendencia longitudinal;
+- visualización de rendimiento.
+
+### Regla same-day
+Dos sesiones formales distintas pueden compartir fecha efectiva y siguen siendo dos identidades.
+
+No colapsarlas por fecha.
+
+## 6.3 Nutrition → Progreso
+
+Contrato obligatorio/previsto:
+
+### Ritmo objetivo de peso
+Progreso necesita de Nutrition:
+
+- rango objetivo;
+- unidad;
+- fecha de inicio de vigencia;
+- fin de vigencia si existe.
+
+Hasta que exista:
+
+- `Ritmo objetivo · no definido`.
+
+Progreso sigue funcionando.
+
+### Contexto
+Puede consumir:
+
+- consumo confirmado;
+- planificación;
+- información longitudinal agregable cuando sea útil.
+
+No duplicar Nutrition.
+
+### Adherencia Nutrition
+Estado canónico del contrato al aprobar Progreso vNext:
+
+- POSPUESTO / condicionado a semántica de Nutrition.
+
+Nutrition debe definir antes:
+
+- consumida;
+- sustituida;
+- modificada;
+- improvisada;
+- omitida;
+- parcialmente registrada;
+- sin registrar.
+
+No existe autorización para que Progreso invente una fórmula.
+
+Si otro documento posterior de Nutrition contiene una resolución formal de este contrato, ese documento posterior prevalece; en este handoff el estado posterior exacto es **DESCONOCIDO**.
+
+## 6.4 CENTRAL
+
+CENTRAL:
+
+- recibe la especificación funcional;
+- decide implementación;
+- integra contratos;
+- resuelve riesgos técnicos;
+- controla cambios;
+- autoriza releases;
+- decide STOP CONDITIONS.
+
+Progreso no puede autorizar schema/migraciones ni releases.
+
+## 6.5 Ingeniería
+
+Ingeniería solo implementa scope autorizado por CENTRAL.
+
+No puede cambiar unilateralmente:
+
+- regla de tendencia;
+- racha;
+- estados;
+- ownership;
+- históricos;
+- Goldens;
+- schema.
+
+## 6.6 QA
+
+QA valida contra:
+
+- especificación funcional;
+- invariantes;
+- Golden Renders;
+- integridad de datos;
+- no-regresión.
+
+No debe reinterpretar dominio.
+
+Las clases cerradas no se reabren salvo regresión reproducible.
+
+---
+
+# 7. MODELO CONCEPTUAL / DATOS / ESTADOS RELEVANTES
+
+## 7.1 Ownership conceptual
+
+### Progreso
+- registros de peso propios;
+- medidas corporales propias;
+- objetivos propios de Progreso;
+- tendencias derivadas;
+- adherencia derivada;
+- racha derivada;
+- selección de ejercicios destacados / `FeaturedExercise`;
+- insights derivados;
+- visualizaciones.
+
+### Training
+- sesiones;
+- ejercicios;
+- sets;
+- estados de sesión;
+- PR;
+- comparabilidad.
+
+### Hoy
+- tareas y resultado diario.
+
+### Nutrition
+- comida/receta;
+- planificación;
+- consumo;
+- objetivo nutricional/rango si lo expone.
+
+## 7.2 Relación física conocida
+
+El validator de backup v2.0 conoce al menos:
+
+- `FeaturedExercise → Exercise`
+
+La denominación exacta de todas las stores/tablas físicas de peso, medidas y objetivos:
+
+- **DESCONOCIDO desde este especialista**.
+
+Codex debe inspeccionar schema 5 antes de asumir nombres.
+
+## 7.3 Estados de calidad / presentación
+
+Progreso debe distinguir:
+
+- suficiente;
+- insuficiente;
+- no disponible;
+- sin registrar;
+- no aplica;
+- pendiente de confirmar;
+- comparación no válida;
+- estimación BIA;
+- línea base.
+
+## 7.4 Estados Training relevantes
+
+- planned/pending;
+- in progress;
+- completed;
+- omitted;
+- incomplete;
+- reprogrammed;
+- extra;
+- accidental start discarded;
+- Daily Mobility;
+- Recuperación;
+- descanso.
+
+Los nombres físicos/enums exactos deben leerse del código; no renombrarlos desde este documento.
+
+## 7.5 Periodos funcionales
+
+Peso:
+
+- actual: 7 días;
+- comparación: 7d vs 7d;
+- serie principal corta: 28 días.
+
+Adherencia Rutina:
+
+- reciente: 7 días;
+- tendencia: 4 semanas.
+
+Adherencia Training:
+
+- principal: 4 semanas.
+
+Rendimiento:
+
+- 8 semanas por defecto;
+- opciones históricas aprobadas: 3 meses / todo.
+
+Medidas:
+
+- aproximadamente mensual;
+- vistas históricas previstas: 3 meses / 6 meses / todo.
+
+---
+
+# 8. UX, COMPORTAMIENTO E INTERACCIÓN APROBADOS
+
+## 8.1 Arquitectura funcional de Progreso
+
+Secciones conceptuales:
+
+- Resumen;
+- Peso;
+- Rendimiento;
+- Adherencia;
+- Cuerpo/Medidas;
+- Historial conceptual dentro de las superficies pertinentes.
+
+En v2.1 existen exactamente cinco Golden surfaces de Progreso:
+
+- Resumen;
+- Peso;
+- Rendimiento;
+- Adherencia;
+- Cuerpo/Medidas.
+
+No inventar un sexto layout independiente sin autorización.
+
+## 8.2 Resumen
+
+Debe priorizar:
+
+1. insight relevante, si existe;
+2. peso/dirección;
+3. consistencia;
+4. rendimiento relevante;
+5. acceso a detalle.
+
+No dashboard de 15 cards.
+
+## 8.3 Peso
+
+Debe permitir:
+
+- registrar rápido;
+- ver último valor;
+- ver tendencia;
+- ver comparación;
+- ver calidad de datos;
+- objetivo/hito;
+- corregir;
+- eliminar como acción distinta;
+- explorar historial.
+
+## 8.4 Rendimiento
+
+Debe mostrar pocos ejercicios clave.
+
+No debe ser clon de Training.
+
+Drill-down hacia historial del ejercicio cuando corresponda.
+
+## 8.5 Adherencia
+
+Rutina y Training separadas.
+
+Cobertura visible.
+
+Sin registrar distinguible.
+
+Racha como dato secundario, no como protagonista.
+
+## 8.6 Cuerpo/Medidas
+
+Cintura y brazos como medidas principales aprobadas.
+
+BIA relegada a referencia.
+
+No sobrecargar.
+
+## 8.7 Objetivos
+
+Mostrar:
+
+- hito 70 kg;
+- objetivo 78 kg;
+- ritmo si Nutrition lo proporciona.
+
+Se puede mostrar:
+
+- kg restantes.
+
+No usar como representación principal una barra lineal simplista de “% del objetivo corporal”.
+
+## 8.8 Estados vacíos
+
+Ejemplos funcionales aprobados:
+
+### Sin peso
+`Registra tu primer peso para empezar a construir la tendencia.`
+
+### Un peso
+Mostrar valor real + `Necesitamos más registros para calcular tendencia.`
+
+### Sin medidas
+`Todavía no hay medidas corporales.`
+
+### Sin Training
+`Completa sesiones para empezar a ver evolución.`
+
+### Sin comparables
+`Todavía no existen ejecuciones comparables.`
+
+### Sin adherencia suficiente
+`Aún no hay resultados suficientes para valorar la consistencia.`
+
+## 8.9 Errores
+
+Distinguir:
+
+- vacío;
+- insuficiente;
+- error técnico.
+
+Un error técnico nunca debe presentarse como “sin progreso”.
+
+## 8.10 Offline
+
+Debe funcionar offline para:
+
+- consultar historial local;
+- registrar peso;
+- registrar medidas;
+- corregir/eliminar registros propios;
+- visualizar tendencias calculables localmente.
+
+---
+
+# 9. REQUISITOS VISUALES Y GOLDEN RENDERS
+
+## 9.1 Design System global
+
+- mobile-first;
+- iPhone prioritario;
+- negro profundo;
+- superficies gris/carbón;
+- textura carbón discreta;
+- rojo FÉNIX `#DE090A`;
+- blanco/gris;
+- verde para estados semánticamente positivos cuando corresponda;
+- no arcoíris para métricas;
+- jerarquía clara;
+- legibilidad alta;
+- diseño premium/minimalista.
+
+Bottom nav:
+
+`Hoy · Training · Nutrition · Progreso`
+
+Progreso activo en sus superficies.
+
+## 9.2 Icono
+
+Decisión funcional aprobada:
+
+- el icono identificativo de Progreso debe ser un **fénix**;
+- activo en rojo FÉNIX;
+- reconocible a tamaño pequeño;
+- debe conservar etiqueta accesible `Progreso`.
+
+No usar el fénix como decoración masiva.
+
+No existe decisión posterior conocida que derogue esta regla.
+
+Si el Golden final contradice explícitamente este icono, no elegir una versión: **STOP CONDITION → CENTRAL**.
+
+## 9.3 Golden Freeze v2.1
+
+Paquete:
+
+`FENIX_v2.1_GOLDEN_RENDERS_FINAL_26.zip`
+
+SHA-256:
+
+`0f797dd2962f44ec7ae82d46f770d6b70c462927ad6a938728ea86375056bffc`
+
+Progreso:
+
+19. `19_PROGRESO_Resumen.png`
+20. `20_PROGRESO_Peso.png`
+21. `21_PROGRESO_Rendimiento.png`
+22. `22_PROGRESO_Adherencia.png`
+23. `23_PROGRESO_Cuerpo_Medidas.png`
+
+Regla v2.1:
+
+- paridad visual estricta;
+- un Golden por layout/pantalla;
+- no inventar UI;
+- no reinterpretar Goldens como mera inspiración;
+- evitar nueva capa CSS de parche tipo `final-v2.css`;
+- usar Design System v2;
+- retirar overrides obsoletos en superficies tocadas.
+
+## 9.4 Accesibilidad visual
+
+Requisitos conocidos v2.1:
+
+- floor táctil 44 px;
+- Dialog accesible;
+- no depender solo de color;
+- texto escalable;
+- gráficos acompañados de resumen textual;
+- estados semanticamente distinguibles;
+- no native `confirm` como patrón nuevo/final;
+- `prefers-reduced-motion` donde aplique globalmente.
+
+---
+
+# 10. FUNCIONALIDAD YA IMPLEMENTADA Y VALIDADA
+
+## 10.1 v2.0.0 CORE STABLE
+
+Validado:
+
+- tendencia 7d vs 7d;
+- threshold 3+3;
+- caso 2+2 insuficiente;
+- latest real cuando no hay cobertura;
+- serie 28 días;
+- missing days neutral;
+- racha canónica;
+- same-day Training por identidad;
+- Hoy + Progreso core PASS;
+- backup/restore con referencias Progreso (`FeaturedExercise → Exercise`);
+- schema 5;
+- roundtrip oficial 759 records PASS.
+
+Test/gate conocido:
+
+`F2-RC1 Hoy + Progreso core: PASS (focus 0/1/2/active/terminal + trend 2+2/3+3)`
+
+## 10.2 Racha determinista
+
+QA/RC2:
+
+`P01–P08 Streak determinism: PASS`
+
+Casos conocidos:
+
+- P01 permutations same-day/createdAt → mismo resultado;
+- P02 completed + completed;
+- P03 completed + omitted;
+- P04 completed + incomplete;
+- P05 pending + completed;
+- P06 extra mixed with formal;
+- P07 reprogrammed same-day;
+- P08 igualdad Training/Hoy/Progreso.
+
+Orden:
+
+`scheduledDate → createdAt → id`
+
+## 10.3 v2.1 Progreso
+
+Gates conocidos:
+
+`Progress mutation sweep: PASS (weight/body/featured transactions + correction/delete separation)`
+
+`concurrency matrix: PASS (Progress P01-P04 + horizontal tx closure)`
+
+Scope implementado conocido:
+
+- peso;
+- body/medidas;
+- featured exercises;
+- corrección;
+- delete separado;
+- objetivos;
+- rendimiento;
+- adherencia;
+- Cuerpo;
+- hardening de mutaciones.
+
+## 10.4 Visual v2.1
+
+Conocido:
+
+- Golden reachability PASS;
+- visual matrix source contract PASS;
+- 26 Golden tests independientes;
+- capturas 19–23 incluidas en matrix;
+- 26/26 visual captures PASS en ejecuciones conocidas;
+- Golden parity contract PASS tras repair conocida.
+
+## 10.5 Estado de validación final de Progreso
+
+No existe una incidencia Progreso OPEN conocida al corte.
+
+Pero Progreso v2.1 no debe etiquetarse `STABLE` de forma independiente mientras la release global v2.1 no esté cerrada por CENTRAL.
+
+---
+
+# 11. FUNCIONALIDAD PENDIENTE / BACKLOG
+
+Orden de prioridad sin diseñar nada nuevo.
+
+## P0 — cierre de release global v2.1
+
+- reproducir/continuar el gate exacto que CENTRAL autorice;
+- no tocar Progreso salvo defecto reproducible;
+- no inventar fixes por problemas de otras áreas;
+- no commit/tag/push hasta autorización.
+
+Estado exacto global posterior al último gate conocido:
+
+- DESCONOCIDO.
+
+## P1 — contrato Nutrition: ritmo objetivo
+
+Progreso requiere, si aún no está resuelto:
+
+- rango de ganancia;
+- unidad;
+- vigencia temporal.
+
+Si no existe:
+
+- mantener `Ritmo objetivo · no definido`.
+
+## P1 — contrato Nutrition: adherencia nutricional
+
+Solo activar si Nutrition ha emitido contrato posterior formal.
+
+Si no:
+
+- seguir pospuesto.
+
+## P2 — fotografías de progreso
+
+Aprobadas como futura versión, no vNext/v2.1.
+
+## P2 — correlaciones/insights avanzados
+
+Pospuesto:
+
+- correlaciones automáticas;
+- causalidad;
+- análisis cross-module avanzado.
+
+## P2 — predicciones
+
+Pospuesto:
+
+- fecha automática de llegada a peso;
+- forecast corporal.
+
+## P2 — performance score / e1RM generalizado
+
+No autorizado como KPI general.
+
+## P2 — BIA avanzado / Xiaomi integration automática
+
+No requisito de vNext.
+
+## P2 — benchmarking/social
+
+Fuera de alcance.
+
+---
+
+# 12. BUGS, RIESGOS, DEUDA CONOCIDA Y EDGE CASES
+
+## 12.1 Riesgos funcionales
+
+- reaccionar a ruido diario del peso;
+- comparar semanas sin cobertura suficiente;
+- convertir `SIN REGISTRAR` en fallo;
+- tratar BIA como precisión clínica;
+- usar tonelaje como sinónimo de progreso;
+- colapsar sesiones same-day;
+- tratar reprogramación como fallo + nueva sesión;
+- contar Daily Mobility/Recuperación en racha;
+- contar warm-ups como progreso;
+- aplicar objetivos nuevos retrospectivamente;
+- inventar causalidad Nutrition↔Training;
+- generar demasiadas cards/métricas;
+- gamificar excesivamente la racha.
+
+## 12.2 Edge cases obligatorios
+
+### Peso
+- 0 registros;
+- 1 registro;
+- 2+2 entre periodos → insuficiente;
+- 3+3 → comparación permitida;
+- días faltantes → neutrales;
+- peso corregido;
+- peso eliminado;
+- dos pesajes same-day;
+- pesaje fuera de protocolo;
+- objetivo de ritmo inexistente.
+
+### Racha
+- multiple sessions same-day;
+- same scheduledDate + same/different createdAt;
+- completed + completed;
+- completed + omitted;
+- completed + incomplete;
+- pending + completed;
+- extra + formal;
+- reprogrammed same-day;
+- historial intermedio desconocido;
+- Daily Mobility/Recuperación;
+- inicio accidental.
+
+### Adherencia
+- no aplica;
+- sin registrar;
+- incompleta Training;
+- omitida Training;
+- ventana con cobertura pobre.
+
+### Rendimiento
+- cambio de variante;
+- cambio de equipo;
+- sustitución;
+- RIR distinto;
+- working set vs warm-up;
+- sin suficientes ejecuciones comparables.
+
+## 12.3 Deuda técnica conocida de Progreso
+
+Deuda específica no cerrada:
+
+- **DESCONOCIDO**.
+
+Existen hardenings transaccionales v2.1 ya implementados y PASS; no asumir deuda adicional sin inspección.
+
+## 12.4 Riesgo global actual
+
+La release v2.1 ha tenido múltiples reparaciones PRE-QA globales.
+
+Codex no debe interpretar “Progreso PASS” como permiso para declarar release global final.
+
+---
+
+# 13. INCIDENCIAS QA / PRE-QA HISTÓRICAS QUE AFECTAN A PROGRESO
+
+## 13.1 F2-B01 streak policy
+
+Estado:
+
+- CLOSED.
+
+Cobertura:
+
+- streak policy;
+- freshness;
+- same-day behavior;
+- regression.
+
+## 13.2 F2-RC1 Hoy + Progreso core
+
+Estado:
+
+- CLOSED / PASS.
+
+Cobertura:
+
+- `2+2` pesos → insufficient;
+- `3+3` → ready;
+- missing days neutral;
+- same-day focus;
+- streak regression.
+
+## 13.3 QA-RC11-005 — streak determinism
+
+Estado:
+
+- CLOSED.
+
+Cierre:
+
+- P01–P08 PASS;
+- canonical date/createdAt/id ordering.
+
+No reabrir salvo regresión reproducible.
+
+## 13.4 v2.1 Progress mutation sweep
+
+ID de incidencia raíz:
+
+- **DESCONOCIDO**.
+
+Estado del gate:
+
+- PASS.
+
+Cobertura:
+
+- weight/body/featured transactions;
+- correction/delete separation;
+- horizontal transaction closure;
+- Progress P01-P04 concurrency.
+
+## 13.5 PREQA-V21-VISUAL-001
+
+Afectación:
+
+- global visual, por tanto puede afectar Progreso.
+
+Estado conocido:
+
+- repair aplicada;
+- visual/source gates posteriores PASS.
+
+## 13.6 PREQA-V21-VISUAL-MATRIX-002
+
+Afectación:
+
+- matriz de 26 superficies, incluye Progreso 19–23.
+
+Estado conocido:
+
+- repair aplicada;
+- visual matrix PASS.
+
+## 13.7 PREQA-V21-GOLDEN-PARITY-001
+
+Afectación:
+
+- paridad Golden global, incluye Progreso.
+
+Estado conocido:
+
+- repair aplicada;
+- Golden parity contract PASS;
+- 26/26 visual matrix PASS en esa ejecución.
+
+El gate completo posterior encontró un fallo E2E en Nutrition Recetas; no es una incidencia Progreso demostrada.
+
+## 13.8 Incidencias Progreso abiertas
+
+Al corte:
+
+- ninguna incidencia Progreso OPEN identificable por ID desde este contexto.
+
+Si el repositorio contiene un ledger más nuevo, ese ledger debe prevalecer.
+
+---
+
+# 14. INVARIANTES Y CASOS DE REGRESIÓN QUE NUNCA DEBEN PERDERSE
+
+1. `SIN REGISTRAR` nunca equivale a fallo.
+2. Tendencia semanal requiere ≥3 registros válidos en 7 días.
+3. Comparación 7d vs 7d requiere ≥3 en ambos periodos.
+4. Si falta cobertura, mostrar último dato real y “datos insuficientes”.
+5. Días sin peso no valen 0.
+6. Serie corta de peso = 28 días.
+7. No reescribir historia por objetivo nuevo.
+8. Corrección y delete son operaciones distintas.
+9. Racha por sesiones formales, no días.
+10. Orden determinista de racha: `scheduledDate → createdAt → id`.
+11. Sesiones same-day se cuentan por identidad.
+12. `COMPLETADA` incrementa racha.
+13. `OMITIDA` rompe racha.
+14. `INCOMPLETA` rompe racha.
+15. Reprogramada conserva identidad y es neutral mientras está pendiente.
+16. Descanso neutral.
+17. Daily Mobility neutral.
+18. Recuperación neutral.
+19. Extra no planificada neutral.
+20. Inicio accidental descartado neutral.
+21. Historial sin resolver produce “pendiente de confirmar”.
+22. Adherencia Rutina y Training separadas.
+23. Adherencia Training no asigna medio punto a incompleta.
+24. Warm-ups no son base de progresión por defecto.
+25. Progreso no define PR.
+26. Progreso no define comparabilidad Training.
+27. Progreso no define ritmo Nutrition.
+28. BIA nunca puede producir falsa precisión.
+29. No score global FÉNIX.
+30. No fitness/progress/body score.
+31. No tonelaje como sinónimo automático de mejora.
+32. Hoy recibe máximo dos KPIs principales de Progreso.
+33. Progreso no copia fuentes de verdad de otros módulos.
+34. Backup/restore debe preservar relaciones e integridad Progreso.
+35. Schema 5 se preserva salvo autorización CENTRAL.
+36. Golden surfaces 19–23 deben mantener paridad estricta en v2.1.
+37. Un fallo en un estado visual no debe impedir ejecutar/capturar los otros 25 estados.
+38. No usar datos DEMO de renders como datos reales del usuario.
+
+---
+
+# 15. ARTEFACTOS, DOCUMENTOS, BUNDLES, VERSIONES Y SHA-256 CANÓNICOS CONOCIDOS
+
+## 15.1 Gobierno
+
+### `FENIX_PROTOCOLO_DE_COORDINACION_v1.0.md`
+Estado:
+- VIGENTE.
+
+### `FENIX_MANIFIESTO_DE_FUENTES_v1.0.md`
+Fecha de auditoría:
+- `2026-08-28`.
+
+### Prompt específico
+`PROMPT ESPECÍFICO — 04 · FÉNIX — PROGRESO v1.0`
+
+Estado:
+- vigente como marco funcional del especialista.
+
+## 15.2 Exportación histórica
+
+Archivo disponible en proyecto:
+
+`FENIX_Notion_Export_2026-08-28.zip`
+
+SHA-256:
+
+- DESCONOCIDO.
+
+## 15.3 Release v2.0.0
+
+Commit:
+
+`deac3890f4d1b794cae8f3acde5a12bf7c35cf94`
+
+Tag:
+
+`v2.0.0`
+
+Source release SHA-256:
+
+`f98d902d245dcd3cc0a6db5eca4d40afa4b1bca3e7f7f00a9238d16f32fab617`
+
+RC2.2 source bundle:
+
+`FENIX_v2_CORE_STABLE_v2.0.0-rc.2.2_SOURCE_BUNDLE.zip`
+
+SHA-256:
+
+`f98d902d245dcd3cc0a6db5eca4d40afa4b1bca3e7f7f00a9238d16f32fab617`
+
+RC2.2 patch:
+
+`FENIX_v2_CORE_STABLE_v2.0.0-rc.2.2_PATCH.zip`
+
+SHA-256:
+
+`a4bbafebcf7f409ad1ff80f975894f682aff89e70ff49c8b03b47f119d5317d0`
+
+## 15.4 Backup oficial de validación
+
+`fenix-backup-2026-09-06T13-27-03-525Z.json`
+
+Records:
+
+`759`
+
+SHA-256:
+
+`3686d872e64d83f7fea7053fab9f2e32508bd525c50180431a5b437bad8e8732`
+
+Schema:
+
+`5`
+
+## 15.5 Golden Renders v2.1
+
+`FENIX_v2.1_GOLDEN_RENDERS_FINAL_26.zip`
+
+SHA-256:
+
+`0f797dd2962f44ec7ae82d46f770d6b70c462927ad6a938728ea86375056bffc`
+
+Progreso filenames:
+
+- `19_PROGRESO_Resumen.png`
+- `20_PROGRESO_Peso.png`
+- `21_PROGRESO_Rendimiento.png`
+- `22_PROGRESO_Adherencia.png`
+- `23_PROGRESO_Cuerpo_Medidas.png`
+
+## 15.6 v2.1 candidata
+
+Versión:
+
+`2.1.0-rc.1`
+
+Un source bundle conocido anterior a reparaciones posteriores:
+
+`FENIX_v2.1.0-rc.1_SOURCE_BUNDLE.zip`
+
+SHA-256 conocido de esa captura:
+
+`1a7898441c5a0c325496901d075839dc025b6b831652b8445790945668ab2c58`
+
+**IMPORTANTE:** este hash puede estar SUPERSEDED por reparaciones Golden posteriores. No usarlo como source definitivo sin verificar el estado Git actual.
+
+Engineering evidence conocido:
+
+`FENIX_v2.1.0-rc.1_ENGINEERING_EVIDENCE_20260908-104931.zip`
+
+SHA-256:
+
+`912b4ac8dc42bd0b2defa567864b2af0008db53062f93391207f21b9a62abddf`
+
+También puede preceder reparaciones posteriores; verificar cronología antes de usarlo como entrega final.
+
+## 15.7 Evidencia PREQA Golden parity
+
+`PREQA-V21-GOLDEN-PARITY-001_PRE_FIX_VISUAL_20260908-123014.zip`
+
+SHA-256:
+
+`55263558cc1b69ba2c226402f4fd61b3eb36f0e41a906a8b14ce80324d93073f`
+
+Estado:
+
+- evidencia pre-fix preservada;
+- repair aplicada;
+- parity source contract PASS.
+
+## 15.8 DB
+
+DB:
+
+`fenix-db`
+
+Schema:
+
+`5`
+
+Migraciones:
+
+`NONE`
+
+---
+
+# 16. STOP CONDITIONS QUE REQUIEREN DECISIÓN DE CENTRAL
+
+Codex debe detener cambios funcionales y escalar a CENTRAL si ocurre cualquiera de estos casos:
+
+1. un Golden 19–23 contradice una regla funcional aprobada de Progreso;
+2. el Golden contradice explícitamente la decisión de icono fénix;
+3. se requiere un sexto layout único de Progreso no cubierto por Goldens;
+4. se pretende modificar threshold `3 registros / 7 días`;
+5. se pretende cambiar la definición de `SIN REGISTRAR`;
+6. se pretende cambiar la racha por sesiones a días;
+7. se pretende hacer que INCOMPLETA no rompa racha;
+8. se pretende contar Mobility/Recuperación/extra en racha;
+9. Training y Progreso discrepan sobre comparabilidad/PR;
+10. Nutrition exige que Progreso prescriba cambios nutricionales;
+11. se quiere activar adherencia Nutrition sin contrato semántico;
+12. se requiere schema 6 o migración nueva;
+13. se detecta incompatibilidad entre schema 5 y el comportamiento aprobado;
+14. se necesita reescribir historia para simplificar implementación;
+15. se quiere convertir correction en delete/recreate;
+16. se requiere tocar `production` antes de autorización;
+17. una reparación visual exige romper Golden parity de otra superficie;
+18. una incidencia cerrada solo puede resolverse reabriendo un contrato funcional;
+19. aparece corrupción/duplicidad que afecte datos reales de peso/medidas/FeaturedExercise;
+20. el repositorio contiene una resolución posterior contradictoria que este handoff no conoce.
+
+No es STOP CONDITION:
+
+- bug implementativo inequívoco resoluble sin cambiar contrato;
+- ajuste técnico de responsive/accesibilidad que preserve Golden y comportamiento;
+- refactor interno sin cambio semántico.
+
+---
+
+# 17. QUÉ NO DEBE ASUMIR NI REINTERPRETAR CODEX
+
+Codex **NO debe asumir**:
+
+- que más datos = mejor Progreso;
+- que BIA es precisa;
+- que un missing day es 0;
+- que “sin registrar” es omitido;
+- que una sesión same-day puede colapsarse con otra;
+- que reprogramar crea una sesión nueva;
+- que extra Training cuenta para racha;
+- que Daily Mobility cuenta;
+- que Recuperación cuenta;
+- que warm-ups cuentan como progresión;
+- que más tonelaje = más progreso;
+- que un PR total es KPI;
+- que Progreso puede definir PR;
+- que Progreso puede definir un cambio nutricional;
+- que el objetivo 78 kg debe convertirse en una barra lineal de progreso;
+- que “inicios de octubre” significa una fecha exacta concreta;
+- que los valores de layouts DEMO son datos reales;
+- que existe una adherencia global FÉNIX;
+- que existe un score global de rendimiento;
+- que existe un score corporal;
+- que Progreso debe mostrar 15 cards;
+- que el antiguo híbrido de layouts tiene prioridad sobre Goldens;
+- que los collages/posters v2.1 son canónicos;
+- que v2.1.0-rc.1 está formalmente liberada;
+- que el source bundle hash anterior sigue siendo el hash actual tras reparaciones;
+- que puede abrir nuevas migraciones;
+- que puede cambiar schema 5;
+- que puede tocar `production`;
+- que puede reabrir QA cerrado sin regresión reproducible.
+
+Codex debe leer el código/schema real antes de inferir nombres físicos de tablas que este handoff no especifica.
+
+---
+
+# 18. PRÓXIMA ACCIÓN RECOMENDADA DESDE EL PUNTO ACTUAL
+
+## Acción única recomendada
+
+**No diseñar ni implementar nada nuevo en Progreso.**
+
+Tras incorporar este handoff al repositorio:
+
+1. CENTRAL/Codex debe identificar el estado Git exacto actual de `main`;
+2. verificar qué reparación v2.1 fue la última aplicada;
+3. verificar si existe un source bundle/engineering evidence posterior a `PREQA-V21-GOLDEN-PARITY-001`;
+4. continuar únicamente el gate/revisión de release v2.1 autorizado por CENTRAL;
+5. no tocar Progreso si sus gates permanecen PASS;
+6. si la release global v2.1 cierra, mantener Progreso conforme a Goldens 19–23 y contratos de este handoff;
+7. si aparece una regresión Progreso reproducible, aplicar root-cause closure + horizontal sweep + regression test antes de volver a CENTRAL.
+
+Hasta nueva autorización:
+
+> **NO CONTINUAR EL TRABAJO FUNCIONAL DE 04 · FÉNIX — PROGRESO.**
+
+---
+
+# 19. CONTRADICCIONES / AMBIGÜEDADES QUE CODEX DEBE CONOCER
+
+## 19.1 Flexibilidad visual antigua vs paridad Golden v2.1
+
+Versión antigua:
+- Central podía usar renders como referencia funcional no píxel a píxel.
+
+Versión posterior:
+- v2.1 exige paridad Golden estricta.
+
+Resolución ya conocida:
+- la versión posterior supersede la anterior para v2.1.
+
+## 19.2 Historial como sección conceptual vs ausencia de Golden propio
+
+La especificación Progreso vNext incluía `Historial` conceptualmente.
+
+El Freeze v2.1 solo tiene cinco Golden surfaces:
+
+- Resumen;
+- Peso;
+- Rendimiento;
+- Adherencia;
+- Cuerpo/Medidas.
+
+No existe Golden `Progreso Historial` separado.
+
+Interpretación canónica:
+- no inventar un sexto layout;
+- historial puede vivir dentro de detalles/superficies existentes;
+- si se requiere una geometría independiente material, STOP a CENTRAL.
+
+## 19.3 Icono fénix vs Golden
+
+Decisión explícita:
+- icono Progreso = fénix.
+
+Contenido exacto del icono dentro del Golden final:
+- no se verifica textualmente desde este handoff.
+
+Si hay discrepancia visual real:
+- no resolver unilateralmente;
+- STOP a CENTRAL.
+
+## 19.4 Contrato Nutrition de adherencia
+
+En Progreso vNext:
+- estaba pospuesto.
+
+Estado posterior exacto después de la evolución Nutrition/v2.1:
+- DESCONOCIDO desde este especialista.
+
+Codex debe buscar un handoff Nutrition posterior antes de activar una fórmula.
+
+## 19.5 Release global v2.1
+
+Existe evidencia de múltiples gates PASS de Progreso/visual.
+
+Existe también evidencia de fallo E2E global posterior en Nutrition.
+
+Estado formal final de release v2.1 al corte:
+- DESCONOCIDO / no confirmado.
+
+No convertir una cadena de PRE-QA PASS parciales en release final.
+
+---
+
+# 20. FUENTES/ARTEFACTOS DE REFERENCIA QUE CODEX DEBE PRIORIZAR
+
+En caso de discrepancia, usar la jerarquía del proyecto y la cronología de decisiones.
+
+Prioridad práctica para Progreso:
+
+1. decisiones expresas del usuario posteriores;
+2. este handoff de migración como resumen de estado conocido;
+3. `FENIX_v2.1_GOLDEN_RENDERS_FINAL_26.zip` para geometría/visual v2.1;
+4. especificación aprobada `04 · FÉNIX — PROGRESO vNext`;
+5. resolución Training→Progreso de racha/adherencia;
+6. `FENIX_PROTOCOLO_DE_COORDINACION_v1.0.md`;
+7. `FENIX_MANIFIESTO_DE_FUENTES_v1.0.md`;
+8. source actual + schema 5 + tests;
+9. entregas RC/v2.1 y evidencias PRE-QA;
+10. fuentes científicas para interpretación solo cuando una decisión realmente dependa de ellas.
+
+No utilizar:
+
+- collages/posters no canónicos;
+- layouts exploratorios como sustitutos de Goldens;
+- datos DEMO;
+- preprints cuando existe versión final;
+- opiniones como sustituto de evidencia.
+
+---
+
+# 21. CIERRE DE MIGRACIÓN DEL ÁREA
+
+Este documento preserva el estado canónico conocido de `04 · FÉNIX — PROGRESO` al corte de `2026-09-08`.
+
+No autoriza:
+
+- nuevas decisiones;
+- rediseño;
+- implementación adicional;
+- release;
+- migraciones;
+- cambios de contrato.
+
+**Estado del especialista tras emitir este handoff: PAUSADO POR MIGRACIÓN.**
+
+Reanudación únicamente bajo nueva autorización de `00 · FÉNIX — CENTRAL`.

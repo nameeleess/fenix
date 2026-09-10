@@ -1,0 +1,397 @@
+{
+  "formatVersion": 1,
+  "goldenZipSHA256": "0f797dd2962f44ec7ae82d46f770d6b70c462927ad6a938728ea86375056bffc",
+  "method": "Manually identified screen bounds pinned before implementation comparison; uniform scaling only.",
+  "states": {
+    "01_HOY_Principal.png": {
+      "goldenSHA256": "552316c65bb1f7fc76711cd6529427f51134a027c0077adba0aea6618c860c4e",
+      "crop": [
+        120,
+        166,
+        697,
+        1360
+      ],
+      "viewport": [
+        393,
+        767
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "02_HOY_Dia_0.png": {
+      "goldenSHA256": "a9b28f49cc5413832d158e23995bac2cf8aa147c8b6fec83a7dbbca97b304edc",
+      "crop": [
+        120,
+        166,
+        697,
+        1360
+      ],
+      "viewport": [
+        393,
+        767
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "03_TRAINING_Hoy.png": {
+      "goldenSHA256": "adc7fa67d9d89cb8ebfc904294c8033b8cd1e3d5dbc656f75df90e2d62601a3f",
+      "crop": [
+        106,
+        140,
+        724,
+        1404
+      ],
+      "viewport": [
+        393,
+        762
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "04_TRAINING_Rutinas.png": {
+      "goldenSHA256": "8943ea971793bc8655b41dcc51399b01286d25f9a9f4d4ff4ae37c77d9651f38",
+      "crop": [
+        106,
+        140,
+        724,
+        1404
+      ],
+      "viewport": [
+        393,
+        762
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "05_TRAINING_Ejercicios.png": {
+      "goldenSHA256": "b33603aae58cdec15a6cb74318d8a3aad5307db4b07d0bcb742a1b54c28dbfae",
+      "crop": [
+        127,
+        187,
+        685,
+        1335
+      ],
+      "viewport": [
+        393,
+        766
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Individual original screen bounds: exclude external side rails, operating-system status row and home indicator. Fixed rectangle identified on original before recapture; uniform scaling only. See bounds-review images."
+    },
+    "06_TRAINING_Historial.png": {
+      "goldenSHA256": "11ee7e3cd169ad1f128e75d79a9c327223720d3c6146ee90ba93d75e31e131b8",
+      "crop": [
+        116,
+        180,
+        711,
+        1362
+      ],
+      "viewport": [
+        393,
+        753
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Individual original screen bounds: exclude external side rails, operating-system status row and home indicator. Fixed rectangle identified on original before recapture; uniform scaling only. See bounds-review images."
+    },
+    "07_TRAINING_Sesion_en_curso.png": {
+      "goldenSHA256": "9a3f4559f8168f9fdb438f0c7a517776dfcc7185313c2712fbbb41d3675ba836",
+      "crop": [
+        106,
+        140,
+        724,
+        1404
+      ],
+      "viewport": [
+        393,
+        762
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "08_TRAINING_Detalle_rutina.png": {
+      "goldenSHA256": "0f3cadf1a0b0351d12a0bf78fdb0398cc5c0ea9da72c9f8f0cc200b902983318",
+      "crop": [
+        116,
+        150,
+        708,
+        1396
+      ],
+      "viewport": [
+        393,
+        775
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "09_TRAINING_Detalle_ejercicio.png": {
+      "goldenSHA256": "70bcca1ca2005df83e6c742e3fb860ff47d691b08188048699a0cbe5f0747cb9",
+      "crop": [
+        107,
+        134,
+        717,
+        1406
+      ],
+      "viewport": [
+        393,
+        771
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Individual original screen bounds: exclude external side rails, operating-system status row and home indicator. Fixed rectangle identified on original before recapture; uniform scaling only. See bounds-review images."
+    },
+    "10_TRAINING_Crear_Editar_rutina.png": {
+      "goldenSHA256": "264a22910e9ae30a10947e9e742472c89eef1a2748bb6844f9304cc6cb86be7c",
+      "crop": [
+        120,
+        145,
+        697,
+        1410
+      ],
+      "viewport": [
+        393,
+        795
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "11_TRAINING_Crear_Editar_ejercicio.png": {
+      "goldenSHA256": "f5c0eadada22a9f9c20b1bbeac93cb7db26fb3dfedd41102d85a1c3e804533ab",
+      "crop": [
+        106,
+        140,
+        724,
+        1404
+      ],
+      "viewport": [
+        393,
+        762
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "12_NUTRITION_Hoy.png": {
+      "goldenSHA256": "9d20417da3b1205b48f45c3cca85d9855f351687270526b33ae85721a2ebc23c",
+      "crop": [
+        106,
+        140,
+        724,
+        1404
+      ],
+      "viewport": [
+        393,
+        762
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "13_NUTRITION_Semana.png": {
+      "goldenSHA256": "c525f11ce028689b3609091b0fdc85342fcec32a0bdcc27b9eb57441dda13662",
+      "crop": [
+        106,
+        140,
+        724,
+        1404
+      ],
+      "viewport": [
+        393,
+        762
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "14_NUTRITION_Recetas.png": {
+      "goldenSHA256": "ecff0b8d0c11451196f67b634b443a36b0594a75d7e2fcf673eeca916ec05f17",
+      "crop": [
+        106,
+        140,
+        724,
+        1404
+      ],
+      "viewport": [
+        393,
+        762
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "15_NUTRITION_Compra.png": {
+      "goldenSHA256": "a2d898076a48367f0a523bd22293508d32396741704605efc0e0015dd869b860",
+      "crop": [
+        106,
+        140,
+        724,
+        1404
+      ],
+      "viewport": [
+        393,
+        762
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "16_NUTRITION_Detalle_receta.png": {
+      "goldenSHA256": "9961f896a98ad0eb29947c6724b7662a43c011af7f70fdce99a2a5e788035f7f",
+      "crop": [
+        106,
+        140,
+        724,
+        1404
+      ],
+      "viewport": [
+        393,
+        762
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "17_NUTRITION_Detalle_comida.png": {
+      "goldenSHA256": "31a430f6b55aa351e47ea98ed279fe3b51d1850afd4634b5a777fd811bf6eaee",
+      "crop": [
+        106,
+        140,
+        724,
+        1404
+      ],
+      "viewport": [
+        393,
+        762
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "18_NUTRITION_Crear_Editar_receta.png": {
+      "goldenSHA256": "b3501216e366d71e2283ddb03abd8f82ec7e0ff8899a94072adf875605286641",
+      "crop": [
+        106,
+        140,
+        724,
+        1404
+      ],
+      "viewport": [
+        393,
+        762
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "19_PROGRESO_Resumen.png": {
+      "goldenSHA256": "0a2ef62913e426078ceb4dff5c6b4e6e227663f842aa3cb1c53fff7fbab98b83",
+      "crop": [
+        139,
+        138,
+        662,
+        1432
+      ],
+      "viewport": [
+        393,
+        850
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Individual original screen bounds: exclude external side rails, operating-system status row and home indicator. Fixed rectangle identified on original before recapture; uniform scaling only. See bounds-review images."
+    },
+    "20_PROGRESO_Peso.png": {
+      "goldenSHA256": "086fff19752b3adad809bd43a78c07021cb7bae01421729582200ac338f075aa",
+      "crop": [
+        106,
+        140,
+        724,
+        1404
+      ],
+      "viewport": [
+        393,
+        762
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "21_PROGRESO_Rendimiento.png": {
+      "goldenSHA256": "310338a11b9518fa630d61b4ea661e117ceb4a2f1711c8b29821a4dbeb5d06f9",
+      "crop": [
+        106,
+        140,
+        724,
+        1404
+      ],
+      "viewport": [
+        393,
+        762
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "22_PROGRESO_Adherencia.png": {
+      "goldenSHA256": "12ea1d373fb9dd096aa727eb07bbbb034e725ac7e246f804c5adc710ceef1aea",
+      "crop": [
+        106,
+        140,
+        724,
+        1404
+      ],
+      "viewport": [
+        393,
+        762
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "23_PROGRESO_Cuerpo_Medidas.png": {
+      "goldenSHA256": "48ab49f8a562853b31d8da3b841193cad4c101b229dc634713238cfd866fc709",
+      "crop": [
+        139,
+        138,
+        662,
+        1432
+      ],
+      "viewport": [
+        393,
+        850
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Individual original screen bounds: exclude external side rails, operating-system status row and home indicator. Fixed rectangle identified on original before recapture; uniform scaling only. See bounds-review images."
+    },
+    "24_AJUSTES_Principal.png": {
+      "goldenSHA256": "44c8be7c70bb493f2125fc24d75e610daa3dc181b9c975393d8525deca030a5d",
+      "crop": [
+        122,
+        174,
+        697,
+        1360
+      ],
+      "viewport": [
+        393,
+        767
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "25_AJUSTES_Rutina_diaria.png": {
+      "goldenSHA256": "b284055d825de0062d34b58ae8ce7fd8ed790ea95cae6a6101ce4a6e94e8bbdd",
+      "crop": [
+        120,
+        166,
+        697,
+        1432
+      ],
+      "viewport": [
+        393,
+        807
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    },
+    "26_AJUSTES_Datos_Backup_Restore.png": {
+      "goldenSHA256": "caf95f07de980abda43e383747490493191a91ceb313db94acff8853725ea113",
+      "crop": [
+        120,
+        166,
+        697,
+        1360
+      ],
+      "viewport": [
+        393,
+        767
+      ],
+      "deviceScaleFactor": 3,
+      "reason": "Inner screen rectangle excluding operating-system status bar, home indicator and device frame; includes app navigation and content."
+    }
+  }
+}

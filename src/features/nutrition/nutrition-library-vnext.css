@@ -693,3 +693,249 @@
     grid-template-columns: 32px minmax(0, 1fr) auto 28px;
   }
 }
+
+/* v2.1 Golden parity · Nutrition library/detail mobile composition */
+@media (max-width:600px){
+  .nutrition-vnext-shell--library .nutrition-library-vnext{width:100%;max-width:none;padding:0 0 calc(72px + env(safe-area-inset-bottom))}
+  .nutrition-library-vnext .nutrition-library-hero{display:none}
+  .nutrition-library-vnext .nutrition-tabs{gap:3px;margin:0 0 5px;padding:2px;border-radius:11px}.nutrition-library-vnext .nutrition-tabs button{min-height:32px;border-radius:9px;font-size:9px}
+  .nutrition-library-vnext .recipes-toolbar{grid-template-columns:minmax(0,1fr) auto;gap:5px;margin-bottom:5px}.nutrition-library-vnext .nutrition-search{gap:3px}.nutrition-library-vnext .nutrition-search>span{display:none}.nutrition-library-vnext .nutrition-search input{min-height:34px;padding:0 9px;border-radius:10px;font-size:9px}.nutrition-library-vnext .new-recipe-button{width:auto;min-height:34px;padding:0 10px;border-radius:10px;font-size:9px}
+  .nutrition-library-vnext .nutrition-categories{gap:4px;margin:0 0 5px;padding:1px}.nutrition-library-vnext .nutrition-categories button{min-height:24px;padding:0 9px;font-size:8px}.nutrition-library-vnext .nutrition-library-results{margin:0 2px 5px}.nutrition-library-vnext .nutrition-library-results span{font-size:9px}.nutrition-library-vnext .nutrition-library-results small{font-size:7px;text-align:right}
+  .nutrition-vnext-shell--library .nutrition-categories{flex-wrap:wrap;overflow:visible}.nutrition-vnext-shell--library .nutrition-library-results{display:none}
+  .nutrition-library-vnext .nutrition-recipe-grid{grid-template-columns:1fr;gap:6px}.nutrition-library-vnext .nutrition-recipe-card{gap:5px;min-height:92px;height:92px;padding:6px;border-radius:11px;overflow:hidden}.nutrition-library-vnext .nutrition-recipe-card--visual{grid-template-columns:minmax(0,1fr) 32px}.nutrition-recipe-card__open{grid-template-columns:112px minmax(0,1fr);gap:7px}.nutrition-recipe-card__open .recipe-visual--card{width:112px;height:78px;border-radius:9px}.nutrition-recipe-card__copy{gap:3px}.nutrition-recipe-card__copy>strong{font-size:11px}.nutrition-library-vnext .nutrition-eyebrow{font-size:7px}.nutrition-library-vnext .nutrition-recipe-card__ingredientCount{font-size:7px}.nutrition-library-vnext .favorite-button{width:32px;height:32px;border-radius:10px;font-size:17px}.nutrition-library-vnext .nutrition-macros{gap:3px}.nutrition-library-vnext .nutrition-macros>div{padding:4px 3px;border-radius:8px}.nutrition-library-vnext .nutrition-macros strong{font-size:9px}.nutrition-library-vnext .nutrition-macros span{font-size:6px}.nutrition-library-vnext .recipe-card-footer{padding-top:4px}.nutrition-library-vnext .recipe-card-footer>span,.nutrition-library-vnext .recipe-card-footer button{font-size:8px}
+  .nutrition-library-vnext .shopping-catalog-header,.nutrition-library-vnext .shopping-basket-header{gap:7px;margin-bottom:5px;padding:8px 9px;border-radius:12px;align-items:center}.nutrition-library-vnext .shopping-catalog-header h2,.nutrition-library-vnext .shopping-basket-header h2{margin:2px 0;font-size:15px}.nutrition-library-vnext .shopping-catalog-header p:last-child,.nutrition-library-vnext .shopping-basket-header p:last-child{font-size:8px;line-height:1.25}.nutrition-library-vnext .cart-button{min-height:44px;padding:0 8px;font-size:8px}
+  .nutrition-library-vnext .catalog-sections,.nutrition-library-vnext .shopping-list{gap:4px}.nutrition-library-vnext .catalog-section,.nutrition-library-vnext .shopping-group{border-radius:11px}.nutrition-library-vnext .catalog-section-header,.nutrition-library-vnext .shopping-group__heading{min-height:44px;padding:0 8px}.nutrition-library-vnext .catalog-section-header h3,.nutrition-library-vnext .shopping-group__heading span{font-size:9px}.nutrition-library-vnext .catalog-section-header button{width:44px;height:44px}.nutrition-library-vnext .catalog-product-row,.nutrition-library-vnext .shopping-row{min-height:46px;padding:3px 7px;gap:6px}.nutrition-library-vnext .catalog-product-row strong,.nutrition-library-vnext .shopping-info strong{font-size:9px}.nutrition-library-vnext .catalog-product-row span,.nutrition-library-vnext .shopping-info span{font-size:7px}.nutrition-library-vnext .catalog-row-actions{gap:3px}.nutrition-library-vnext .catalog-row-actions button,.nutrition-library-vnext .shopping-check,.nutrition-library-vnext .shopping-remove{width:44px;height:44px}.nutrition-library-vnext .shopping-edit{min-height:44px;font-size:8px}
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header)>.ds-segmented,.nutrition-vnext-shell--library:has(.recipe-editor)>.ds-segmented{display:none}
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header),.nutrition-vnext-shell--library:has(.recipe-editor){padding-top:0}
+  .nutrition-library-vnext>.recipe-visual--hero,.nutrition-library-vnext .recipe-editor>.recipe-visual--hero{width:100%;height:156px;margin:0 0 5px;border-radius:12px}
+  .nutrition-library-vnext .nutrition-back-button{min-height:44px;font-size:9px}.nutrition-library-vnext .nutrition-detail__header,.nutrition-library-vnext .recipe-editor__header{margin:0 0 5px;padding:8px 9px;border-radius:12px}.nutrition-library-vnext .nutrition-detail__header h1,.nutrition-library-vnext .recipe-editor__header h1{font-size:19px}.nutrition-library-vnext .recipe-management-actions{gap:4px;margin:0 0 5px}.nutrition-library-vnext .recipe-management-actions button{min-height:44px;padding:0 8px;font-size:8px}.nutrition-library-vnext .nutrition-detail-section,.nutrition-library-vnext .editor-card{padding:9px;border-radius:12px}.nutrition-library-vnext .nutrition-detail-section h2{font-size:15px}.nutrition-library-vnext .ingredient-row{min-height:44px;font-size:9px}.nutrition-library-vnext .recipe-editor{gap:6px}.nutrition-library-vnext .recipe-field{gap:3px}.nutrition-library-vnext .recipe-field span{font-size:8px}.nutrition-library-vnext .recipe-field input,.nutrition-library-vnext .recipe-field select,.nutrition-library-vnext .recipe-field textarea{min-height:44px;border-radius:10px;font-size:9px}.nutrition-library-vnext .recipe-field textarea{min-height:72px}
+}
+
+/* RC1.2 canonical recipe states. Kept in the feature owner so the normal
+   responsive cascade, rather than a release-only stylesheet, owns them. */
+@media (max-width:600px){
+  .nutrition-library-vnext:has(.nutrition-detail__header) .nutrition-macros{height:70px;min-height:70px;padding:0}
+  .nutrition-library-vnext:has(.nutrition-detail__header) .nutrition-macros>div{min-height:68px;align-content:center;padding:7px 3px}
+  .nutrition-library-vnext:has(.nutrition-detail__header) .ingredient-row{height:29px;min-height:29px;padding:1px 4px}
+
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor__header{min-height:43px;padding:0 3px;margin:0;border:0;background:transparent}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor__header .nutrition-eyebrow{display:none}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor__header small{display:block;color:#aaa;font-size:9px;line-height:1.25}
+}
+
+@media (max-width:600px){
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header)>.ds-app-header{height:68px;min-height:68px}
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header) .nutrition-back-button{top:18px}
+  .nutrition-library-vnext:has(.nutrition-detail__header)>.nutrition-macros{height:70px;min-height:70px}
+  .nutrition-library-vnext:has(.nutrition-detail__header)>.nutrition-macros>div{min-height:68px;align-content:center}
+  .nutrition-vnext-shell--library:has(.recipe-editor)>.ds-app-header{height:64px;min-height:64px}
+  .nutrition-vnext-shell--library:has(.recipe-editor) .nutrition-back-button{top:14px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:first-of-type{height:92px;align-content:start}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:nth-of-type(2){height:55px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:nth-of-type(2) h2{font-size:10px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within){height:27px;min-height:27px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within) input{height:21px;min-height:21px}
+}
+
+@media (max-width:600px){
+  .nutrition-library-vnext:has(.nutrition-detail__header)>.nutrition-macros{height:auto;min-height:0}
+  .nutrition-library-vnext:has(.nutrition-detail__header)>.nutrition-macros>div{min-height:0}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:first-of-type,
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:nth-of-type(2){height:auto}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:nth-of-type(2) h2{font-size:13px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within){height:34px;min-height:34px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within) input{height:26px;min-height:26px}
+}
+
+.ingredient-thumb{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ded2ba,#8c7357 55%,#211812);color:#17120e;font-size:9px;font-weight:800}
+.nutrition-detail-section .ingredient-row{grid-template-columns:26px minmax(0,1fr) auto}
+@media (max-width:600px){
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within){grid-template-columns:25px minmax(0,1fr) 70px 24px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within)>.ingredient-thumb{grid-column:1}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within)>.recipe-field:first-of-type{grid-column:2}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within)>.ingredient-amount-grid{grid-column:3}
+}
+@media (max-width:600px){
+  .nutrition-library-vnext:has(.nutrition-detail__header) .nutrition-detail-section,.nutrition-library-vnext:has(.nutrition-detail__header) .nutrition-detail__facts,
+  .nutrition-library-vnext:has(.recipe-editor) .editor-card,.nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient{background:#080809}
+
+  /* Golden-owned recipe detail geometry: macro and ingredient rows retain their
+     semantic markup while matching the approved mobile information density. */
+  .nutrition-library-vnext:has(.nutrition-detail__header) .nutrition-macro-grid{min-height:69px;padding:7px 0}
+  .nutrition-library-vnext:has(.nutrition-detail__header) .nutrition-macro-grid strong{font-size:15px}
+  .nutrition-library-vnext:has(.nutrition-detail__header) .ingredient-row{min-height:29px;height:29px;padding:2px 8px}
+  .nutrition-library-vnext:has(.nutrition-detail__header) .ingredient-thumb{width:24px;height:24px}
+
+  /* Editor header is the owner of the approved title/subtitle composition. */
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor__header .nutrition-eyebrow{display:none}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor__header small{display:block;color:#aaa;font-size:9px;line-height:1.25}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor__header{min-height:43px;padding-top:0}
+}
+
+@media (max-width:600px){
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:first-of-type{padding:2px 5px;gap:1px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:first-of-type .recipe-field{gap:1px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:first-of-type input,
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:first-of-type select{height:27px;min-height:27px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:nth-of-type(2){padding:3px 5px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:nth-of-type(2) .recipe-macro-form input{height:27px;min-height:27px}
+}
+
+/* Recipe detail/editor own their compact Golden surfaces. The recipe raster is
+   still supplied by the licensed runtime registry; only its slot is sized here. */
+@media (max-width:600px){
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header)>.ds-app-header,
+  .nutrition-vnext-shell--library:has(.recipe-editor)>.ds-app-header{height:76px;min-height:76px;padding:0 44px 0 48px}
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header)>.ds-app-header .ds-app-header__settings,
+  .nutrition-vnext-shell--library:has(.recipe-editor)>.ds-app-header .ds-app-header__settings{display:none}
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header) .nutrition-back-button,
+  .nutrition-vnext-shell--library:has(.recipe-editor) .nutrition-back-button{top:23px}
+  .nutrition-library-vnext:has(.nutrition-detail__header) .recipe-visual--hero{display:block;width:100%;height:142px;margin:0 0 5px;border-radius:12px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:focus-within{grid-template-columns:repeat(2,minmax(0,1fr)) 24px;padding:6px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:focus-within>.recipe-field:nth-of-type(2),
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:focus-within>.recipe-field:last-child,
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:focus-within .ingredient-amount-grid>.recipe-field{display:grid}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:focus-within span{display:block}
+}
+
+@media (max-width:600px){
+  .nutrition-vnext-shell--library .nutrition-library-vnext{padding-left:7px;padding-right:7px}
+  .nutrition-library-vnext:has(.nutrition-recipe-grid){padding-top:4px}
+  .nutrition-library-vnext:has(.nutrition-recipe-grid) .nutrition-categories{margin-bottom:9px}
+  .nutrition-library-vnext:has(.nutrition-recipe-grid) .nutrition-categories button{min-height:26px}
+}
+
+@media (max-width:600px){
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header)>.ds-app-header,.nutrition-vnext-shell--library:has(.recipe-editor)>.ds-app-header{display:flex;min-height:112px;padding-left:42px}
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header)>.ds-app-header p,.nutrition-vnext-shell--library:has(.recipe-editor)>.ds-app-header p{font-size:0}
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header)>.ds-app-header p:after{content:"Recetas · Detalle de receta";font-size:11px}
+  .nutrition-vnext-shell--library:has(.recipe-editor)>.ds-app-header p:after{content:"Jueves, 3 de septiembre";font-size:11px}
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header) .nutrition-back-button,.nutrition-vnext-shell--library:has(.recipe-editor) .nutrition-back-button{position:fixed;z-index:20;left:9px;top:52px;width:34px;min-height:34px;overflow:hidden;padding:0;color:transparent;border:1px solid var(--fenix-border);border-radius:50%;background:#0d0e10;font-size:0}
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header) .nutrition-back-button:before{content:"‹";color:white;font-size:28px}
+  .nutrition-vnext-shell--library:has(.recipe-editor) .nutrition-back-button:before{content:"‹";color:white;font-size:28px}
+  .nutrition-library-vnext:has(.nutrition-detail__header)>.recipe-visual--hero{height:142px;margin:0 0 5px}
+  .nutrition-library-vnext .nutrition-detail__header{display:grid;grid-template-columns:minmax(0,1fr) 38px;padding:0 3px;margin:0;border:0;background:transparent}
+  .nutrition-library-vnext .nutrition-detail__header h1{font-size:21px;line-height:1.08}
+  .nutrition-library-vnext .nutrition-detail__pills{display:flex;gap:7px;margin:2px 3px 6px}.nutrition-library-vnext .nutrition-detail__pills span{padding:4px 10px;border:1px solid #4b171a;border-radius:999px;color:#ddd;font-size:9px}
+  .nutrition-library-vnext .nutrition-detail__notes{margin:0 3px 7px;color:#aaa;font-size:10px;line-height:1.35}
+  .nutrition-library-vnext:has(.nutrition-detail__header)>.nutrition-macros{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:0 0 6px;border:1px solid var(--fenix-border);border-radius:11px}
+  .nutrition-library-vnext:has(.nutrition-detail__header)>.nutrition-macros>div{border:0;border-right:1px solid var(--fenix-border);background:transparent;padding:7px 3px}.nutrition-library-vnext:has(.nutrition-detail__header)>.nutrition-macros>div:last-child{border-right:0}
+  .nutrition-library-vnext:has(.nutrition-detail__header)>.nutrition-detail-section{padding:6px;margin:0 0 6px}.nutrition-library-vnext:has(.nutrition-detail__header)>.nutrition-detail-section h2{font-size:14px;margin:0 0 4px}
+  .nutrition-library-vnext:has(.nutrition-detail__header) .ingredient-row{min-height:31px;padding:2px 4px}.nutrition-library-vnext:has(.nutrition-detail__header) .ingredient-action-area button{width:28px;height:28px;min-height:28px}.nutrition-library-vnext:has(.nutrition-detail__header) .ingredient-row strong,.nutrition-library-vnext:has(.nutrition-detail__header) .ingredient-action-area span{font-size:9px}
+  .nutrition-library-vnext .recipe-management-actions{margin-top:4px}.nutrition-library-vnext .recipe-management-actions>summary{min-height:32px;display:flex;align-items:center;color:#aaa;font-size:9px}.nutrition-library-vnext .recipe-management-actions>div{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.nutrition-library-vnext .recipe-management-actions>div button{min-height:36px}
+
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor{gap:5px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor__header{padding:0 3px;margin:0;border:0;background:transparent}.nutrition-library-vnext:has(.recipe-editor) .recipe-editor__header h1{font-size:20px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.recipe-visual--hero{height:82px;margin:0;border-radius:10px}
+  .nutrition-library-vnext:has(.recipe-editor) .editor-card{padding:5px;border-radius:10px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-field input,.nutrition-library-vnext:has(.recipe-editor) .recipe-field select{min-height:31px;padding:4px 7px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-macro-form{grid-template-columns:repeat(4,1fr);gap:4px}.nutrition-library-vnext:has(.recipe-editor) .recipe-macro-form input{min-height:31px}
+  .nutrition-library-vnext:has(.recipe-editor) .editor-card h2{margin:0 0 4px;font-size:13px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredients{gap:3px}.nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient{display:grid;grid-template-columns:minmax(0,1fr) 80px 24px;align-items:center;gap:5px;padding:3px;border-radius:7px}.nutrition-library-vnext:has(.recipe-editor) .ingredient-editor-header{grid-column:1/-1;display:none}.nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient>.recipe-field:first-of-type{grid-column:1}.nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient>.recipe-field:nth-of-type(2),.nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient>.recipe-field:last-child{display:none}.nutrition-library-vnext:has(.recipe-editor) .ingredient-amount-grid{grid-column:2;display:block}.nutrition-library-vnext:has(.recipe-editor) .ingredient-amount-grid>.recipe-field:not(:first-child){display:none}.nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient input{min-height:28px;border:0;background:transparent}.nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient span{display:none}.nutrition-library-vnext:has(.recipe-editor) .section-title-row button{min-height:28px}
+  .nutrition-library-vnext:has(.recipe-editor) .editor-card:has(textarea){padding:4px}.nutrition-library-vnext:has(.recipe-editor) textarea{min-height:56px!important;font-size:8px!important}.nutrition-library-vnext:has(.recipe-editor) .editor-card:has(textarea) .recipe-field:last-child{display:none}
+}
+
+.shopping-golden-summary{display:grid;gap:7px;margin-bottom:6px;padding:10px 12px;border:1px solid var(--fenix-border);border-radius:12px;background:var(--fenix-surface)}
+.shopping-golden-summary>span{font-size:9px;color:#aaa}.shopping-golden-summary>div{display:grid;grid-template-columns:52px 1fr 52px 1fr;align-items:center;gap:7px}.shopping-golden-summary strong{font-size:25px;text-align:center}.shopping-golden-summary small{font-size:10px;color:#aaa;font-style:normal}.shopping-golden-summary em{color:var(--fenix-accent);font-style:normal}.shopping-golden-summary i{color:var(--fenix-success);font-style:normal}
+.shopping-golden-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:7px}.shopping-golden-actions button{min-height:44px;border:1px solid var(--fenix-border);border-radius:10px;background:var(--fenix-surface);color:var(--fenix-text);display:flex;align-items:center;justify-content:center;gap:7px;font-size:15px}.shopping-golden-actions span{font-size:9px;line-height:1.15}.shopping-golden-actions button:disabled{opacity:.5}
+
+.nutrition-detail__facts{display:grid;grid-template-columns:repeat(3,1fr);margin:0 0 6px;border:1px solid var(--fenix-border);border-radius:11px;background:var(--fenix-surface)}
+.nutrition-detail__facts>span{display:grid;place-items:center;gap:2px;min-height:45px;padding:5px;border-right:1px solid var(--fenix-border);text-align:center}.nutrition-detail__facts>span:last-child{border-right:0}.nutrition-detail__facts b{font-size:13px}.nutrition-detail__facts small{font-size:7px;color:#aaa}
+.nutrition-detail__content-tabs{display:grid;grid-template-columns:1fr 1fr;margin:0 0 6px;border:1px solid var(--fenix-border);border-radius:10px}.nutrition-detail__content-tabs a{display:grid;place-items:center;min-height:34px;color:#ccc;font-size:9px;text-decoration:none}.nutrition-detail__content-tabs a:first-child{border-radius:9px;background:linear-gradient(110deg,#e30000,#b70005);color:#fff}
+.nutrition-detail__footer-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0 0 5px}.nutrition-detail__footer-actions button{min-height:38px;border:1px solid var(--fenix-border);border-radius:10px;background:#0e0e0f;color:#eee;font-size:9px}.nutrition-detail__footer-actions button:first-child{background:linear-gradient(110deg,#d30000,#ad0004)}.nutrition-detail__footer-actions button:disabled{opacity:.7;cursor:not-allowed}
+
+@media (max-width:600px){
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header)>.ds-app-header,
+  .nutrition-vnext-shell--library:has(.recipe-editor)>.ds-app-header{height:60px;min-height:60px;padding:0 0 0 44px}
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header)>.ds-app-header .ds-app-header__actions,
+  .nutrition-vnext-shell--library:has(.recipe-editor)>.ds-app-header .ds-app-header__actions{display:none}
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header) .nutrition-back-button,
+  .nutrition-vnext-shell--library:has(.recipe-editor) .nutrition-back-button{top:10px}
+  .nutrition-library-vnext:has(.nutrition-detail__header) .ingredient-row{min-height:29px;padding:1px 4px}
+  .nutrition-library-vnext:has(.nutrition-detail__header) .ingredient-action-area button{width:25px;height:25px;min-height:25px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient{min-height:30px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within){height:30px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within) input{height:23px;min-height:23px}
+}
+
+@media (max-width:600px){
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient{min-height:34px;max-height:none}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within){height:34px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within) input{height:26px;min-height:26px;padding:2px 5px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredients{gap:2px}
+  .nutrition-library-vnext:has(.recipe-editor) .editor-card{margin:0}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor__header{min-height:32px}
+}
+
+@media (max-width:600px){
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header)>.ds-app-header{height:68px;min-height:68px}
+  .nutrition-vnext-shell--library:has(.nutrition-detail__header) .nutrition-back-button{top:18px}
+  .nutrition-library-vnext:has(.nutrition-detail__header)>.nutrition-macros{height:70px;min-height:70px}
+  .nutrition-library-vnext:has(.nutrition-detail__header)>.nutrition-macros>div{min-height:68px;align-content:center}
+  .nutrition-vnext-shell--library:has(.recipe-editor)>.ds-app-header{height:64px;min-height:64px}
+  .nutrition-vnext-shell--library:has(.recipe-editor) .nutrition-back-button{top:14px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:first-of-type{height:92px;align-content:start}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:nth-of-type(2){height:55px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:nth-of-type(2) h2{font-size:10px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within){height:27px;min-height:27px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within) input{height:21px;min-height:21px}
+}
+
+/* RC1.2 canonical recipe states — final feature-owner cascade. */
+@media (max-width:600px){
+  .nutrition-library-vnext:has(.nutrition-detail__header) .nutrition-macros{height:70px;min-height:70px;padding:0}
+  .nutrition-library-vnext:has(.nutrition-detail__header) .nutrition-macros>div{min-height:68px;align-content:center;padding:7px 3px}
+  .nutrition-library-vnext:has(.nutrition-detail__header) .ingredient-row{height:29px;min-height:29px;padding:1px 4px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor__header{min-height:43px;padding:0 3px;margin:0;border:0;background:transparent}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor__header .nutrition-eyebrow{display:none}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor__header small{display:block;color:#aaa;font-size:9px;line-height:1.25}
+}
+@media (max-width:600px){
+  .nutrition-library-vnext:has(.nutrition-detail__header) .nutrition-detail__header h1{transform:translateY(-9px)}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:first-of-type{height:96px;padding:0;border:0;background:transparent}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:first-of-type>.recipe-field:nth-child(2){position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-options{display:grid;grid-template-columns:1fr 1.05fr;gap:12px;margin-top:3px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-options>span{display:flex;align-items:end;gap:4px;position:relative;padding-top:13px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-options small{position:absolute;left:0;top:0;color:#aaa;font-size:7px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-options b{display:grid;place-items:center;min-height:24px;flex:1;padding:0 4px;border:1px solid #343438;border-radius:9px;color:#ccc;font-size:7px;font-weight:500}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-options b.active{border-color:#e30613;background:#bc0008;color:#fff}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within){height:27px;min-height:27px;grid-template-columns:25px minmax(0,1fr) 70px 24px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within)>.ingredient-thumb{display:grid;grid-column:1}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within)>.recipe-field:first-of-type{grid-column:2}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within)>.ingredient-amount-grid{grid-column:3}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within) input{height:21px;min-height:21px}
+}
+@media (max-width:600px){
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:nth-of-type(3){padding:4px 5px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within){height:24px;min-height:24px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-ingredient:not(:focus-within) input{height:19px;min-height:19px}
+  .nutrition-library-vnext:has(.recipe-editor) .editor-card:has(textarea){height:62px;padding:3px 5px}
+  .nutrition-library-vnext:has(.recipe-editor) .editor-card:has(textarea) textarea{height:44px;min-height:44px!important}
+  .recipe-editor-tags{display:grid;gap:3px}
+  .recipe-editor-tags>small{font-size:8px;color:#bbb}
+  .recipe-editor-tags>div{display:flex;gap:4px}
+  .recipe-editor-tags button{height:24px;min-height:24px;padding:0 7px;border:1px solid #343438;border-radius:999px;background:#09090a;color:#bbb;font-size:7px;opacity:1}
+  .recipe-editor-tags button:first-child{border-color:#c9000b;color:#eee}
+  .recipe-editor-final-actions{display:grid;grid-template-columns:1fr 1.18fr;gap:7px}
+  .recipe-editor-final-actions>button{min-height:42px;border:1px solid #343438;border-radius:9px;background:#0a0a0b;color:#eee;font-size:9px;opacity:1}
+  .recipe-editor-final-actions>.nutrition-primary-button{background:linear-gradient(110deg,#e30000,#bd0008);font-size:9px}
+}
+@media (max-width:600px){
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:first-of-type{height:89px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:nth-of-type(2){height:51px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:nth-of-type(2) .recipe-macro-form input{border:0;border-radius:0;border-right:1px solid #29292d;background:transparent}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor>.editor-card:nth-of-type(3){margin-bottom:26px}
+}
+@media (max-width:600px){
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-tags{margin-top:34px}
+}
+@media (max-width:600px){
+  .nutrition-library-vnext:has(.recipe-editor) .editor-card:has(textarea){height:78px;border:0;background:transparent;padding:0}
+  .nutrition-library-vnext:has(.recipe-editor) .editor-card:has(textarea) textarea{height:60px;min-height:60px!important}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-tags{margin-top:5px}
+}
+@media (max-width:600px){
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-options{margin-top:-3px}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-final-actions{grid-template-columns:1fr 1fr}
+  .nutrition-library-vnext:has(.recipe-editor) .recipe-editor-final-actions>.nutrition-primary-button{background:linear-gradient(110deg,#e00612,#ad0006)}
+}

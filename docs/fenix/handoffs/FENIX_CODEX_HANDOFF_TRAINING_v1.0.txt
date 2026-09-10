@@ -1,0 +1,2524 @@
+# FENIX_CODEX_HANDOFF_TRAINING_v1.0
+
+Estado del documento: CANÓNICO PARA MIGRACIÓN A CODEX
+Área: 02 · FÉNIX — TRAINING
+Fecha de emisión: 2026-09-08
+Propósito: preservar el conocimiento funcional, contractual, histórico, visual, de QA y de integración vigente de Training para que Codex pueda continuar el proyecto sin reconstruir decisiones desde conversaciones previas.
+Regla de este handoff: no introduce diseño nuevo, no cambia decisiones aprobadas y no autoriza implementación. Cuando un dato no puede determinarse con certeza se marca `DESCONOCIDO`.
+
+## 0. Jerarquía de autoridad aplicable
+
+Training está subordinado a la gobernanza global de FÉNIX. El orden operativo conocido es:
+
+1. Decisiones expresas posteriores del usuario.
+2. PROMPT MAESTRO — PROYECTO FÉNIX.
+3. FÉNIX — MANIFIESTO DE FUENTES v1.0.
+4. FÉNIX — PROTOCOLO DE COORDINACIÓN v1.0.
+5. Resoluciones de CENTRAL aplicables al estado actual del proyecto.
+6. Especificaciones funcionales aprobadas del especialista Training.
+7. Implementación existente, que sirve como evidencia de estado pero no puede invalidar contratos funcionales aprobados.
+
+Para datos personales e históricos, la autoridad conocida es:
+
+1. Corrección expresa posterior del usuario.
+2. Exportación histórica FÉNIX/Notion.
+3. Datos creados posteriormente dentro de FÉNIX.
+
+Para afirmaciones científicas de Training, debe priorizarse la mejor evidencia disponible por calidad y aplicabilidad, no la reputación de un autor.
+
+---
+
+# 1. Rol, autoridad y límites de este especialista
+
+## 1.1 Identidad del especialista
+
+Este chat/área es:
+
+`02 · FÉNIX — TRAINING`
+
+Su prompt específico vigente de origen es:
+
+`PROMPT ESPECÍFICO — 02 · FÉNIX — TRAINING v1.0`
+
+## 1.2 Misión
+
+Convertir Training en una herramienta personal de entrenamiento extremadamente útil basada en:
+
+- evidencia;
+- datos reales;
+- experiencia de uso;
+- adherencia;
+- progresión;
+- simplicidad.
+
+Training existe para mejorar el entrenamiento real, no para maximizar el número de estadísticas.
+
+Toda funcionalidad de Training debe contribuir al menos a una de estas áreas:
+
+- mejor ejecución;
+- mejor progresión;
+- mejores decisiones;
+- menor fricción;
+- mejor adherencia;
+- mejor comprensión del rendimiento.
+
+## 1.3 Autoridad funcional de Training
+
+Training es autoridad funcional sobre:
+
+- ejercicios;
+- catálogo de ejercicios;
+- grupos musculares;
+- selección de ejercicios;
+- rutinas;
+- plantillas;
+- programación;
+- sesiones;
+- estados de sesión;
+- calentamiento;
+- movilidad relacionada con entrenamiento;
+- recuperación relacionada con entrenamiento;
+- series;
+- warm-up sets;
+- working sets;
+- repeticiones;
+- cargas;
+- RIR;
+- RPE cuando corresponda, aunque no es métrica principal aprobada para vNext;
+- descansos;
+- temporizador;
+- orden de ejercicios;
+- sustituciones;
+- técnica;
+- ROM;
+- progresión;
+- PR cuando proceda;
+- rendimiento;
+- historial de entrenamiento;
+- volumen cuando sea útil;
+- modificaciones de rutina;
+- estructura funcional y UX necesaria del módulo;
+- cualquier dato cuyo propietario conceptual sea Training.
+
+## 1.4 Rol profesional asumido
+
+El especialista actúa como:
+
+- entrenador de fuerza e hipertrofia;
+- especialista en programación;
+- especialista en selección de ejercicios;
+- especialista en técnica;
+- analista de volumen;
+- analista de intensidad;
+- especialista en RIR/RPE;
+- analista de progresión;
+- especialista en recuperación relacionada con entrenamiento;
+- diseñador funcional de Training;
+- analista de rendimiento;
+- investigador basado en evidencia.
+
+## 1.5 Límites
+
+Training no decide ni debe codificar:
+
+- arquitectura;
+- React;
+- TypeScript;
+- Dexie;
+- IndexedDB;
+- modelo físico de datos;
+- schema;
+- migraciones;
+- persistencia;
+- PWA;
+- Service Worker;
+- sincronización;
+- seguridad;
+- privacidad;
+- cifrado;
+- rendimiento técnico;
+- Git/GitHub;
+- Cloudflare;
+- componentes técnicos;
+- testing técnico;
+- implementación del Design System.
+
+Eso pertenece a CENTRAL/Ingeniería.
+
+Training puede especificar una necesidad funcional, por ejemplo: `necesito poder sustituir un ejercicio durante la sesión`. Ingeniería/CENTRAL decide cómo construirla.
+
+---
+
+# 2. Estado exacto actual del área
+
+## 2.1 Estado funcional
+
+La auditoría funcional de Training vNext fue completada y aprobada por el usuario el 2026-09-02.
+
+Existe una especificación funcional final aprobada titulada:
+
+`ESPECIFICACIÓN APROBADA PARA IMPLEMENTACIÓN — 02 · FÉNIX — TRAINING — vNext`
+
+Estado de esa especificación:
+
+`APROBADA PARA IMPLEMENTACIÓN`
+
+Los impactos cross-module funcionales con Hoy, Progreso y Nutrition quedaron resueltos antes de emitirla.
+
+## 2.2 Estado de producto/implementación global conocido
+
+FÉNIX v2.0.0 CORE STABLE llegó a release y fue desplegada como PWA. En esa etapa se validó operativamente en iPhone:
+
+- app instalada;
+- offline PASS;
+- Training PASS;
+- Nutrition PASS;
+- Progreso PASS;
+- errores visibles: NO.
+
+El release canónico v2.0.0 conocido tiene SHA-256:
+
+`f98d902d245dcd3cc0a6db5eca4d40afa4b1bca3e7f7f00a9238d16f32fab617`
+
+DB conocida:
+
+`fenix-db`
+
+Schema conocido:
+
+`5`
+
+Migraciones en la línea CORE STABLE/v2.1 conocida:
+
+`NONE`
+
+El roundtrip real de CORE STABLE preservó 759 registros y pasó validación.
+
+## 2.3 Estado actual de desarrollo v2.1 conocido a 2026-09-08
+
+Versión de trabajo:
+
+`FÉNIX v2.1.0-rc.1`
+
+Branch de trabajo:
+
+`main`
+
+Baseline de producción declarado como intacto:
+
+`deac3890f4d1b794cae8f3acde5a12bf7c35cf94`
+
+Estado de publicación de v2.1.0-rc.1:
+
+- commit de RC1 final: NO;
+- tag: NO;
+- push: NO;
+- release: NO;
+- QA independiente final: NO autorizado todavía en el punto recuperado.
+
+CENTRAL exige una RC1.1 consolidada antes de QA/producción, con tres cierres abiertos:
+
+- `CENTRAL-RC1-001`: paridad visual 26/26 contra Goldens inmutables;
+- `CENTRAL-RC1-002`: ExerciseMotion específico 33/33;
+- `CENTRAL-RC1-003`: media final para los 7 assets FÉNIX propios.
+
+Por tanto, Training v2.1 no debe considerarse release estable ni cerrado actualmente.
+
+## 2.4 Estado de datos reales de Training
+
+Durante la auditoría de 2026-09-02 el usuario indicó que existían aproximadamente tres semanas de entrenamientos registrados.
+
+CORE STABLE validó preservación/roundtrip global y se conoce que un registro histórico `2026-09-04 · Lower B` en estado pending fue preservado durante la validación de release.
+
+Cantidad exacta de sesiones Training actualmente presentes en el dispositivo real tras el posterior arranque “día 0”:
+
+`DESCONOCIDO`
+
+No debe inferirse desde este handoff.
+
+---
+
+# 3. Contratos funcionales vigentes y reglas que no pueden romperse
+
+## 3.1 Separación conceptual obligatoria
+
+Training vNext separa funcionalmente:
+
+1. Plantilla/rutina.
+2. Programación.
+3. Sesión real.
+
+Significados:
+
+- Plantilla/rutina: define qué debe hacerse.
+- Programación: define cuándo corresponde realizar la plantilla.
+- Sesión real: registra qué ocurrió realmente.
+
+Editar una plantilla nunca puede reescribir una sesión histórica.
+
+## 3.2 Fuente de verdad
+
+Training es la única fuente funcional de verdad sobre:
+
+- identidad de sesión;
+- sesión prevista;
+- sesión iniciada;
+- sesión completada;
+- sesión incompleta;
+- sesión omitida;
+- reprogramación;
+- ejercicios;
+- sets;
+- kg;
+- reps;
+- RIR;
+- sustituciones;
+- comparabilidad de rendimiento;
+- contenido de Training.
+
+Hoy, Nutrition y Progreso consumen contexto/datos de Training, pero no recrean una fuente paralela.
+
+## 3.3 Finalización de sesión
+
+Una sesión no se considera completada por rellenar automáticamente todas las series.
+
+Debe existir una finalización explícita desde Training:
+
+`Finalizar entrenamiento`
+
+La sesión puede ser completada aunque haya:
+
+- sustituciones;
+- ejercicios omitidos;
+- series eliminadas;
+- cambios razonables respecto a la plantilla.
+
+Completitud de sesión no equivale a “100 % de plantilla exacta ejecutada”.
+
+## 3.4 Reprogramación
+
+Una sesión reprogramada conserva identidad.
+
+No puede modelarse funcionalmente como:
+
+- sesión fallida el día original;
+- más sesión nueva en el nuevo día.
+
+Una reprogramación válida es neutral hasta que la sesión se resuelva.
+
+## 3.5 Omisión
+
+`OMITIDA` es una decisión/resultado explícito de una sesión formal prevista que termina definitivamente sin realizarse.
+
+Nunca debe inferirse simplemente porque haya pasado una fecha.
+
+`SIN REGISTRAR` o `PENDIENTE` no equivalen a `OMITIDA`.
+
+## 3.6 Incompleta
+
+`INCOMPLETA` significa:
+
+- sesión formal prevista;
+- existió trabajo real;
+- la sesión finalizó sin alcanzar el criterio funcional de `COMPLETADA` definido por Training.
+
+Debe conservar el trabajo realizado.
+
+No es lo mismo que `OMITIDA`.
+
+## 3.7 Inicio accidental
+
+Si una sesión se inicia por error y no contiene trabajo real relevante:
+
+- puede descartarse;
+- no debe contaminar historial;
+- no debe afectar racha/adherencia.
+
+## 3.8 Warm-up sets versus working sets
+
+Son categorías diferentes.
+
+Warm-up sets:
+
+- pueden conservarse en Training;
+- no cuentan por defecto como working volume;
+- no generan PR por defecto;
+- no se usan por defecto para progresión longitudinal;
+- no necesitan RIR obligatoriamente;
+- son editables/omitibles.
+
+Working sets:
+
+- sí forman parte del rendimiento;
+- sí alimentan progresión;
+- sí alimentan análisis longitudinal.
+
+## 3.9 Historial y eliminación destructiva
+
+Los ejercicios usados históricamente deben protegerse frente a eliminación destructiva.
+
+Comportamiento funcional aprobado:
+
+`Archivar` en lugar de destruir historial.
+
+Editar rutina no altera sesiones cerradas.
+
+Editar/corregir sesión histórica está permitido mediante una acción deliberada y no debe modificar la plantilla actual.
+
+## 3.10 Administración desde la app
+
+Contenido personal ordinario de Training debe ser administrable desde FÉNIX cuando sea razonable:
+
+- ejercicios;
+- rutinas;
+- orden;
+- alternativas;
+- notas;
+- parámetros;
+- movilidad;
+- recuperación.
+
+No debe ser necesario modificar VS Code para cambiar contenido ordinario.
+
+## 3.11 Offline y persistencia
+
+Las operaciones esenciales de Training deben funcionar offline:
+
+- consultar sesión;
+- iniciar;
+- continuar;
+- registrar;
+- completar/desmarcar sets dentro de reglas válidas;
+- kg/reps/RIR;
+- temporizador;
+- sustituir;
+- finalizar;
+- consultar contenido local;
+- historial;
+- editar contenido local ordinario.
+
+Cerrar/navegar/reabrir no debe perder una sesión activa.
+
+## 3.12 Una sesión activa
+
+Regla funcional aprobada:
+
+solo una sesión activa simultánea para este producto personal, salvo cambio formal futuro.
+
+---
+
+# 4. Todas las decisiones aprobadas que siguen vigentes
+
+## 4.1 Programación semanal base
+
+Split aprobado:
+
+`Upper / Lower x4`
+
+Reparto ideal:
+
+- lunes: Upper A;
+- martes: Lower A;
+- jueves: Upper B;
+- viernes: Lower B.
+
+Son días ideales, no fechas rígidas.
+
+## 4.2 Duración objetivo
+
+Objetivo habitual:
+
+aproximadamente 50 minutos por sesión.
+
+Máximo habitual indicado por el usuario:
+
+90 minutos.
+
+Training debe priorizar calidad y eficiencia de sesión, no añadir volumen indiscriminadamente para perseguir cambios de peso corporal.
+
+## 4.3 Rutina de fuerza aprobada vNext
+
+### Upper A
+
+| Ejercicio | Working sets | Reps | RIR | Descanso |
+|---|---:|---:|---:|---:|
+| Press inclinado con mancuernas | 3 | 6–10 | 2 | 2–3 min |
+| Jalón al pecho | 3 | 8–12 | 2 | 2 min |
+| Remo con apoyo torácico completo | 2 | 8–12 | 2 | 2 min |
+| Aperturas en polea | 2 | 10–15 | 1–2 | 90 s |
+| Elevación lateral | 3 | 12–20 | 1–2 | 60–90 s |
+| Curl Bayesian | 2 | 10–15 | 1–2 | 90 s |
+| Triceps pushdown | 2 | 10–15 | 1–2 | 90 s |
+
+Total: 17 working sets.
+
+### Lower A
+
+| Ejercicio | Working sets | Reps | RIR | Descanso |
+|---|---:|---:|---:|---:|
+| Hack squat | 3 | 6–10 | 2–3 | 2.5–3 min |
+| Leg press | 2 | 10–15 | 2 | 2 min |
+| Curl femoral | 3 | 8–12 | 1–2 | 90–120 s |
+| Hip thrust | 2 | 8–12 | 1–2 | 2 min |
+| Gemelo sentado | 3 | 10–15 | 1–2 | 90 s |
+
+Total: 13 working sets.
+
+### Upper B
+
+| Ejercicio | Working sets | Reps | RIR | Descanso |
+|---|---:|---:|---:|---:|
+| Press banca | 3 | 6–10 | 2 | 2.5–3 min |
+| Dominadas / variante de jalón | 3 | 6–10 | 2 | 2–3 min |
+| Remo con apoyo torácico completo | 2 | 10–15 | 2 | 2 min |
+| Elevación lateral | 3 | 12–20 | 1–2 | 60–90 s |
+| Hammer curl | 2 | 8–12 | 1–2 | 90 s |
+| Extensión overhead de tríceps | 2 | 10–15 | 1–2 | 90 s |
+
+Total: 15 working sets.
+
+### Lower B
+
+| Ejercicio | Working sets | Reps | RIR | Descanso |
+|---|---:|---:|---:|---:|
+| Leg press | 3 | 8–12 | 2 | 2–3 min |
+| Leg extension | 3 | 10–15 | 1–2 | 90 s |
+| Curl femoral | 3 | 10–15 | 1–2 | 90–120 s |
+| Hip thrust | 2 | 10–15 | 1–2 | 2 min |
+| Gemelo sentado | 3 | 10–15 | 1–2 | 90 s |
+
+Total: 14 working sets.
+
+## 4.4 Consideración lumbar y tolerancia personal
+
+El usuario informó durante la auditoría que el remo sentado y el remo en T con apoyo le cargaban mucho la zona lumbar en el contexto de su escoliosis.
+
+Decisiones aprobadas:
+
+- no mantener un remo concreto por obligación si provoca molestias;
+- buscar variante con apoyo torácico realmente tolerable;
+- si también genera molestias, sustituir;
+- el Romanian Deadlift se retiró temporalmente del núcleo obligatorio de Lower B;
+- no usar etiquetas clínicas simplistas como `Safe For My Back` o `Spine Load` como equivalentes de seguridad;
+- usar preferentemente tolerancia personal y notas.
+
+Valores funcionales propuestos/aprobados para tolerancia personal:
+
+- sin problemas;
+- molestia ocasional;
+- evitar por ahora.
+
+Training no debe convertir esto en diagnóstico o tratamiento médico.
+
+## 4.5 Progresión
+
+Sistema aprobado:
+
+`doble progresión + RIR`
+
+Se deroga como regla la idea de “subir peso porque pasó otra semana”.
+
+Cada ejercicio puede usar:
+
+- rango de repeticiones;
+- RIR objetivo/rango;
+- working sets anteriores;
+- carga anterior;
+- rendimiento comparable.
+
+Regla funcional:
+
+- si todavía no se domina la parte alta del rango con esfuerzo compatible, mantener carga e intentar añadir reps;
+- cuando se alcance suficientemente la parte alta del rango manteniendo RIR compatible, sugerir un incremento mínimo razonable de carga;
+- si el rendimiento cae, Training puede sugerir mantener/recuperar/ajustar en vez de forzar una subida.
+
+Las sugerencias nunca bloquean la decisión del usuario.
+
+## 4.6 RIR/RPE
+
+RIR es la métrica principal de esfuerzo aprobada.
+
+No duplicar rutinariamente RIR y RPE.
+
+Referencia funcional:
+
+- compuestos: aproximadamente RIR 2, con margen contextual, incluido 2–3 en algunos casos;
+- aislamientos estables: normalmente RIR 1–2.
+
+No imponer RIR 2 universal a todas las series.
+
+No obligar a fallo sistemático.
+
+## 4.7 Warm-up automático sugerido
+
+Training debe poder sugerir warm-up sets automáticamente, siempre editables/omitibles.
+
+Referencia práctica aprobada para un primer ejercicio pesado:
+
+- aproximación ligera, aproximadamente 40–50 %;
+- aproximación media, aproximadamente 60–70 %;
+- aproximación cercana, aproximadamente 80 %;
+- repeticiones decrecientes conforme sube la carga.
+
+No debe tratarse como fórmula clínica rígida.
+
+Ejercicios posteriores pueden requerir 0, 1 o más aproximaciones según contexto.
+
+## 4.8 Descanso y temporizador
+
+Al completar una working set debe iniciar automáticamente el descanso correspondiente.
+
+Rangos de referencia aprobados:
+
+- multiarticulares pesados: 2–3 min;
+- máquinas/aislamientos exigentes: 90–120 s;
+- aislamientos pequeños: 60–90 s.
+
+Debe permitir:
+
+- saltar;
+- modificar;
+- navegar;
+- recibir aviso cuando sea técnicamente viable.
+
+El temporizador nunca bloquea la sesión.
+
+## 4.9 Técnica y ROM
+
+Decisiones vigentes:
+
+- técnica basada en evidencia, no dogmática;
+- no imponer técnica estricta universal;
+- no clasificar cualquier momentum automáticamente como repetición inválida;
+- priorizar ROM amplio, cómodo y controlado;
+- enfatizar posiciones musculares elongadas cuando sea útil y respaldado;
+- los parciales elongados son una herramienta válida, no una obligación;
+- instrucciones de técnica deben ser breves, normalmente 1–3 cues útiles por ejercicio;
+- no imponer excéntrica universal obligatoria de 3 segundos.
+
+## 4.10 Superseries
+
+Para vNext se permiten conceptualmente superseries antagonistas simples, especialmente bíceps/tríceps, como herramienta opcional para ahorrar tiempo.
+
+No son obligatorias.
+
+## 4.11 Movilidad diaria
+
+Nombre conceptual:
+
+`FÉNIX Daily Mobility`
+
+Frecuencia aprobada:
+
+una vez al día.
+
+Duración objetivo:
+
+5–8 min.
+
+Máximo:
+
+10 min.
+
+Contenido inicial aprobado:
+
+- Cat Cow: 6–8 reps;
+- Open Book: 6/lado;
+- 90/90 Hip Switch: 6–8;
+- Hip Flexor Stretch: aproximadamente 30 s/lado;
+- Wall Slides: 8–10.
+
+No presentarla como tratamiento de escoliosis ni “injury prevention”.
+
+## 4.12 Recuperación semanal
+
+Concepto:
+
+`Recuperación`
+
+Día ideal:
+
+miércoles.
+
+Duración:
+
+15–20 min.
+
+Objetivo:
+
+baja fatiga, movilidad ligera y trabajo de tronco.
+
+Contenido inicial aprobado:
+
+- Bird Dog: 2 x 6–8/lado;
+- Dead Bug: 2 x 6–8/lado;
+- Side Plank: 2 x 20–30 s/lado;
+- Open Book: 1 x 6/lado;
+- 90/90: 1 x 6–8;
+- respiración/movilidad suave: 2–3 min.
+
+No denominar automáticamente `Injury Prevention`.
+
+## 4.13 Sustituciones durante sesión
+
+Debe poder sustituirse un ejercicio durante una sesión.
+
+Debe distinguirse funcionalmente:
+
+- `Solo hoy`;
+- `Actualizar también rutina`.
+
+Las alternativas preferidas pertenecen a Training.
+
+## 4.14 Historial
+
+Debe conservar, por sesión, suficiente información para reconstruir lo ocurrido:
+
+- identidad;
+- fecha originalmente prevista;
+- fecha efectiva;
+- rutina utilizada;
+- ejercicios reales;
+- sustituciones;
+- warm-up sets;
+- working sets;
+- carga;
+- reps;
+- RIR;
+- inicio;
+- final;
+- duración;
+- notas;
+- estado final.
+
+La corrección histórica está permitida sin modificar la plantilla vigente.
+
+## 4.15 PR y métricas
+
+Training puede mostrar:
+
+- mejor carga real usada;
+- mejor rendimiento comparable;
+- mejora respecto a sesión anterior;
+- PR contextual cuando tenga sentido.
+
+No debe convertir en KPI principal:
+
+- toneladas levantadas;
+- volume load global;
+- scores arbitrarios;
+- e1RM de todo ejercicio.
+
+## 4.16 Funciones expresamente pospuestas
+
+Posponer salvo nueva decisión:
+
+- día opcional completo de pecho;
+- drop sets avanzados;
+- rest-pause;
+- myo-reps;
+- clusters;
+- periodización compleja;
+- deload automático;
+- tracking separado izquierda/derecha;
+- RPE adicional rutinario;
+- dashboard completo de e1RM;
+- curación masiva de GIF/vídeos como prioridad funcional;
+- analítica avanzada de Training que duplique Progreso.
+
+El día opcional de pecho está pospuesto, no descartado.
+
+---
+
+# 5. Decisiones anteriores superseded/derogadas
+
+## 5.1 Rutina histórica de Notion
+
+La exportación Notion de 2026-08-28 contenía, entre otros:
+
+- Upper A con 7 ejercicios y 23 working sets aproximados;
+- Upper B con 9 ejercicios y 29 working sets aproximados;
+- Lower A con 5 ejercicios y 18 working sets aproximados;
+- Lower B con 6 ejercicios y 20 working sets aproximados;
+- Romanian Deadlift en Lower B;
+- Seated Cable Row y Chest Supported Row-T en Upper B;
+- múltiples instrucciones rígidas como “3-sec eccentric”, “no swinging”, etc.
+
+Para programación activa, esa prescripción fue superseded por la rutina vNext aprobada descrita en la sección 4.3.
+
+La exportación histórica no se elimina: sigue siendo fuente histórica y de migración.
+
+## 5.2 RIR 2 universal
+
+Implementaciones/plantillas previas usaban RIR objetivo 2 de forma generalizada.
+
+Superseded por:
+
+- RIR contextual por ejercicio;
+- compuestos aproximadamente 2, a veces 2–3;
+- aislamientos normalmente 1–2.
+
+## 5.3 “Subir peso cada semana”
+
+Superseded por:
+
+`doble progresión + RIR + rendimiento comparable`.
+
+## 5.4 Técnica estricta universal
+
+Superseded por:
+
+- técnica controlada pero flexible;
+- ROM útil;
+- énfasis en longitud muscular;
+- momentum no automáticamente inválido;
+- cues breves.
+
+## 5.5 Excéntrica universal de 3 segundos
+
+Superseded.
+
+No existe tempo exacto universal obligatorio en Training vNext.
+
+## 5.6 `Safe For My Back` y `Spine Load`
+
+La Exercise Library histórica de Notion incluía:
+
+- `Safe For My Back`;
+- `Spine Load`.
+
+Estas etiquetas quedan deprecadas funcionalmente como clasificaciones simplistas de seguridad clínica.
+
+Sustituidas por tolerancia personal/notas cuando corresponda.
+
+## 5.7 Daily Mobility histórica
+
+Notion definía `5-Minute Daily Mobility` como “Do every morning or before training”.
+
+La lógica posterior también llegó a contemplar duplicación mañana/noche.
+
+Superseded por:
+
+- una vez al día;
+- 5–8 min objetivo;
+- máximo 10 min.
+
+## 5.8 Recuperación histórica
+
+Notion contenía `Wednesday Body Maintenance` con 7 ejercicios y volumen considerable, etiquetada como `Injury Prevention & Recovery`.
+
+Superseded por:
+
+- Recuperación semanal de 15–20 min;
+- baja fatiga;
+- contenido simplificado;
+- no prometer injury prevention.
+
+## 5.9 Modelo de sesión de solo tres estados
+
+El contrato inicial con Hoy utilizaba como estados principales:
+
+- PENDIENTE;
+- EN CURSO;
+- COMPLETADA.
+
+Ese modelo fue ampliado, no invalidado, para resultados finales:
+
+- INCOMPLETA;
+- OMITIDA.
+
+Los tres estados iniciales siguen siendo parte del ciclo de vida, pero no bastan para expresar todos los resultados finales.
+
+## 5.10 Renders Layout 2 + Layout 4 como “solo referencia no pixel-perfect”
+
+Durante la auditoría de Training vNext se aprobaron:
+
+- Layout 2 como referencia de Training Home;
+- Layout 4 como referencia de Sesión Activa;
+- con la instrucción original de que eran referencia visual/funcional, no obligación píxel por píxel.
+
+Posteriormente, FÉNIX v2.1 estableció un contrato global más estricto:
+
+`paridad visual EXACTA con los Golden Renders aprobados`, salvo excepciones justificadas por accesibilidad, safe areas o compatibilidad.
+
+Por tanto, la regla v2.1 de Golden Renders supersede la flexibilidad visual anterior. Los Layout 2/4 deben tratarse como antecedentes funcionales de la dirección visual, no como autoridad visual superior a los Goldens actuales.
+
+## 5.11 Media Freeze 25+8
+
+Una versión previa de autorización citaba:
+
+- 25 assets RepDB;
+- 8 assets FÉNIX propios.
+
+Superseded por resolución CENTRAL STOP-MEDIA-01:
+
+- 26 RepDB;
+- 7 FÉNIX propios;
+- 33/33 ejercicios mapeados;
+- `Curl femoral = RepDB leg-curl (lying canonical)`.
+
+---
+
+# 6. Dependencias y contratos cross-module
+
+# 6.1 Training -> Hoy
+
+## Propiedad
+
+Training es fuente de verdad.
+
+Hoy solo consume y representa.
+
+## Datos que Hoy puede consumir
+
+- identidad de sesión;
+- entrenamiento previsto para la fecha;
+- nombre de sesión;
+- rutina/plantilla;
+- estado;
+- fecha/hora prevista cuando exista;
+- fecha efectiva;
+- duración estimada cuando exista;
+- inicio real;
+- final real;
+- duración real;
+- movilidad relacionada;
+- contexto semanal necesario.
+
+## Regla de completitud de Hoy
+
+Cuando Training determina:
+
+`COMPLETADA`
+
+Hoy marca automáticamente su paso Training como completado.
+
+Hoy no puede completar una sesión manualmente ni crear un segundo estado paralelo.
+
+## Sesión activa
+
+Si Training está `EN CURSO`, Hoy debe poder enlazar a la sesión activa, no a una copia o resumen independiente.
+
+---
+
+# 6.2 Training -> Progreso
+
+Resolución cross-module: CERRADA.
+
+## Propiedad
+
+Training:
+
+- sesiones;
+- estados;
+- ejercicios;
+- ejecución;
+- comparabilidad;
+- working sets válidos;
+- PR reconocidos cuando proceda.
+
+Progreso:
+
+- racha derivada;
+- adherencia longitudinal;
+- tendencias;
+- comparaciones;
+- visualización analítica longitudinal.
+
+## Racha oficial
+
+`Racha de Training = número de sesiones formales de fuerza previstas consecutivas que terminaron en COMPLETADA desde la última sesión formal prevista no completada.`
+
+Unidad:
+
+sesiones, no días.
+
+Solo entra en la secuencia:
+
+sesión formal de fuerza prevista.
+
+Excluidos de la racha:
+
+- descanso programado;
+- Daily Mobility;
+- Recuperación;
+- entrenamientos extraordinarios no previstos;
+- inicios accidentales descartados;
+- sesiones futuras;
+- reprogramaciones pendientes válidas.
+
+### Incrementa
+
+`COMPLETADA` -> +1.
+
+### Rompe
+
+`OMITIDA` -> racha 0.
+
+`INCOMPLETA` -> racha 0.
+
+### Reprogramación
+
+Conserva identidad y es neutral hasta resultado.
+
+Al resolver:
+
+- COMPLETADA -> suma;
+- INCOMPLETA -> rompe;
+- OMITIDA -> rompe.
+
+### Sesión sin resultado
+
+No inferir OMITIDA.
+
+Progreso debe poder expresar:
+
+`Racha · pendiente de confirmar`
+
+hasta que Training resuelva el evento.
+
+`SIN REGISTRAR != OMITIDA`.
+
+## Adherencia Training
+
+Pregunta:
+
+`¿Estoy completando las sesiones formales de fuerza que tenía previstas?`
+
+Incluye solo sesiones formales previstas ya resueltas:
+
+- COMPLETADA;
+- INCOMPLETA;
+- OMITIDA.
+
+Excluye:
+
+- futuras;
+- pendientes;
+- reprogramadas sin resolver;
+- descanso;
+- Daily Mobility;
+- Recuperación;
+- extras;
+- inicios accidentales.
+
+Cálculo base:
+
+`completadas / (completadas + incompletas + omitidas)`
+
+Debe conservar los tres componentes por separado.
+
+No existe ponderación aprobada tipo `INCOMPLETA = 0.5`.
+
+## Datos que Progreso consume
+
+Para racha/adherencia:
+
+- identidad estable de sesión;
+- si pertenece al entrenamiento formal de fuerza;
+- fecha originalmente prevista;
+- fecha efectiva;
+- estado final;
+- identidad original en reprogramación;
+- categoría suficiente para excluir Mobility/Recovery/extras/descanso/inicios accidentales.
+
+Para progresión por ejercicio:
+
+- identidad estable de ejercicio;
+- ejercicio/variante realmente ejecutado;
+- equipamiento/contexto cuando afecte comparabilidad;
+- fecha;
+- working sets;
+- carga;
+- repeticiones;
+- RIR;
+- sustituciones;
+- contexto de sesión;
+- clasificación de comparabilidad definida por Training;
+- PR reconocidos por Training cuando exista la función.
+
+Progreso no reconstruye estas semánticas por su cuenta.
+
+---
+
+# 6.3 Training -> Nutrition
+
+Resolución cross-module: CERRADA.
+
+## Regla base
+
+Training aporta contexto de sesión.
+
+Nutrition decide estructura alimentaria y consumo.
+
+No se crea una segunda fuente de verdad.
+
+## Datos que Nutrition necesita de Training
+
+Necesarios:
+
+- identidad de sesión;
+- fecha prevista;
+- fecha efectiva cuando haya reprogramación;
+- estado de sesión.
+
+Estados relevantes:
+
+- prevista;
+- reprogramada;
+- omitida;
+- en curso;
+- completada;
+- incompleta.
+
+Útiles adicionales:
+
+- inicio real;
+- final real.
+
+Duración estimada:
+
+Training puede exponerla, pero Nutrition no depende de ella para crear Pre/Post en vNext.
+
+## Asociación Pre/Post
+
+Pre-entreno y Post-entreno se asocian conceptualmente a la identidad de sesión, no solo a un día del calendario.
+
+## Reprogramación
+
+Si una sesión cambia de día y los bloques Pre/Post siguen pendientes:
+
+- los bloques pendientes dejan de aplicar en el día original;
+- aparecen en el nuevo día vinculados a la misma identidad de sesión;
+- se conservan recetas/cantidades ya seleccionadas cuando sea razonable;
+- no se requiere confirmación extra solo por reprogramar.
+
+## Consumo confirmado
+
+Nunca mover ni reescribir automáticamente:
+
+- comida REALIZADA;
+- comida OMITIDA explícitamente.
+
+Training puede cambiar contexto, nunca consumo.
+
+## Sesión OMITIDA
+
+Nutrition elimina/desactiva Pre/Post pendientes y adapta el resto del día a estructura no-Training.
+
+Registros REALIZADOS/OMITIDOS existentes se conservan.
+
+## Sesión INCOMPLETA
+
+Si hubo trabajo real:
+
+- Nutrition considera que existió entrenamiento;
+- Pre sigue siendo válido históricamente;
+- Post puede permanecer pendiente;
+- no hay umbral de porcentaje de sesión para “merecer” Post.
+
+## Dos sesiones el mismo día
+
+Training debe exponer ambas identidades.
+
+Nutrition decide si sus necesidades se consolidan.
+
+Training no fusiona automáticamente pares Pre/Post.
+
+---
+
+# 6.4 Training -> CENTRAL
+
+Training entrega decisiones funcionales aprobadas.
+
+CENTRAL decide:
+
+- arquitectura;
+- modelo físico de datos;
+- schema;
+- migraciones;
+- persistencia;
+- integración técnica;
+- PWA/offline;
+- componentes;
+- testing;
+- deployment.
+
+CENTRAL no puede reinterpretar unilateralmente los contratos funcionales aprobados.
+
+Si existe impedimento técnico material:
+
+1. conservar objetivo funcional;
+2. explicar el problema;
+3. proponer alternativa técnicamente mejor;
+4. solicitar aprobación si el cambio es funcionalmente relevante.
+
+---
+
+# 6.5 Training -> Ingeniería
+
+Ingeniería implementa solo bloques autorizados por CENTRAL.
+
+No puede cambiar unilateralmente:
+
+- estados;
+- historial;
+- ownership;
+- reprogramación;
+- racha;
+- contratos cross-module;
+- criterios de aceptación;
+- semántica de Training.
+
+Ante ambigüedad material debe detener la decisión y devolverla a CENTRAL.
+
+---
+
+# 6.6 Training -> QA
+
+QA debe probar adversarialmente los contratos, no diseñarlos.
+
+Proceso de calidad vigente del proyecto:
+
+- self-test de Ingeniería;
+- PRE-QA adversarial/root-cause closure;
+- shadow QA cuando corresponda;
+- QA independiente final;
+- retest focal solo ante defecto material real.
+
+El usuario pidió reducir rondas evitables sin rebajar rigor.
+
+No se debe enviar a QA independiente una RC v2.1 mientras CENTRAL-RC1-001/002/003 sigan abiertos.
+
+---
+
+# 7. Modelo conceptual, datos y estados relevantes
+
+## 7.1 Ejercicio
+
+Propiedades funcionales relevantes:
+
+- identidad estable;
+- nombre;
+- grupos musculares;
+- equipamiento;
+- tipo/patrón cuando sea útil;
+- instrucciones técnicas breves;
+- alternativas;
+- notas personales;
+- parámetros por defecto;
+- media/demostración cuando exista;
+- estado activo/archivado;
+- historial asociado;
+- tolerancia personal cuando corresponda.
+
+## 7.2 Plantilla/rutina
+
+Define:
+
+- nombre;
+- ejercicios;
+- orden;
+- working sets;
+- rep range;
+- RIR objetivo/rango;
+- descansos;
+- warm-up;
+- alternativas;
+- notas.
+
+## 7.3 Programación
+
+Define:
+
+- relación plantilla -> día/fecha;
+- excepciones;
+- reprogramación;
+- omisión explícita;
+- descanso.
+
+## 7.4 Sesión real
+
+Debe conservar:
+
+- identidad estable;
+- fecha inicialmente prevista;
+- fecha efectiva;
+- rutina/plantilla utilizada;
+- snapshot funcional suficiente;
+- ejercicios realmente realizados;
+- sustituciones;
+- warm-up sets;
+- working sets;
+- kg;
+- reps;
+- RIR;
+- inicio;
+- final;
+- duración;
+- notas;
+- estado final.
+
+## 7.5 Estados de sesión vigentes
+
+### PENDIENTE
+
+Sesión prevista no iniciada.
+
+### EN CURSO
+
+Sesión formalmente iniciada.
+
+### COMPLETADA
+
+Sesión finalizada explícitamente desde Training y considerada completada.
+
+### INCOMPLETA
+
+Hubo trabajo real pero la sesión terminó sin completarse funcionalmente.
+
+### OMITIDA
+
+Sesión formal prevista que termina definitivamente sin realizarse.
+
+### REPROGRAMADA
+
+Concepto funcional: conserva identidad y cambia fecha. No es necesariamente obligatorio representarlo técnicamente como estado terminal; CENTRAL decide modelo técnico.
+
+### SIN RESULTADO / PENDIENTE HISTÓRICO
+
+No se convierte en OMITIDA automáticamente.
+
+## 7.6 Transiciones críticas
+
+- PENDIENTE -> EN CURSO: inicio explícito.
+- EN CURSO -> COMPLETADA: finalización explícita.
+- EN CURSO -> INCOMPLETA: cierre con trabajo real sin completitud.
+- PENDIENTE -> OMITIDA: omisión explícita.
+- PENDIENTE/reprogramada -> nueva fecha: misma identidad.
+- inicio accidental vacío -> descartado/no histórico.
+
+## 7.7 Media
+
+Existe soporte conceptual/histórico de:
+
+- `mediaPath`;
+- `mediaType`.
+
+En FÉNIX v2.1 hay un Media Freeze definitivo de 33/33 ejercicios:
+
+- 26 RepDB;
+- 7 FÉNIX propios.
+
+Mapping específico canónico conocido:
+
+`Curl femoral = RepDB leg-curl (lying canonical)`.
+
+Package RepDB conocido:
+
+`@repdb/exercises@2026.8.1`
+
+Lista completa exacta de los 26 mappings y nombres exactos de los 7 assets FÉNIX propios desde este contexto:
+
+`DESCONOCIDO`
+
+Codex debe leer el artefacto canónico de Media Freeze en repositorio, no inventar ese listado.
+
+---
+
+# 8. UX, comportamiento e interacción aprobados
+
+## 8.1 Principio principal
+
+Durante entrenamiento real:
+
+`VELOCIDAD DE REGISTRO > ESTADÍSTICAS DECORATIVAS`
+
+Prioridades:
+
+- pocos taps;
+- lectura rápida;
+- serie anterior visible;
+- kg;
+- reps;
+- RIR;
+- descanso;
+- edición sencilla;
+- prevención de errores;
+- una mano;
+- pantalla pequeña;
+- offline.
+
+## 8.2 Training Home
+
+Debe permitir ver inmediatamente:
+
+- qué sesión corresponde;
+- estado;
+- semana;
+- duración estimada cuando exista;
+- contenido/preview de sesión;
+- acción principal de inicio/continuación;
+- reprogramar;
+- omitir;
+- accesos secundarios a Rutinas/Historial/Ejercicios/Movilidad según Golden actual.
+
+## 8.3 Sesión activa
+
+Filosofía aprobada:
+
+- un ejercicio activo expandido;
+- resto de ejercicios colapsados;
+- anterior visible;
+- sugerencia visible;
+- tabla compacta kg/reps/RIR;
+- warm-up y working sets diferenciados;
+- temporizador prominente;
+- sustitución accesible;
+- añadir/eliminar series sin fricción;
+- navegación rápida entre ejercicios.
+
+## 8.4 Referencia anterior
+
+Debe mostrarse rendimiento anterior comparable cuando exista.
+
+Si no existe:
+
+`Sin rendimiento anterior.`
+
+No inventar baseline.
+
+## 8.5 Sugerencia de progresión
+
+Puede mostrarse como recomendación contextual, nunca como bloqueo.
+
+Si no hay información suficiente:
+
+`Sin sugerencia todavía.`
+
+No inventar una progresión.
+
+## 8.6 Reanudar
+
+Cerrar pantalla/app o cambiar de módulo no debe borrar sesión activa.
+
+Training debe priorizar `Continuar` cuando haya una sesión `EN CURSO`.
+
+## 8.7 Inputs
+
+Requisitos funcionales mobile:
+
+- targets táctiles amplios;
+- números legibles;
+- teclado apropiado para kg/reps;
+- mínima escritura manual;
+- completar serie con una acción clara;
+- feedback inmediato;
+- evitar modales innecesarios;
+- recuperación de errores.
+
+## 8.8 Accesibilidad
+
+Estados no pueden depender solo del color.
+
+Requisitos:
+
+- contraste suficiente;
+- tamaños táctiles adecuados;
+- icono/texto además de color;
+- texto escalable razonablemente;
+- controles identificables.
+
+Verde se reserva semánticamente para completado.
+
+---
+
+# 9. Requisitos visuales y Golden Renders
+
+## 9.1 Design System global vigente
+
+Identidad visual global FÉNIX:
+
+- mobile-first;
+- iPhone como referencia prioritaria;
+- modo oscuro;
+- fondo negro profundo;
+- superficies gris carbón oscuras;
+- textura carbón extremadamente discreta;
+- rojo FÉNIX `#DE090A` como identidad principal;
+- rojo usado de forma controlada;
+- blanco roto/grises para contenido;
+- verde reservado semánticamente para completado;
+- bordes oscuros discretos;
+- cards redondeadas cuando sean funcionales;
+- jerarquía clara;
+- aspecto deportivo, premium, minimalista y moderno;
+- alta legibilidad;
+- controles cómodos para una mano;
+- sin apariencia de dashboard empresarial genérico.
+
+Navegación inferior global:
+
+`Hoy · Training · Nutrition · Progreso`
+
+Training activo en superficies Training.
+
+## 9.2 Regla actual de paridad visual
+
+FÉNIX v2.1 exige:
+
+`paridad visual EXACTA con los Golden Renders aprobados`
+
+Excepciones permitidas únicamente cuando sean necesarias por:
+
+- accesibilidad;
+- safe areas;
+- compatibilidad.
+
+No reinterpretar Goldens por preferencia de implementación.
+
+## 9.3 Golden Renders de Training aprobados
+
+Dentro de los 26 Golden Renders individuales aprobados globalmente, Training tiene 9 layouts únicos conocidos:
+
+1. Training — Hoy.
+2. Training — Rutinas.
+3. Training — Ejercicios.
+4. Training — Historial.
+5. Training — Sesión en curso.
+6. Training — Detalle de rutina.
+7. Training — Detalle de ejercicio.
+8. Training — Crear/Editar rutina.
+9. Training — Crear/Editar ejercicio.
+
+Nombres exactos de archivo de cada imagen individual:
+
+`DESCONOCIDO`
+
+No inventarlos. Deben extraerse del ZIP canónico.
+
+## 9.4 ZIP Golden canónico
+
+Archivo:
+
+`FENIX_v2.1_GOLDEN_RENDERS_FINAL_26.zip`
+
+SHA-256:
+
+`0f797dd2962f44ec7ae82d46f770d6b70c462927ad6a938728ea86375056bffc`
+
+Este conjunto es inmutable salvo resolución formal posterior de CENTRAL/usuario.
+
+## 9.5 Antecedentes visuales de Training
+
+Durante la auditoría funcional se aprobaron preferentemente:
+
+- Layout 2 para Training Home;
+- Layout 4 para Sesión Activa.
+
+Esos renders fueron referencia funcional inicial. La autoridad visual actual superior es el set Golden v2.1.
+
+## 9.6 Ajustes visuales globales posteriores conocidos
+
+Se aprobó como criterio de FÉNIX v2.1:
+
+- cabeceras coherentes;
+- mismo tamaño de cabeceras entre módulos;
+- botones/selector semanal de Training coherentes con Nutrition;
+- no rediseño total: mantener la esencia FÉNIX y oficializarla mediante Golden Renders.
+
+---
+
+# 10. Funcionalidad ya implementada y validada
+
+Esta sección diferencia hechos confirmados de funciones cuya presencia exacta en el código actual no puede asegurarse desde este contexto.
+
+## 10.1 CORE STABLE v2.0.0 confirmado
+
+Se conoce como implementado/validado en la línea CORE STABLE:
+
+- lifecycle básico de sesiones Training;
+- sesiones activas;
+- sets;
+- persistencia local;
+- historial/preservación de datos;
+- import/export y recuperación global del producto dentro de CORE STABLE;
+- offline/PWA;
+- integración cross-module básica;
+- iPhone/PWA Training PASS tras deployment;
+- tests específicos de Training Remove Lifecycle en RC1;
+- tests Today + Progreso;
+- tests Backup Integrity + Recovery;
+- tests PWA + Mobile;
+- Source Invariants;
+- roundtrip real de 759 registros PASS.
+
+## 10.2 Implementación histórica previa a vNext conocida
+
+Antes de la auditoría vNext ya existían:
+
+- pantalla Training;
+- pestañas Entrenos / Historial;
+- Upper A / Lower A / Upper B / Lower B;
+- inicio de sesión;
+- sesión activa;
+- ejercicios ordenados;
+- warm-up y working sets;
+- carga;
+- repeticiones;
+- RIR;
+- añadir/eliminar series;
+- completar/desmarcar series;
+- temporizador de descanso;
+- referencia de rendimiento previo;
+- notas técnicas;
+- finalizar entrenamiento;
+- cancelar entrenamiento;
+- historial;
+- persistencia local;
+- funcionamiento offline;
+- diseño FÉNIX;
+- catálogo de ejercicios;
+- Curl Bayesian;
+- Remo T con pecho apoyado;
+- elevación de gemelos sentado;
+- soporte conceptual `mediaPath` / `mediaType`.
+
+## 10.3 Estado de implementación v2.1 de cada función vNext
+
+No existe en este chat un source tree actual completo auditado por este especialista.
+
+Por tanto, la presencia exacta y validación actual en v2.1 de las siguientes capacidades es:
+
+`DESCONOCIDO` salvo que el repositorio/GOLDEN/QA lo confirme:
+
+- sugerencias automáticas de progresión;
+- warm-up automático sugerido;
+- `Solo hoy / Actualizar también rutina` en sustituciones;
+- edición histórica desde UI;
+- creación/edición completa de rutina desde UI;
+- creación/edición completa de ejercicio desde UI;
+- Daily Mobility administrable;
+- Recuperación administrable;
+- omitir/reprogramar/incompleta con toda semántica actual;
+- alertas de timer fuera de pantalla;
+- tolerancia personal de ejercicio;
+- PR contextual;
+- superseries antagonistas simples.
+
+Los Golden Renders demuestran diseño/objetivo visual para varias pantallas, no por sí solos validación funcional de runtime.
+
+---
+
+# 11. Funcionalidad pendiente/backlog por prioridad
+
+## P0. Cierre técnico v2.1 actual autorizado por CENTRAL
+
+Mientras sigan abiertos:
+
+- CENTRAL-RC1-001;
+- CENTRAL-RC1-002;
+- CENTRAL-RC1-003;
+
+no debe promoverse v2.1 a QA final/producción.
+
+Training está afectado especialmente por:
+
+- paridad exacta de sus 9 Golden Renders;
+- ExerciseMotion correcto para su catálogo de 33 ejercicios;
+- disponibilidad final de los 7 assets FÉNIX propios.
+
+## P0. Preservación de contratos e invariantes
+
+Antes de release, debe verificarse que v2.1 no rompe:
+
+- identidad de sesión;
+- reprogramación;
+- historial;
+- warm-up vs working sets;
+- lifecycle terminal;
+- Training -> Hoy;
+- Training -> Nutrition;
+- Training -> Progreso;
+- streak semantics;
+- backup/restore;
+- offline;
+- schema 5/no migrations si esa restricción sigue vigente por CENTRAL.
+
+## P1. Verificar contra repositorio qué funciones vNext están efectivamente implementadas
+
+No asumir por diseño o conversación.
+
+Codex debe comparar el source actual contra la especificación aprobada y marcar función por función:
+
+- implementada y validada;
+- implementada sin validar;
+- no implementada;
+- deprecada;
+- pospuesta.
+
+No debe inventar estado.
+
+## P1. QA consolidado tras cierre RC1.1
+
+Secuencia esperada según gobierno vigente:
+
+1. self-test de Ingeniería;
+2. PRE-QA adversarial/root-cause;
+3. shadow QA si aplica;
+4. QA independiente integral final;
+5. retest focal solo si aparece defecto material real.
+
+## P2. Backlog funcional aprobado pero pospuesto
+
+- día opcional completo de pecho;
+- drop sets;
+- rest-pause;
+- myo-reps;
+- clusters;
+- periodización compleja;
+- deload automático;
+- izquierda/derecha separadas;
+- RPE adicional;
+- e1RM dashboard;
+- librería masiva de medios más allá del freeze actual;
+- analytics avanzados que pertenezcan a Progreso.
+
+No introducir estos elementos en v2.1 sin nueva autorización.
+
+---
+
+# 12. Bugs, riesgos, deuda conocida y edge cases
+
+## 12.1 Riesgo: stale writes después de terminalización
+
+Clases históricas de fallo Training:
+
+- añadir set después de descartar/finalizar;
+- toggle de set stale tras terminalización;
+- remove de set stale/lifecycle;
+- sustitución stale capaz de afectar set completado.
+
+Regla de riesgo:
+
+ninguna mutación stale puede modificar children de una sesión/ejercicio terminal o soft-deleted.
+
+## 12.2 Riesgo: huérfanos activos
+
+No puede existir `ExerciseSet` activo bajo `WorkoutSession` o `WorkoutSessionExercise` soft-deleted/terminal.
+
+## 12.3 Riesgo: grafos imposibles en backup
+
+Backup/restore debe rechazar grafos Training funcionalmente imposibles.
+
+No basta con validar forma superficial.
+
+## 12.4 Riesgo: reprogramación destructiva
+
+No crear doble identidad sesión fallida + nueva.
+
+## 12.5 Riesgo: inferir OMITIDA por fecha
+
+Prohibido.
+
+Un pasado sin resultado debe permanecer incierto hasta resolución.
+
+## 12.6 Riesgo: historial destruido por editar catálogo/rutina
+
+Editar/archivar no puede borrar datos históricos.
+
+## 12.7 Riesgo: comparabilidad falsa
+
+Progreso no puede comparar automáticamente variantes/máquinas si Training no las declara comparables.
+
+## 12.8 Riesgo: warm-ups contaminan analítica
+
+Warm-up sets no deben alimentar por defecto PR/progresión/working volume.
+
+## 12.9 Riesgo: Nutrition reescribe consumo
+
+Reprogramaciones de Training solo reorganizan planificación Nutrition pendiente.
+
+No mover REALIZADA/OMITIDA explícitamente.
+
+## 12.10 Riesgo: timer/background
+
+La experiencia deseada incluye timer persistente/aviso cuando sea viable.
+
+El comportamiento técnico exacto en background/iOS es competencia de CENTRAL.
+
+No bloquear sesión si el aviso no es posible.
+
+## 12.11 Riesgo: tolerancia lumbar
+
+El usuario reportó carga lumbar con remos sentado/T con apoyo.
+
+No asumir que “chest supported” garantiza tolerancia.
+
+El sistema debe permitir sustitución y registrar preferencia/tolerancia sin hacer afirmaciones clínicas.
+
+## 12.12 Edge cases obligatorios
+
+- sesión iniciada accidentalmente sin trabajo;
+- sesión interrumpida con trabajo real;
+- sesión pasada sin resultado;
+- sesión reprogramada múltiples veces;
+- ejercicio no disponible;
+- ejercicio con molestias;
+- plantilla modificada durante sesión;
+- ejercicio archivado con historial;
+- PWA cerrada durante sesión;
+- offline total;
+- corrección de dato histórico;
+- dos sesiones efectivas en un día;
+- timer interrumpido por navegación;
+- reprogramación después de consumir un Pre-entreno;
+- INCOMPLETA con Post-entreno aún pertinente;
+- sesión extra que solo deja de ser neutral si formalmente sustituye una sesión prevista.
+
+## 12.13 Deuda visual/media actual
+
+V2.1 todavía no debe considerarse cerrada hasta completar:
+
+- 26/26 parity global;
+- 33/33 ExerciseMotion;
+- 7/7 media FÉNIX finales.
+
+---
+
+# 13. Incidencias QA/PRE-QA históricas que afectan a Training
+
+## 13.1 F2-B01 CORE STATE & CONTRACTS
+
+Historial conocido:
+
+- `v2.0.0-b01.1`: QA FAIL.
+- incidencias iniciales conocidas por IDs `QA-B01-001`, `QA-B01-002`, `QA-B01-003`.
+- descripción exacta individual de cada una desde este contexto: `DESCONOCIDO`.
+- b01.2 -> b01.5 realizaron cierres por clase sobre estados, identidad, causalidad e invariantes cross-module.
+- `QA-B01-006`: stale global Nutrition reconciliation, CERRADA en b01.5.
+- baseline B01 final: `v2.0.0-b01.5`, QA PASS/CERRADA.
+- SHA-256 conocido de b01.5: `d5b5316f063af51706bd3ee55beb6a7175f60422526662988cb1348fc839d9e6`.
+
+Clases de regresión B01 relevantes a Training que quedaron cubiertas en el cierre:
+
+- estados pending/in_progress/omitted/incomplete;
+- causalidad Today/final write;
+- reconciliación de identidad;
+- post-commit guards;
+- cross-session;
+- colapso/duplicación de identidades Training.
+
+## 13.2 F2-B02 TRAINING INTEGRITY
+
+### PREQA-B02-001
+
+Clase conocida:
+
+save/toggle transaccional para ExerciseSets completados.
+
+Estado final histórico:
+
+corregido dentro de la evolución B02/RC posterior.
+
+### QA-B02-001 — ALTA
+
+Descripción conocida:
+
+`addExerciseSet()` podía crear un `ExerciseSet` activo después de `discardEmptyWorkout()`, dejando un child huérfano bajo `WorkoutSession` / `WorkoutSessionExercise` soft-deleted.
+
+Fallaban:
+
+- AC-B02-02;
+- AC-B02-05.
+
+Corrección en b02.3:
+
+- addExerciseSet transaccional;
+- revalidación de session + snapshot + set;
+- revalidación de padres;
+- serialización de `nextOrder`.
+
+Resultado b02.3:
+
+- orphan scan: 0;
+- add vs discard/finish: PASS;
+- duplicate order: no reproducido;
+- QA-B02-001: CERRADA por clase.
+
+SHA-256 conocido de artefacto b02.3:
+
+`31c3df7865be4804d061bb4b9b9f1b2f15b8871789842d700c84db69f3e06b68`
+
+Nombre exacto del bundle b02.3:
+
+`DESCONOCIDO`
+
+### QA-B02-003
+
+Descripción conocida:
+
+`toggleSetCompletion` stale podía modificar `completedAt` tras terminalizar la sesión.
+
+Estado:
+
+implementada/corregida en b02.4 según ledger histórico; posteriormente cubierta por la línea RC/CORE STABLE.
+
+Estado final de release:
+
+CERRADA por la aprobación de CORE STABLE v2.0.0.
+
+### QA-B02-004
+
+Clase conocida:
+
+`removeExerciseSet stale / lifecycle`.
+
+Descripción textual exacta del informe original:
+
+`DESCONOCIDO`
+
+Estado:
+
+corregida en RC1 según ledger histórico y no abierta en el release final v2.0.0.
+
+### QA-B02-002
+
+Estado/descripción exactos:
+
+`DESCONOCIDO`
+
+No inventar.
+
+## 13.3 RC1.1 CORE STABLE
+
+### QA-RC11-001
+
+Descripción conocida:
+
+stale `substituteSessionExercise()` podía reasignar un set completado.
+
+RC1.1: FAIL.
+
+Estado final posterior:
+
+CORE STABLE v2.0.0 fue aprobado y liberado; por tanto esta incidencia no quedó OPEN en la release final. Versión exacta de parche de cierre individual: `DESCONOCIDO`.
+
+### QA-RC11-002
+
+Descripción conocida:
+
+backup validator aceptaba grafos Training imposibles.
+
+RC1.1: FAIL.
+
+Estado final posterior:
+
+CORE STABLE v2.0.0 fue aprobado y liberado; no quedó OPEN en la release final. Versión exacta de cierre individual: `DESCONOCIDO`.
+
+### QA-RC11-003
+
+Incidencia de NutritionGoal concurrente. No es Training directa, pero fue blocker de RC1.1 cross-module.
+
+Estado final:
+
+cerrada antes del release v2.0.0.
+
+## 13.4 RC1 CORE STABLE suites
+
+Suites conocidas con PASS:
+
+- Training Remove Lifecycle;
+- Nutrition Integrity;
+- Today + Progreso;
+- Backup Integrity + Recovery;
+- PWA + Mobile;
+- Source Invariants.
+
+## 13.5 RC2.1 / RC2.2
+
+RC2.1 se centró principalmente en lifecycle Nutrition Ingredient/RecipeIngredient/Recipe/ShoppingItem, pero forma parte del release global que Training debía no romper.
+
+Artefacto RC2.1:
+
+`FENIX_v2_CORE_STABLE_v2.0.0-rc.2.1_SOURCE_BUNDLE.zip`
+
+SHA-256:
+
+`179aeb1682edf404cec7086abedf56d27ae7bc974bb3965521a9db9369c2da6a`
+
+PATCH SHA-256:
+
+`00af07fa42766db78f369cae1a10d21fb5fe765d599756919914419489e8edaa`
+
+RC2.2 detectó:
+
+`QA-RC21-001` ALTA: duplicidades Ingredient/ShoppingItem.
+
+No era Training específica, pero bloqueaba release global. Se cerró antes de release v2.0.0.
+
+## 13.6 FÉNIX v2.1 RC1 actuales
+
+Estado OPEN a 2026-09-08 en la última información recuperada:
+
+### CENTRAL-RC1-001
+
+Paridad visual exacta 26/26 contra Goldens inmutables.
+
+### CENTRAL-RC1-002
+
+ExerciseMotion específico 33/33.
+
+### CENTRAL-RC1-003
+
+Media final para 7 assets FÉNIX propios.
+
+Estos no deben marcarse CLOSED hasta evidencia reproducible y resolución de CENTRAL.
+
+---
+
+# 14. Invariantes y casos de regresión que nunca deben perderse
+
+1. Una sesión reprogramada conserva una sola identidad.
+2. No inferir OMITIDA por fecha.
+3. PENDIENTE/SIN RESULTADO no equivale a OMITIDA.
+4. Una sesión con trabajo real puede terminar INCOMPLETA y conserva ese trabajo.
+5. Inicio accidental vacío puede descartarse sin historial/adherencia/racha.
+6. Solo COMPLETADA incrementa la racha formal.
+7. INCOMPLETA y OMITIDA rompen racha pero mantienen semánticas distintas.
+8. Descanso, Daily Mobility, Recuperación, extras no previstos y reprogramación pendiente son neutrales para racha.
+9. Hoy no puede completar Training.
+10. Training -> COMPLETADA debe reflejar completitud en Hoy sin un segundo write contradictorio.
+11. Training no puede marcar comida Nutrition como REALIZADA/OMITIDA.
+12. Reprogramar mueve solo planificación Nutrition pendiente; jamás reescribe consumo confirmado.
+13. Warm-up sets no cuentan por defecto para PR/progresión longitudinal.
+14. Editar plantilla no modifica historial.
+15. Archivar ejercicio no destruye historial.
+16. Una mutación stale no puede modificar una sesión/ejercicio terminal o soft-deleted.
+17. No se permiten ExerciseSets activos huérfanos.
+18. No se permiten duplicate order derivados de concurrencia al añadir sets.
+19. Backup/restore debe rechazar grafos Training imposibles.
+20. Una sesión activa debe sobrevivir a navegación/cierre/reapertura.
+21. Offline no puede bloquear registro o finalización.
+22. Solo una sesión activa simultánea salvo cambio formal.
+23. Progreso no reconstruye comparabilidad/PR/estado por su cuenta.
+24. Training define qué working sets son válidos/comparables.
+25. Las sesiones históricas y datos reales existentes deben preservarse en migraciones.
+26. Schema/migration no debe cambiar en v2.1 mientras siga vigente el contrato CENTRAL de `fenix-db`, schema 5, no migrations.
+27. Golden Renders v2.1 son inmutables y exact-parity salvo excepciones autorizadas.
+28. Media Freeze es 26 RepDB + 7 FÉNIX = 33/33, no 25+8.
+29. Curl femoral debe mapear a `RepDB leg-curl`, visual canónico lying.
+30. El usuario no debe verse obligado a editar código para modificar contenido ordinario Training.
+
+---
+
+# 15. Artefactos, documentos, bundles, versiones y SHA-256 conocidos
+
+## 15.1 Fuentes de gobierno y dominio
+
+### Exportación histórica
+
+Archivo exterior conocido:
+
+`FENIX_Notion_Export_2026-08-28.zip`
+
+Contiene un ZIP anidado:
+
+`ExportBlock-bba56db3-b471-418b-a875-eee6fc56dc65-Part-1.zip`
+
+Contenido Training histórico conocido dentro de la exportación:
+
+- `FENIX/Training 6b332a9b4b9646918173aae42f011307.md`
+- `FENIX/Training/Exercise Library 87aaf777a64e4142879f01d7f0035eac.csv`
+- `FENIX/Training/Exercise Library 87aaf777a64e4142879f01d7f0035eac_all.csv`
+- `FENIX/Training/Workout 5230d051278143e6bc0acf667cc0d838.csv`
+- `FENIX/Training/Workout 5230d051278143e6bc0acf667cc0d838_all.csv`
+- páginas de Upper A, Upper B, Lower A, Lower B, Recuperación y 5-Minute Daily Mobility;
+- páginas individuales de la Exercise Library.
+
+SHA-256 canónico previamente declarado para la exportación:
+
+`DESCONOCIDO`
+
+### Manifiesto
+
+`FENIX_MANIFIESTO_DE_FUENTES_v1.0.md`
+
+Versión: v1.0.
+
+### Protocolo
+
+Nombre lógico:
+
+`FÉNIX — PROTOCOLO DE COORDINACIÓN v1.0`
+
+Archivo suministrado conocido:
+
+`FENIX_PROTOCOLO_DE_COORDINACION_v1.0(1).md`
+
+## 15.2 Núcleo científico Training
+
+### Técnica
+
+Archivo:
+
+`02_Nippard_2024_Tecnica_Hipertrofia.pdf`
+
+Artículo:
+
+Androulakis Korakakis P, Wolf M, Coleman M, Burke R, Piñero A, Nippard J, Schoenfeld BJ. `Optimizing Resistance Training Technique to Maximize Muscle Hypertrophy: A Narrative Review.`
+
+DOI:
+
+`10.3390/jfmk9010009`
+
+### ROM / parciales elongados
+
+Archivo:
+
+`03_Nippard_2025_ROM_Parciales_Elongados.pdf`
+
+Artículo:
+
+Wolf M et al. `Lengthened partial repetitions elicit similar muscular adaptations as full range of motion repetitions during resistance training in trained individuals.`
+
+DOI:
+
+`10.7717/peerj.18904`
+
+### Técnica estricta vs momentum
+
+Archivo:
+
+`04_Nippard_2025_Tecnica_Estricta_vs_Impulso.pdf`
+
+Artículo:
+
+Augustin F et al. `Do Cheaters Prosper? Effect of Externally Supplied Momentum During Resistance Training on Measures of Upper Body Muscle Hypertrophy.`
+
+DOI:
+
+`10.70252/GDBL2230`
+
+### Mecanismos hipertrofia
+
+Archivo:
+
+`05_Nippard_2026_Mecanismos_Hipertrofia.pdf`
+
+Artículo:
+
+Van Every DW, Lees MJ, Wilson B, Nippard J, Phillips SM. `Load-induced human skeletal muscle hypertrophy: Mechanisms, myths, and misconceptions.`
+
+DOI:
+
+`10.1016/j.jshs.2025.101104`
+
+## 15.3 Fuentes suplementarias añadidas posteriormente
+
+Archivo:
+
+`s40798-023-00651-y.pdf`
+
+Artículo:
+
+Helms et al. `Effect of Small and Large Energy Surpluses on Strength, Muscle, and Skinfold Thickness in Resistance-Trained Individuals: A Parallel Groups Design.`
+
+DOI:
+
+`10.1186/s40798-023-00651-y`
+
+Uso principal: coordinación Training/Nutrition sobre ganancia de masa y evitar perseguir peso mediante volumen indiscriminado.
+
+Archivo:
+
+`noap-position-paper.pdf`
+
+Documento:
+
+`Nutrition and Athletic Performance` — Dietitians of Canada / Academy of Nutrition and Dietetics / ACSM, 2016.
+
+Archivo:
+
+`s12970-017-0177-8‌.pdf`
+
+Documento:
+
+Jäger et al. `International Society of Sports Nutrition Position Stand: protein and exercise.`
+
+DOI:
+
+`10.1186/s12970-017-0177-8`
+
+Estas fuentes suplementarias no sustituyen la jerarquía del Manifiesto.
+
+## 15.4 Especificación funcional
+
+Título lógico:
+
+`ESPECIFICACIÓN APROBADA PARA IMPLEMENTACIÓN — 02 · FÉNIX — TRAINING — vNext`
+
+Archivo físico canónico en repositorio:
+
+`DESCONOCIDO`
+
+No inventar filename si no está presente.
+
+## 15.5 CORE STABLE
+
+Release:
+
+`FÉNIX v2.0.0`
+
+SHA-256 canónico:
+
+`f98d902d245dcd3cc0a6db5eca4d40afa4b1bca3e7f7f00a9238d16f32fab617`
+
+Commit message conocido:
+
+`release: FÉNIX v2.0.0 CORE STABLE`
+
+Número de ficheros en commit/release reportado:
+
+69.
+
+Branch production fue creada y publicada.
+
+### F2-B01 final
+
+Versión:
+
+`v2.0.0-b01.5`
+
+SHA-256:
+
+`d5b5316f063af51706bd3ee55beb6a7175f60422526662988cb1348fc839d9e6`
+
+Filename exacto:
+
+`DESCONOCIDO`
+
+### F2-B02 b02.3
+
+Versión:
+
+`v2.0.0-b02.3`
+
+SHA-256:
+
+`31c3df7865be4804d061bb4b9b9f1b2f15b8871789842d700c84db69f3e06b68`
+
+Filename exacto:
+
+`DESCONOCIDO`
+
+### RC2.1
+
+Archivo:
+
+`FENIX_v2_CORE_STABLE_v2.0.0-rc.2.1_SOURCE_BUNDLE.zip`
+
+SHA-256:
+
+`179aeb1682edf404cec7086abedf56d27ae7bc974bb3965521a9db9369c2da6a`
+
+Patch SHA-256:
+
+`00af07fa42766db78f369cae1a10d21fb5fe765d599756919914419489e8edaa`
+
+## 15.6 v2.1 Golden/Engineering
+
+### Golden Render ZIP
+
+`FENIX_v2.1_GOLDEN_RENDERS_FINAL_26.zip`
+
+SHA-256:
+
+`0f797dd2962f44ec7ae82d46f770d6b70c462927ad6a938728ea86375056bffc`
+
+### Engineering Starter Bundle
+
+`FENIX_v2.1_ENGINEERING_STARTER_BUNDLE_v1.0.zip`
+
+SHA-256:
+
+`e12dc15aa16c80982ca68222a1078c948bc8d88729b884f0c5c24b3f00e7fd6f`
+
+### Media artifacts conocidos
+
+- `FENIX_v2.1_MEDIA_FREEZE_PLAN_v1.0.md`
+- `FENIX_v2.1_MEDIA_COVERAGE_AUDIT_v0.2.md`
+- `03_FENIX_v2.1_MEDIA_FREEZE_DECISION_v0.3.md`
+
+Hashes exactos:
+
+`DESCONOCIDO`
+
+### Media package
+
+`@repdb/exercises@2026.8.1`
+
+### RC1 consolidated repair script
+
+`REPAIR_FENIX_v2.1_RC1_CONSOLIDATED_001_AND_FINAL_GATE_v1.0.ps1`
+
+Estado exacto de ejecución/cierre final a partir de este chat:
+
+`DESCONOCIDO`; la última información canónica recuperada aún marcaba RC1-001/002/003 como pendientes de cierre.
+
+## 15.7 Baseline v2.1 actual conocido
+
+Versión:
+
+`FÉNIX v2.1.0-rc.1`
+
+Branch:
+
+`main`
+
+Producción intacta:
+
+`deac3890f4d1b794cae8f3acde5a12bf7c35cf94`
+
+DB:
+
+`fenix-db`
+
+Schema:
+
+`5`
+
+Migraciones:
+
+`NONE`
+
+---
+
+# 16. STOP CONDITIONS que requieren decisión de CENTRAL
+
+Codex debe detener cualquier reinterpretación funcional y escalar a CENTRAL cuando ocurra cualquiera de estos casos:
+
+1. El repositorio contradice un contrato funcional canónico de este handoff.
+2. Se propone cambiar el significado de PENDIENTE, EN CURSO, COMPLETADA, INCOMPLETA u OMITIDA.
+3. Se propone inferir OMITIDA por fecha.
+4. Se propone que reprogramar cree una nueva identidad de sesión.
+5. Se propone cambiar la racha/adherencia Training sin resolución de Progreso.
+6. Se propone que Training modifique consumo Nutrition.
+7. Se propone que Hoy pueda completar Training.
+8. Se propone destruir historial por editar/archivar ejercicios o rutinas.
+9. Se necesita una migración/schema change respecto a `fenix-db` schema 5 mientras siga vigente la restricción de no migrations.
+10. Se necesita modificar Golden Renders o apartarse de paridad exacta más allá de accesibilidad/safe area/compatibilidad.
+11. Se necesita alterar el Media Freeze 26+7 / 33+33 o el mapping de Curl femoral.
+12. Falta el artefacto exacto que contiene la lista de 7 assets FÉNIX o 26 mappings RepDB y alguien pretende rellenarla de memoria.
+13. Aparece una inconsistencia entre Goldens y especificación funcional que no puede resolverse sin cambiar comportamiento.
+14. Se detecta riesgo de pérdida de datos históricos.
+15. Se detecta que backup/restore puede producir grafos Training imposibles.
+16. Se detecta un stale write capaz de modificar sesión terminal/soft-deleted.
+17. Se pretende commit/tag/push/release de v2.1 con CENTRAL-RC1-001/002/003 abiertos o sin el gate QA requerido.
+18. Se pretende añadir backlog pospuesto como si fuese requisito v2.1.
+19. Se pretende modificar una decisión científica importante con un único estudio aislado sin evaluar el conjunto de evidencia.
+20. Cualquier ambigüedad material de ownership entre Training, Nutrition, Progreso u Hoy.
+
+---
+
+# 17. Qué NO debe asumir ni reinterpretar Codex
+
+Codex NO debe asumir:
+
+- que la implementación actual es la especificación si contradice decisiones aprobadas;
+- que Notion es arquitectura canónica; es historia/datos, no diseño obligatorio;
+- que toda sesión pasada sin resultado fue omitida;
+- que INCOMPLETA equivale a OMITIDA;
+- que completar todas las series finaliza automáticamente una sesión;
+- que RIR 2 es universal;
+- que hay que subir carga cada semana;
+- que más volume load implica automáticamente más hipertrofia;
+- que un impulso técnico invalida una repetición por definición;
+- que 3 s de excéntrica es obligatorio;
+- que `Safe For My Back` / `Spine Load` son clasificaciones clínicas válidas;
+- que un remo con apoyo torácico es automáticamente tolerable para el usuario;
+- que Romanian Deadlift debe volver al núcleo sin nueva decisión;
+- que Daily Mobility se hace dos veces al día;
+- que Recuperación es “injury prevention”;
+- que warm-up sets cuentan como working sets;
+- que Progreso puede inventar comparabilidad entre variantes;
+- que Nutrition puede reescribir ingesta al reprogramar;
+- que Layout 2/4 tienen prioridad visual sobre los Golden Renders v2.1;
+- que el conteo antiguo 25 RepDB + 8 FÉNIX sigue vigente;
+- que la lista de 7 assets propios o 26 mappings puede inventarse si falta el artefacto;
+- que los Goldens pueden reinterpretarse para facilitar implementación;
+- que un render aprobado demuestra por sí solo runtime implementado/validado;
+- que todos los elementos de la especificación vNext están ya implementados en v2.1;
+- que los filenames o SHA no conocidos pueden reconstruirse por aproximación;
+- que QA puede omitirse para acelerar release;
+- que este handoff autoriza continuar desarrollo.
+
+Si el dato no aparece en repositorio/artefacto canónico, marcar `DESCONOCIDO` o detener según criticidad.
+
+---
+
+# 18. Contradicciones no resueltas / puntos que deben conservarse tal como están
+
+No se ha identificado una contradicción funcional vigente no resuelta entre las resoluciones cross-module finales.
+
+Sí existen pares históricos de decisión que deben entenderse como superseded, no combinarse:
+
+1. `Layout 2 + Layout 4 como referencia no pixel-perfect` frente a `v2.1 Golden exact parity`.
+   - Vigente actual: Golden exact parity.
+2. `25 RepDB + 8 FÉNIX` frente a `26 RepDB + 7 FÉNIX`.
+   - Vigente actual: 26+7, 33/33.
+3. `Curl femoral` sin mapping final frente a `RepDB leg-curl (lying canonical)`.
+   - Vigente actual: leg-curl lying.
+4. Rutina Notion histórica frente a rutina vNext aprobada.
+   - Vigente para programación activa: rutina vNext; Notion se conserva como historia.
+5. RIR 2 universal frente a rangos RIR contextuales.
+   - Vigente actual: contextual.
+6. Técnica rígida/3-sec eccentric/no momentum frente a técnica flexible basada en evidencia.
+   - Vigente actual: flexible.
+7. Daily Mobility histórica “5 min cada mañana / potencialmente duplicada” frente a una vez al día ≤10 min.
+   - Vigente actual: una vez al día.
+8. Recuperación histórica extensa/“injury prevention” frente a recuperación semanal simplificada.
+   - Vigente actual: simplificada, sin promesa clínica.
+
+Si el repositorio contiene ambos comportamientos, Codex no debe mantener ambos como equivalentes: debe reportar drift a CENTRAL.
+
+---
+
+# 19. Criterios de aceptación funcionales que deben seguir siendo verificables
+
+La especificación aprobada fijó, como mínimo, estos criterios:
+
+1. Ver qué sesión corresponde.
+2. Iniciarla con pocos taps.
+3. Reanudar una sesión tras abandonar la pantalla.
+4. Registrar kg/reps/RIR rápidamente.
+5. Separar warm-up y working sets.
+6. Evitar que warm-ups contaminen progresión.
+7. Iniciar timer automáticamente cuando corresponda.
+8. Mostrar recomendación de progresión no vinculante.
+9. Sustituir ejercicio durante sesión.
+10. Elegir `Solo hoy / actualizar rutina` cuando esa capacidad esté implementada.
+11. Añadir/eliminar series dentro del lifecycle válido.
+12. Finalizar explícitamente.
+13. Registrar INCOMPLETA conservando trabajo.
+14. Descartar inicio accidental vacío.
+15. OMITIR deliberadamente.
+16. Reprogramar conservando identidad.
+17. No generar una sesión fallida artificial al reprogramar.
+18. No marcar una sesión pasada como OMITIDA automáticamente.
+19. Editar rutina sin alterar historial.
+20. Archivar ejercicio sin destruir historial.
+21. Corregir historial.
+22. Administrar rutinas desde FÉNIX.
+23. Administrar ejercicios desde FÉNIX.
+24. Administrar Daily Mobility.
+25. Administrar Recuperación.
+26. Funcionar offline durante sesión.
+27. Cerrar/reabrir sin pérdida de datos.
+28. Preservar sesiones reales existentes en migración.
+29. Hoy recibe correctamente estado Training.
+30. Progreso puede calcular racha con semántica oficial.
+31. Nutrition recibe reprogramación/contexto sin adquirir autoridad sobre Training.
+32. Training nunca modifica consumo Nutrition.
+33. UX móvil sigue Goldens/jerarquía aprobada.
+34. No aparece dashboard decorativo que desplace el flujo principal.
+35. Usuario valida resultado final en móvil.
+
+---
+
+# 20. Evidencia científica canónica de soporte
+
+Training no debe tratar estas fuentes como dogma, pero son el núcleo científico inicial aprobado.
+
+## 20.1 Técnica
+
+Androulakis Korakakis et al., 2024.
+
+DOI `10.3390/jfmk9010009`.
+
+Uso funcional aprobado:
+
+- tempo flexible;
+- ROM con énfasis en longitudes largas;
+- evitar reglas cinemáticas universales excesivamente rígidas.
+
+Grado usado en la auditoría:
+
+`EVIDENCIA MODERADA`.
+
+## 20.2 ROM/parciales elongados
+
+Wolf et al., 2025.
+
+DOI `10.7717/peerj.18904`.
+
+Uso funcional aprobado:
+
+- full ROM y parciales elongados pueden ser válidos;
+- énfasis en posición elongada;
+- no imponer una sola opción universal.
+
+Grado usado:
+
+`EVIDENCIA MODERADA`.
+
+## 20.3 Técnica estricta vs momentum
+
+Augustin et al., 2025.
+
+DOI `10.70252/GDBL2230`.
+
+Uso funcional aprobado:
+
+- no clasificar momentum automáticamente como inútil/inválido;
+- no extrapolar el estudio como recomendación de cheat universal.
+
+Grado usado:
+
+`EVIDENCIA LIMITADA–MODERADA` por especificidad.
+
+## 20.4 Mecanismos de hipertrofia
+
+Van Every et al., 2026.
+
+DOI `10.1016/j.jshs.2025.101104`.
+
+Uso funcional:
+
+- tensión mecánica/progressive resistance exercise como estímulo externo principal respaldado;
+- no diseñar Training alrededor del pump, estrés metabólico o picos hormonales agudos como drivers centrales.
+
+## 20.5 Ganancia de peso / dependencia Nutrition
+
+Helms et al., 2023.
+
+DOI `10.1186/s40798-023-00651-y`.
+
+Uso funcional:
+
+Training no debe añadir volumen solo para perseguir peso corporal. El ritmo/superávit pertenece a Nutrition.
+
+---
+
+# 21. Próxima acción recomendada desde el punto actual
+
+Este handoff no autoriza ejecución.
+
+Próxima acción recomendada para CENTRAL/Codex tras completar la migración de contexto:
+
+1. Ingerir este handoff como fuente permanente del repositorio.
+2. Leer los artefactos canónicos del repositorio, especialmente:
+   - Golden Render ZIP;
+   - Media Freeze Decision;
+   - Engineering Starter Bundle;
+   - estado actual de `main`;
+   - evidencia/source bundle de RC1.1 si existe.
+3. Comparar el estado real del repo con este handoff sin modificar nada.
+4. Confirmar si `CENTRAL-RC1-001`, `CENTRAL-RC1-002` y `CENTRAL-RC1-003` siguen OPEN.
+5. No enviar a QA, no commit/tag/push/release y no realizar rediseño hasta nueva autorización explícita de CENTRAL.
+6. Cuando CENTRAL autorice continuar, reanudar exactamente desde el gate RC1.1 consolidado vigente, no desde una reconstrucción funcional nueva de Training.
+
+Estado operativo del especialista después de este handoff:
+
+`PAUSADO HASTA NUEVA AUTORIZACIÓN DE CENTRAL`.
+

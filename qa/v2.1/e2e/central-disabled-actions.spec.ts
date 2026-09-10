@@ -1,0 +1,28 @@
+import { test, expect } from '@playwright/test'
+import { openApp, mainNav, segmented } from './helpers'
+
+test('CENTRAL disabled actions are explicit and side-effect free', async ({ page }) => {
+  await openApp(page)
+  await mainNav(page, 'Training')
+  await segmented(page, 'Secciones de Training', 'Rutinas')
+  await page.getByRole('button', { name: 'Crear rutina' }).click()
+  const routine = page.locator('[data-central-exception="CENTRAL-EXCEPTION-G10-ROUTINE-EXPORT-01"]')
+  await expect(routine).toBeDisabled()
+  await expect(routine).toContainText('No disponible')
+  await page.getByRole('button', { name: 'Cerrar' }).click()
+  await segmented(page, 'Secciones de Training', 'Ejercicios')
+  await page.getByRole('button', { name: 'Crear ejercicio' }).click()
+  const exercise = page.locator('[data-central-exception="CENTRAL-EXCEPTION-G11-EXERCISE-ACTIONS-01"]')
+  await expect(exercise.locator('button')).toHaveCount(2)
+  for (const button of await exercise.locator('button').all()) await expect(button).toBeDisabled()
+  await expect(exercise).toContainText('No disponible')
+  await page.getByRole('button', { name: 'Cerrar' }).click()
+  await mainNav(page, 'Hoy')
+  await page.getByRole('button', { name: 'Abrir Ajustes' }).first().click()
+  await page.getByRole('button', { name: /Datos y backup/ }).click()
+  const deletion = page.locator('[data-central-exception="CENTRAL-EXCEPTION-G26-DELETE-ALL-DATA-01"]')
+  await expect(deletion).toBeDisabled()
+  await expect(deletion).toContainText('No disponible')
+  expect(await page.evaluate(() => indexedDB.databases().then(databases => databases.some(database => database.name === 'fenix-db')))).toBe(true)
+  await expect(page.locator('body')).not.toContainText('Borrado completado')
+})

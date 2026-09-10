@@ -1,410 +1,127 @@
 import {
+  Suspense,
+  lazy,
   useEffect,
   useState,
 } from 'react'
 
-import {
-  useAppFreshness,
-} from './app/useAppFreshness'
-
-import {
-  initializeDatabase,
-} from './db/database'
-
-import {
-  ensureTrainingSeed,
-} from './features/training/trainingSeed'
-
-import {
-  ensureNutritionSeed,
-} from './features/nutrition/nutritionSeed'
-
-import {
-  ensureTodaySeed,
-} from './features/today/todaySeed'
-
+import { useAppFreshness } from './app/useAppFreshness'
+import { initializeDatabase } from './db/database'
+import { ensureTrainingSeed } from './features/training/trainingSeed'
+import { ensureNutritionSeed } from './features/nutrition/nutritionSeed'
+import { ensureTodaySeed } from './features/today/todaySeed'
 import TodayPage from './features/today/TodayPage'
-
-import TrainingPage from './features/training/TrainingPage'
-
-import NutritionPage from './features/nutrition/NutritionPage'
-
-import ProgressPage from './features/progress/ProgressPage'
-
-import {
-  ensureProgressSeed,
-} from './features/progress/progressSeed'
-
-import {
-  ensureVNextDataMigrations,
-} from './services/vNextMigrationService'
+import { ensureProgressSeed } from './features/progress/progressSeed'
+import { ensureVNextDataMigrations } from './services/vNextMigrationService'
+import { OfflineIndicator, UpdateAvailableBanner } from './components/designSystem'
+import { useOnlineStatus } from './hooks/useOnlineStatus'
+import { usePwaUpdateState } from './hooks/usePwaUpdateState'
+import { useAppBadge } from './hooks/useAppBadge'
+import { AppNavigation, NavigationProvider, type AppSection } from './components/AppNavigation'
+import type { SettingsRoute } from './features/settings/SettingsPage'
 
 import './styles/app.css'
 
-import './styles/mobile-density.css'
+const TrainingPage = lazy(() => import('./features/training/TrainingPage'))
+const NutritionPage = lazy(() => import('./features/nutrition/NutritionPage'))
+const ProgressPage = lazy(() => import('./features/progress/ProgressPage'))
+const SettingsPage = lazy(() => import('./features/settings/SettingsPage'))
 
-import './styles/render-parity.css'
-
-import './styles/visual-polish.css'
-
-import './styles/final-v1.css'
-
-type AppState =
-  | 'checking'
-  | 'ready'
-  | 'error'
-
-type AppSection =
-  | 'today'
-  | 'training'
-  | 'nutrition'
-  | 'progress'
-
-function NavigationIcon({
-  section,
-}: {
-  section: AppSection
-}) {
-  if (
-    section ===
-    'today'
-  ) {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M3.5 10.5 12 3l8.5 7.5" />
-        <path d="M5.5 9.5V21h13V9.5" />
-        <path d="M9.5 21v-6h5v6" />
-      </svg>
-    )
-  }
-
-  if (
-    section ===
-    'training'
-  ) {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M6 8v8" />
-        <path d="M18 8v8" />
-        <path d="M3.5 10v4" />
-        <path d="M20.5 10v4" />
-        <path d="M6 12h12" />
-      </svg>
-    )
-  }
-
-  if (
-    section ===
-    'nutrition'
-  ) {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M7 3v7" />
-        <path d="M4.5 3v5a2.5 2.5 0 0 0 5 0V3" />
-        <path d="M7 10v11" />
-        <path d="M16 3c2 1.5 3 4 3 7v11" />
-        <path d="M16 3v9h3" />
-      </svg>
-    )
-  }
-
-  return (
-    <img
-      className="fenix-phoenix-icon"
-      src="/fenix-icon-32.png"
-      alt=""
-      aria-hidden="true"
-    />
-  )
+type AppState = 'checking' | 'ready' | 'error'
+function LoadingSurface() {
+  return <main className="fenix-route-loading"><img src="/fenix-icon-192.png" alt="" /><p>Preparando FÉNIX…</p></main>
 }
 
 function App() {
-  const [
-    appState,
-    setAppState,
-  ] =
-    useState<AppState>(
-      'checking',
-    )
-
-  const [
-    section,
-    setSection,
-  ] =
-    useState<AppSection>(
-      'today',
-    )
-
-  const freshness =
-    useAppFreshness()
+  const [appState, setAppState] = useState<AppState>('checking')
+  const [section, setSection] = useState<AppSection>('today')
+  const [visited, setVisited] = useState<Set<AppSection>>(() => new Set(['today']))
+  const [settings, setSettings] = useState<{ open: boolean; route: SettingsRoute }>({ open: false, route: 'home' })
+  const freshness = useAppFreshness()
+  const online = useOnlineStatus()
+  const pwaUpdate = usePwaUpdateState(freshness.revision)
+  useAppBadge(freshness.revision)
 
   useEffect(() => {
     let active = true
-
     async function initializeApp() {
       await initializeDatabase()
-
       await ensureTrainingSeed()
-
       await ensureNutritionSeed()
-
       await ensureTodaySeed()
-
       await ensureVNextDataMigrations()
-
       await ensureProgressSeed()
     }
-
-    initializeApp()
+    void initializeApp()
       .then(() => {
-        if (
-          active
-        ) {
-          setAppState(
-            'ready',
-          )
-        }
+        if (!active) return
+        setAppState('ready')
       })
-      .catch(
-        (
-          error: unknown,
-        ) => {
-          console.error(
-            'Error inicializando FÉNIX:',
-            error,
-          )
-
-          if (
-            active
-          ) {
-            setAppState(
-              'error',
-            )
-          }
-        },
-      )
-
-    return () => {
-      active = false
-    }
+      .catch((error: unknown) => {
+        console.error('Error inicializando FÉNIX:', error)
+        if (active) setAppState('error')
+      })
+    return () => { active = false }
   }, [])
 
-  if (
-    appState ===
-    'checking'
-  ) {
-    return (
-      <main>
-        <p>
-          Preparando FÉNIX…
-        </p>
-      </main>
-    )
+  function navigate(next: AppSection) {
+    setVisited((current) => new Set(current).add(next))
+    setSection(next)
+    setSettings((current) => ({ ...current, open: false }))
   }
 
-  if (
-    appState ===
-    'error'
-  ) {
-    return (
-      <main>
-        <h1>
-          FÉNIX
-        </h1>
-
-        <p>
-          No se ha podido iniciar
-          la base local. Tus datos
-          existentes no han sido
-          borrados.
-        </p>
-      </main>
-    )
+  function openSettings(route: SettingsRoute = 'home') {
+    setSettings({ open: true, route })
   }
+
+  if (appState === 'checking') return <LoadingSurface />
+  if (appState === 'error') return (
+    <main className="fenix-route-loading fenix-route-loading--error">
+      <img src="/fenix-icon-192.png" alt="" />
+      <h1>FÉNIX</h1>
+      <p>No se ha podido iniciar la base local. Tus datos existentes no han sido borrados.</p>
+    </main>
+  )
 
   return (
-    <div className="fenix-app">
-      <div
-        className="fenix-view"
-        hidden={
-          section !==
-          'today'
-        }
-      >
+    <NavigationProvider current={section} settings={settings.open} onNavigate={navigate}><div className="fenix-app">
+      <OfflineIndicator offline={!online} />
+      <UpdateAvailableBanner visible={pwaUpdate.visible} deferred={pwaUpdate.deferred} onApply={() => void pwaUpdate.apply()} />
+
+      <div className="fenix-view" hidden={settings.open || section !== 'today'}>
         <TodayPage
-          isActive={
-            section ===
-            'today'
-          }
-          dateKey={
-            freshness.dateKey
-          }
-          refreshRevision={
-            freshness.revision
-          }
-          onOpenTraining={() =>
-            setSection(
-              'training',
-            )
-          }
-          onOpenNutrition={() =>
-            setSection(
-              'nutrition',
-            )
-          }
-          onOpenProgress={() =>
-            setSection(
-              'progress',
-            )
-          }
+          isActive={!settings.open && section === 'today'}
+          dateKey={freshness.dateKey}
+          refreshRevision={freshness.revision}
+          onOpenTraining={() => navigate('training')}
+          onOpenNutrition={() => navigate('nutrition')}
+          onOpenProgress={() => navigate('progress')}
+          onOpenSettings={() => openSettings('home')}
+          onOpenRoutineSettings={() => openSettings('routine')}
         />
       </div>
 
-      <div
-        className="fenix-view"
-        hidden={
-          section !==
-          'training'
-        }
-      >
-        <TrainingPage
-          isActive={
-            section ===
-            'training'
-          }
-          refreshRevision={
-            freshness.revision
-          }
-        />
-      </div>
+      <Suspense fallback={<LoadingSurface />}>
+        {visited.has('training') ? (
+          <div className="fenix-view" hidden={settings.open || section !== 'training'}>
+            <TrainingPage isActive={!settings.open && section === 'training'} refreshRevision={freshness.revision} onOpenSettings={() => openSettings('home')} />
+          </div>
+        ) : null}
+        {visited.has('nutrition') ? (
+          <div className="fenix-view" hidden={settings.open || section !== 'nutrition'}>
+            <NutritionPage isActive={!settings.open && section === 'nutrition'} refreshRevision={freshness.revision} onOpenSettings={() => openSettings('home')} />
+          </div>
+        ) : null}
+        {visited.has('progress') ? (
+          <div className="fenix-view" hidden={settings.open || section !== 'progress'}>
+            <ProgressPage isActive={!settings.open && section === 'progress'} refreshRevision={freshness.revision} onOpenSettings={() => openSettings('home')} onOpenDataSettings={() => openSettings('data')} />
+          </div>
+        ) : null}
+        {settings.open ? <SettingsPage key={settings.route} initialRoute={settings.route} onClose={() => setSettings((current) => ({ ...current, open: false }))} /> : null}
+      </Suspense>
 
-      <div
-        className="fenix-view"
-        hidden={
-          section !==
-          'nutrition'
-        }
-      >
-        <NutritionPage
-          isActive={
-            section ===
-            'nutrition'
-          }
-          refreshRevision={
-            freshness.revision
-          }
-        />
-      </div>
-
-      <div
-        className="fenix-view"
-        hidden={
-          section !==
-          'progress'
-        }
-      >
-        <ProgressPage
-          isActive={
-            section ===
-            'progress'
-          }
-          refreshRevision={
-            freshness.revision
-          }
-        />
-      </div>
-
-      <nav
-        className="fenix-navigation"
-        aria-label="Navegación principal"
-      >
-        <div className="fenix-navigation__inner">
-          {(
-            [
-              [
-                'today',
-                'Hoy',
-              ],
-              [
-                'training',
-                'Training',
-              ],
-              [
-                'nutrition',
-                'Nutrition',
-              ],
-              [
-                'progress',
-                'Progreso',
-              ],
-            ] as const
-          ).map(
-            ([
-              item,
-              label,
-            ]) => (
-              <button
-                key={item}
-                type="button"
-                className={
-                  section ===
-                  item
-                    ? 'active'
-                    : ''
-                }
-                aria-current={
-                  section ===
-                  item
-                    ? 'page'
-                    : undefined
-                }
-                onClick={() =>
-                  setSection(
-                    item,
-                  )
-                }
-              >
-                <span className="fenix-navigation__icon">
-                  <NavigationIcon
-                    section={
-                      item
-                    }
-                  />
-                </span>
-
-                <span className="fenix-navigation__label">
-                  {label}
-                </span>
-              </button>
-            ),
-          )}
-        </div>
-      </nav>
-    </div>
+      <AppNavigation />
+    </div></NavigationProvider>
   )
 }
 

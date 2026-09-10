@@ -2,6 +2,10 @@ import {
   db,
 } from '../../db/database'
 
+import { parseDateKey } from '../../utils/date'
+import { createUuid } from '../../utils/uuid'
+export { getLocalDateKey } from '../../utils/date'
+
 import {
   publishCommittedMutation,
 } from '../../app/freshnessEvents'
@@ -79,7 +83,7 @@ function nowIso() {
 }
 
 function createBase(
-  id: string = crypto.randomUUID(),
+  id: string = createUuid(),
 ): BaseEntity {
   const now = nowIso()
 
@@ -90,73 +94,6 @@ function createBase(
     deletedAt: null,
     version: 1,
   }
-}
-
-export function getLocalDateKey(
-  date = new Date(),
-) {
-  const year =
-    date.getFullYear()
-
-  const month =
-    String(
-      date.getMonth() + 1,
-    ).padStart(2, '0')
-
-  const day =
-    String(
-      date.getDate(),
-    ).padStart(2, '0')
-
-  return `${year}-${month}-${day}`
-}
-
-function parseDateKey(
-  dateKey: string,
-) {
-  const match =
-    /^(\d{4})-(\d{2})-(\d{2})$/.exec(
-      dateKey,
-    )
-
-  if (!match) {
-    throw new Error(
-      'La fecha debe tener formato YYYY-MM-DD.',
-    )
-  }
-
-  const year =
-    Number(match[1])
-
-  const month =
-    Number(match[2])
-
-  const day =
-    Number(match[3])
-
-  const parsed =
-    new Date(
-      year,
-      month - 1,
-      day,
-      12,
-      0,
-      0,
-      0,
-    )
-
-  if (
-    parsed.getFullYear() !== year ||
-    parsed.getMonth() !==
-      month - 1 ||
-    parsed.getDate() !== day
-  ) {
-    throw new Error(
-      'La fecha indicada no es válida.',
-    )
-  }
-
-  return parsed
 }
 
 function getWeekday(
@@ -687,469 +624,238 @@ export async function ensureDailyRoutine(
 
 export async function startDay(
   dateKey: string,
-
-  context:
-    DailyRoutineContext,
+  context: DailyRoutineContext,
 ) {
-  const view =
-    await ensureDailyRoutine(
-      dateKey,
-      context,
-    )
+  const view = await ensureDailyRoutine(dateKey, context)
+  let changed = false
 
-  if (
-    view.routine.startedAt !== null
-  ) {
-    return view
-  }
+  await db.transaction('rw', db.dailyRoutines, async () => {
+    const current = await db.dailyRoutines.get(view.routine.id)
 
-  const now = nowIso()
+    if (!current || current.deletedAt !== null) {
+      throw new Error('No se ha podido localizar el día vigente.')
+    }
 
-  await db.dailyRoutines.update(
-    view.routine.id,
-    {
+    if (current.startedAt !== null) return
+
+    const now = nowIso()
+    await db.dailyRoutines.update(current.id, {
       startedAt: now,
-
       updatedAt: now,
+      version: current.version + 1,
+    })
+    changed = true
+  })
 
-      version:
-        view.routine.version + 1,
-    },
-  )
+  if (changed) publishCommittedMutation('today')
 
-  publishCommittedMutation('today')
-
-  const updated =
-    await getDailyRoutineView(
-      dateKey,
-    )
-
-  if (!updated) {
-    throw new Error(
-      'No se ha podido iniciar el día.',
-    )
-  }
-
+  const updated = await getDailyRoutineView(dateKey)
+  if (!updated) throw new Error('No se ha podido iniciar el día.')
   return updated
 }
 
 export async function setDailyTaskStatus(
   taskId: string,
-
   status: TodayTaskStatus,
 ) {
-  const task =
-    await db
-      .dailyRoutineTasks
-      .get(taskId)
+  await db.transaction('rw', db.dailyRoutineTasks, async () => {
+    const task = await db.dailyRoutineTasks.get(taskId)
+    if (!task || task.deletedAt !== null) throw new Error('La tarea indicada no existe.')
 
-  if (
-    !task ||
-    task.deletedAt !== null
-  ) {
-    throw new Error(
-      'La tarea indicada no existe.',
-    )
-  }
-
-  const now = nowIso()
-
-  await db
-    .dailyRoutineTasks
-    .update(
-      task.id,
-      {
-        status,
-
-        completedAt:
-          status === 'completed'
-            ? now
-            : null,
-
-        statusChangedAt:
-          now,
-
-        updatedAt:
-          now,
-
-        version:
-          task.version + 1,
-      },
-    )
+    const now = nowIso()
+    await db.dailyRoutineTasks.update(task.id, {
+      status,
+      completedAt: status === 'completed' ? now : null,
+      statusChangedAt: now,
+      updatedAt: now,
+      version: task.version + 1,
+    })
+  })
 
   publishCommittedMutation('today')
 }
 
 export async function updateDailyTask(
   taskId: string,
-
-  input:
-    UpdateDailyTaskInput,
+  input: UpdateDailyTaskInput,
 ) {
-  const task =
-    await db
-      .dailyRoutineTasks
-      .get(taskId)
+  await db.transaction('rw', db.dailyRoutineTasks, async () => {
+    const task = await db.dailyRoutineTasks.get(taskId)
+    if (!task || task.deletedAt !== null) throw new Error('La tarea indicada no existe.')
 
-  if (
-    !task ||
-    task.deletedAt !== null
-  ) {
-    throw new Error(
-      'La tarea indicada no existe.',
-    )
-  }
+    const title = input.title === undefined ? task.title : input.title.trim()
+    if (title.length === 0) throw new Error('La tarea necesita un nombre.')
 
-  const title =
-    input.title === undefined
-      ? task.title
-      : input.title.trim()
-
-  if (title.length === 0) {
-    throw new Error(
-      'La tarea necesita un nombre.',
-    )
-  }
-
-  const now = nowIso()
-
-  await db
-    .dailyRoutineTasks
-    .update(
-      task.id,
-      {
-        title,
-
-        description:
-          input.description ===
-          undefined
-            ? task.description
-            : input.description,
-
-        block:
-          input.block ??
-          task.block,
-
-        order:
-          input.order ??
-          task.order,
-
-        updatedAt:
-          now,
-
-        version:
-          task.version + 1,
-      },
-    )
+    const now = nowIso()
+    await db.dailyRoutineTasks.update(task.id, {
+      title,
+      description: input.description === undefined ? task.description : input.description,
+      block: input.block ?? task.block,
+      order: input.order ?? task.order,
+      updatedAt: now,
+      version: task.version + 1,
+    })
+  })
 
   publishCommittedMutation('today')
 }
 
 export async function addOneOffTask(
   dateKey: string,
-
-  input:
-    AddOneOffTaskInput,
-
-  context:
-    DailyRoutineContext,
+  input: AddOneOffTaskInput,
+  context: DailyRoutineContext,
 ) {
-  const view =
-    await ensureDailyRoutine(
-      dateKey,
-      context,
+  const view = await ensureDailyRoutine(dateKey, context)
+  const title = input.title.trim()
+  if (title.length === 0) throw new Error('La tarea necesita un nombre.')
+
+  let created: DailyRoutineTask | null = null
+
+  await db.transaction('rw', db.dailyRoutines, db.dailyRoutineTasks, async () => {
+    const routine = await db.dailyRoutines.get(view.routine.id)
+    if (!routine || routine.deletedAt !== null || routine.date !== dateKey) {
+      throw new Error('El día ya no está disponible.')
+    }
+
+    const currentTasks = await db.dailyRoutineTasks
+      .where('dailyRoutineId')
+      .equals(routine.id)
+      .toArray()
+    const tasksInBlock = currentTasks.filter(
+      (task) => task.deletedAt === null && task.block === input.block,
     )
-
-  const title =
-    input.title.trim()
-
-  if (title.length === 0) {
-    throw new Error(
-      'La tarea necesita un nombre.',
-    )
-  }
-
-  const tasksInBlock =
-    view.tasks.filter(
-      (task) =>
-        task.block ===
-        input.block,
-    )
-
-  const nextOrder =
-    tasksInBlock.length === 0
+    const nextOrder = tasksInBlock.length === 0
       ? 10
-      : Math.max(
-          ...tasksInBlock.map(
-            (task) =>
-              task.order,
-          ),
-        ) + 10
+      : Math.max(...tasksInBlock.map((task) => task.order)) + 10
 
-  const task:
-    DailyRoutineTask = {
-    ...createBase(),
+    created = {
+      ...createBase(),
+      dailyRoutineId: routine.id,
+      date: dateKey,
+      sourceTemplateItemId: null,
+      block: input.block,
+      order: nextOrder,
+      kind: 'one_off',
+      title,
+      description: input.description ?? null,
+      applicability: 'manual',
+      status: 'pending',
+      completedAt: null,
+      statusChangedAt: null,
+      targetTime: null,
+      latestTime: null,
+      timingApplies: false,
+    }
 
-    dailyRoutineId:
-      view.routine.id,
-
-    date:
-      dateKey,
-
-    sourceTemplateItemId:
-      null,
-
-    block:
-      input.block,
-
-    order:
-      nextOrder,
-
-    kind: 'one_off',
-
-    title,
-
-    description:
-      input.description ?? null,
-
-    applicability: 'manual',
-
-    status: 'pending',
-
-    completedAt: null,
-
-    statusChangedAt: null,
-
-    targetTime: null,
-
-    latestTime: null,
-
-    timingApplies: false,
-  }
-
-  await db
-    .dailyRoutineTasks
-    .add(task)
+    await db.dailyRoutineTasks.add(created)
+  })
 
   publishCommittedMutation('today')
-
-  return task
+  if (!created) throw new Error('No se ha podido crear la tarea.')
+  return created
 }
 
-export async function deleteOneOffTask(
-  taskId: string,
-) {
-  const task =
-    await db
-      .dailyRoutineTasks
-      .get(taskId)
+export async function deleteOneOffTask(taskId: string) {
+  await db.transaction('rw', db.dailyRoutineTasks, async () => {
+    const task = await db.dailyRoutineTasks.get(taskId)
+    if (!task || task.deletedAt !== null) throw new Error('La tarea indicada no existe.')
+    if (task.kind !== 'one_off') {
+      throw new Error('Solo las tareas creadas para este día pueden eliminarse directamente.')
+    }
 
-  if (
-    !task ||
-    task.deletedAt !== null
-  ) {
-    throw new Error(
-      'La tarea indicada no existe.',
-    )
-  }
-
-  if (
-    task.kind !== 'one_off'
-  ) {
-    throw new Error(
-      'Solo las tareas creadas para este día pueden eliminarse directamente.',
-    )
-  }
-
-  const now = nowIso()
-
-  await db
-    .dailyRoutineTasks
-    .update(
-      task.id,
-      {
-        deletedAt:
-          now,
-
-        updatedAt:
-          now,
-
-        version:
-          task.version + 1,
-      },
-    )
+    const now = nowIso()
+    await db.dailyRoutineTasks.update(task.id, {
+      deletedAt: now,
+      updatedAt: now,
+      version: task.version + 1,
+    })
+  })
 
   publishCommittedMutation('today')
 }
 
 export async function upsertWorkShift(
   dateKey: string,
-
-  input:
-    WorkShiftInput,
+  input: WorkShiftInput,
 ) {
   parseDateKey(dateKey)
 
-  const existing =
-    await db
-      .workShifts
-      .where('date')
-      .equals(dateKey)
-      .first()
+  await db.transaction('rw', db.workShifts, async () => {
+    const activeForDate = (await db.workShifts.where('date').equals(dateKey).toArray())
+      .filter((item) => item.deletedAt === null)
 
-  const now = nowIso()
+    if (activeForDate.length > 1) {
+      throw new Error('Integridad WorkShift: existe más de una jornada activa para esta fecha.')
+    }
 
-  if (existing) {
-    const nextStatus:
-      TodayTaskStatus =
-      input.isWorking
-        ? existing.status ===
-          'not_applicable'
-          ? 'pending'
-          : existing.status
+    const existing = activeForDate[0]
+    const now = nowIso()
+
+    if (existing) {
+      const nextStatus: TodayTaskStatus = input.isWorking
+        ? existing.status === 'not_applicable' ? 'pending' : existing.status
         : 'not_applicable'
 
-    await db.workShifts.update(
-      existing.id,
-      {
-        isWorking:
-          input.isWorking,
-
-        startTime:
-          input.isWorking
-            ? input.startTime ??
-              null
-            : null,
-
-        endTime:
-          input.isWorking
-            ? input.endTime ??
-              null
-            : null,
-
-        status:
-          nextStatus,
-
-        statusChangedAt:
-          nextStatus !==
-          existing.status
-            ? now
-            : existing
-                .statusChangedAt,
-
-        notes:
-          input.notes ===
-          undefined
-            ? existing.notes
-            : input.notes,
-
+      await db.workShifts.update(existing.id, {
+        isWorking: input.isWorking,
+        startTime: input.isWorking ? input.startTime ?? null : null,
+        endTime: input.isWorking ? input.endTime ?? null : null,
+        status: nextStatus,
+        statusChangedAt: nextStatus !== existing.status ? now : existing.statusChangedAt,
+        notes: input.notes === undefined ? existing.notes : input.notes,
         deletedAt: null,
+        updatedAt: now,
+        version: existing.version + 1,
+      })
+      return
+    }
 
-        updatedAt:
-          now,
-
-        version:
-          existing.version + 1,
-      },
-    )
-
-    publishCommittedMutation('today')
-
-    return
-  }
-
-  const shift:
-    WorkShift = {
-    ...createBase(),
-
-    date:
-      dateKey,
-
-    isWorking:
-      input.isWorking,
-
-    startTime:
-      input.isWorking
-        ? input.startTime ??
-          null
-        : null,
-
-    endTime:
-      input.isWorking
-        ? input.endTime ??
-          null
-        : null,
-
-    status:
-      input.isWorking
-        ? 'pending'
-        : 'not_applicable',
-
-    statusChangedAt: null,
-
-    notes:
-      input.notes ?? null,
-  }
-
-  await db.workShifts.add(
-    shift,
-  )
+    const shift: WorkShift = {
+      ...createBase(),
+      date: dateKey,
+      isWorking: input.isWorking,
+      startTime: input.isWorking ? input.startTime ?? null : null,
+      endTime: input.isWorking ? input.endTime ?? null : null,
+      status: input.isWorking ? 'pending' : 'not_applicable',
+      statusChangedAt: null,
+      notes: input.notes ?? null,
+    }
+    await db.workShifts.add(shift)
+  })
 
   publishCommittedMutation('today')
 }
 
 export async function setWorkShiftStatus(
   dateKey: string,
-
-  status:
-    | 'pending'
-    | 'completed'
-    | 'skipped',
+  status: 'pending' | 'completed' | 'skipped',
 ) {
   parseDateKey(dateKey)
 
-  const shift =
-    await db
-      .workShifts
-      .where('date')
-      .equals(dateKey)
-      .first()
+  await db.transaction('rw', db.workShifts, async () => {
+    const activeForDate = (await db.workShifts.where('date').equals(dateKey).toArray())
+      .filter((item) => item.deletedAt === null)
+    if (activeForDate.length !== 1) {
+      throw new Error(activeForDate.length === 0
+        ? 'No existe jornada laboral para esa fecha.'
+        : 'Integridad WorkShift: existe más de una jornada activa para esta fecha.')
+    }
 
-  if (
-    !shift ||
-    shift.deletedAt !== null
-  ) {
-    throw new Error(
-      'No existe jornada laboral para esa fecha.',
-    )
-  }
+    const shift = activeForDate[0]
+    if (!shift.isWorking) throw new Error('Un día libre no puede tener estado de jornada laboral.')
 
-  if (!shift.isWorking) {
-    throw new Error(
-      'Un día libre no puede tener estado de jornada laboral.',
-    )
-  }
-
-  const now = nowIso()
-
-  await db.workShifts.update(
-    shift.id,
-    {
+    const now = nowIso()
+    await db.workShifts.update(shift.id, {
       status,
-
-      statusChangedAt:
-        now,
-
-      updatedAt:
-        now,
-
-      version:
-        shift.version + 1,
-    },
-  )
+      statusChangedAt: now,
+      updatedAt: now,
+      version: shift.version + 1,
+    })
+  })
 
   publishCommittedMutation('today')
 }
+
 export interface RoutineTemplateEditorView {
   template: DailyRoutineTemplate
   items: DailyRoutineTemplateItem[]
@@ -1170,6 +876,10 @@ export interface RoutineTemplateItemInput {
 export interface SaveRoutineTemplateOptions {
   applyToDate?: string | null
   context?: DailyRoutineContext | null
+  settings?: {
+    wakeTime: string
+    defaultDayType: 'work' | 'free'
+  } | null
 }
 
 export async function getRoutineTemplateEditorView(): Promise<RoutineTemplateEditorView> {
@@ -1299,65 +1009,7 @@ export async function saveRoutineTemplate(
   inputs: RoutineTemplateItemInput[],
   options: SaveRoutineTemplateOptions = {},
 ): Promise<RoutineTemplateEditorView> {
-  for (const input of inputs) {
-    validateRoutineTemplateItemInput(input)
-  }
-
-  const template = await getActiveTemplate()
-
-  if (!template) {
-    throw new Error('No existe una plantilla activa de Hoy.')
-  }
-
-  const existingItems = await getActiveTemplateItems(template.id)
-  const existingById = new Map(existingItems.map((item) => [item.id, item]))
-  const incomingIds = new Set(inputs.flatMap((input) => (input.id ? [input.id] : [])))
-  const now = nowIso()
-
-  const savedItems: DailyRoutineTemplateItem[] = inputs.map((input) => {
-    const existing = input.id ? existingById.get(input.id) : undefined
-
-    if (existing) {
-      return {
-        ...existing,
-        block: input.block,
-        order: input.order,
-        title: input.title.trim(),
-        description: normalizeOptionalText(input.description),
-        applicability: input.applicability,
-        targetTime: normalizeOptionalText(input.targetTime),
-        latestTime: normalizeOptionalText(input.latestTime),
-        timingDays: input.timingDays,
-        deletedAt: null,
-        updatedAt: now,
-        version: existing.version + 1,
-      }
-    }
-
-    return {
-      ...createBase(input.id ?? crypto.randomUUID()),
-      templateId: template.id,
-      block: input.block,
-      order: input.order,
-      title: input.title.trim(),
-      description: normalizeOptionalText(input.description),
-      applicability: input.applicability,
-      targetTime: normalizeOptionalText(input.targetTime),
-      latestTime: normalizeOptionalText(input.latestTime),
-      timingDays: input.timingDays,
-    }
-  })
-
-  const archivedItems = existingItems
-    .filter((item) => !incomingIds.has(item.id))
-    .map((item) => ({
-      ...item,
-      deletedAt: now,
-      updatedAt: now,
-      version: item.version + 1,
-    }))
-
-  const archivedItemIds = new Set(archivedItems.map((item) => item.id))
+  for (const input of inputs) validateRoutineTemplateItemInput(input)
 
   await db.transaction(
     'rw',
@@ -1365,19 +1017,85 @@ export async function saveRoutineTemplate(
     db.dailyRoutineTemplateItems,
     db.dailyRoutines,
     db.dailyRoutineTasks,
+    db.appMeta,
     async () => {
-      if (savedItems.length > 0) {
-        await db.dailyRoutineTemplateItems.bulkPut(savedItems)
+      const activeTemplates = (await db.dailyRoutineTemplates.toArray())
+        .filter((item) => item.deletedAt === null && item.isActive)
+
+      if (activeTemplates.length !== 1) {
+        throw new Error(activeTemplates.length === 0
+          ? 'No existe una plantilla activa de Hoy.'
+          : 'Integridad Today: existe más de una plantilla activa.')
       }
 
-      if (archivedItems.length > 0) {
-        await db.dailyRoutineTemplateItems.bulkPut(archivedItems)
-      }
+      const template = activeTemplates[0]
+      const existingItems = (await db.dailyRoutineTemplateItems
+        .where('templateId')
+        .equals(template.id)
+        .toArray())
+        .filter((item) => item.deletedAt === null)
+      const existingById = new Map(existingItems.map((item) => [item.id, item]))
+      const incomingIds = new Set(inputs.flatMap((input) => input.id ? [input.id] : []))
+      const now = nowIso()
 
+      const savedItems: DailyRoutineTemplateItem[] = inputs.map((input) => {
+        const existing = input.id ? existingById.get(input.id) : undefined
+        if (input.id && !existing) {
+          throw new Error('La rutina ha cambiado. Recarga Ajustes antes de volver a guardar.')
+        }
+        if (existing) {
+          return {
+            ...existing,
+            block: input.block,
+            order: input.order,
+            title: input.title.trim(),
+            description: normalizeOptionalText(input.description),
+            applicability: input.applicability,
+            targetTime: normalizeOptionalText(input.targetTime),
+            latestTime: normalizeOptionalText(input.latestTime),
+            timingDays: input.timingDays,
+            deletedAt: null,
+            updatedAt: now,
+            version: existing.version + 1,
+          }
+        }
+        return {
+          ...createBase(input.id ?? createUuid()),
+          templateId: template.id,
+          block: input.block,
+          order: input.order,
+          title: input.title.trim(),
+          description: normalizeOptionalText(input.description),
+          applicability: input.applicability,
+          targetTime: normalizeOptionalText(input.targetTime),
+          latestTime: normalizeOptionalText(input.latestTime),
+          timingDays: input.timingDays,
+        }
+      })
+
+      const archivedItems = existingItems
+        .filter((item) => !incomingIds.has(item.id))
+        .map((item) => ({
+          ...item,
+          deletedAt: now,
+          updatedAt: now,
+          version: item.version + 1,
+        }))
+      const archivedItemIds = new Set(archivedItems.map((item) => item.id))
+
+      if (savedItems.length > 0) await db.dailyRoutineTemplateItems.bulkPut(savedItems)
+      if (archivedItems.length > 0) await db.dailyRoutineTemplateItems.bulkPut(archivedItems)
       await db.dailyRoutineTemplates.update(template.id, {
         updatedAt: now,
         version: template.version + 1,
       })
+
+      if (options.settings) {
+        await db.appMeta.bulkPut([
+          { key: 'v21:routineWakeTime', value: options.settings.wakeTime, updatedAt: now },
+          { key: 'v21:routineDefaultDayType', value: options.settings.defaultDayType, updatedAt: now },
+        ])
+      }
 
       if (options.applyToDate && options.context) {
         await applyTemplateSnapshotToDate(
@@ -1391,68 +1109,61 @@ export async function saveRoutineTemplate(
   )
 
   publishCommittedMutation('today')
-
   return getRoutineTemplateEditorView()
 }
 
 export async function promoteOneOffTaskToRoutine(
   taskId: string,
 ): Promise<DailyRoutineTemplateItem> {
-  const task = await db.dailyRoutineTasks.get(taskId)
-
-  if (!task || task.deletedAt !== null) {
-    throw new Error('La tarea indicada no existe.')
-  }
-
-  if (task.kind !== 'one_off') {
-    throw new Error('Esta tarea ya pertenece a la rutina.')
-  }
-
-  const template = await getActiveTemplate()
-
-  if (!template) {
-    throw new Error('No existe una plantilla activa de Hoy.')
-  }
-
-  const items = await getActiveTemplateItems(template.id)
-  const sameBlock = items.filter((item) => item.block === task.block)
-  const nextOrder = sameBlock.length === 0
-    ? 10
-    : Math.max(...sameBlock.map((item) => item.order)) + 10
-
-  const now = nowIso()
-  const item: DailyRoutineTemplateItem = {
-    ...createBase(),
-    templateId: template.id,
-    block: task.block,
-    order: nextOrder,
-    title: task.title,
-    description: task.description,
-    applicability:
-      task.block === 'work'
-        ? 'work_day'
-        : task.block === 'postworkout'
-          ? 'training_day'
-          : 'always',
-    targetTime: task.targetTime,
-    latestTime: task.latestTime,
-    timingDays: null,
-  }
+  let created: DailyRoutineTemplateItem | null = null
 
   await db.transaction(
     'rw',
+    db.dailyRoutineTasks,
     db.dailyRoutineTemplates,
     db.dailyRoutineTemplateItems,
     async () => {
+      const task = await db.dailyRoutineTasks.get(taskId)
+      if (!task || task.deletedAt !== null) throw new Error('La tarea indicada no existe.')
+      if (task.kind !== 'one_off') throw new Error('Esta tarea ya pertenece a la rutina.')
+
+      const activeTemplates = (await db.dailyRoutineTemplates.toArray())
+        .filter((item) => item.deletedAt === null && item.isActive)
+      if (activeTemplates.length !== 1) {
+        throw new Error(activeTemplates.length === 0
+          ? 'No existe una plantilla activa de Hoy.'
+          : 'Integridad Today: existe más de una plantilla activa.')
+      }
+      const template = activeTemplates[0]
+      const items = (await db.dailyRoutineTemplateItems.where('templateId').equals(template.id).toArray())
+        .filter((item) => item.deletedAt === null)
+      const sameBlock = items.filter((item) => item.block === task.block)
+      const nextOrder = sameBlock.length === 0 ? 10 : Math.max(...sameBlock.map((item) => item.order)) + 10
+      const now = nowIso()
+      const item: DailyRoutineTemplateItem = {
+        ...createBase(),
+        templateId: template.id,
+        block: task.block,
+        order: nextOrder,
+        title: task.title,
+        description: task.description,
+        applicability: task.block === 'work'
+          ? 'work_day'
+          : task.block === 'postworkout' ? 'training_day' : 'always',
+        targetTime: task.targetTime,
+        latestTime: task.latestTime,
+        timingDays: null,
+      }
       await db.dailyRoutineTemplateItems.add(item)
       await db.dailyRoutineTemplates.update(template.id, {
         updatedAt: now,
         version: template.version + 1,
       })
+      created = item
     },
   )
 
   publishCommittedMutation('today')
-
-  return item
+  if (!created) throw new Error('No se ha podido añadir el paso a la rutina.')
+  return created
 }

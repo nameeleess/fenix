@@ -1,0 +1,2072 @@
+# FENIX_CODEX_HANDOFF_INGENIERIA_IMPLEMENTACION_II_v1.0
+
+**Proyecto:** FÉNIX v2 — EVOLUCIÓN / BUILD & QA  
+**Área:** `01 · FÉNIX v2 — INGENIERÍA / IMPLEMENTACIÓN II`  
+**Destino:** repositorio / Codex como fuente permanente de continuidad  
+**Fecha de corte:** 2026-09-08  
+**Estado de este documento:** HANDOFF CANÓNICO DE MIGRACIÓN  
+**Regla posterior a emisión:** este especialista no debe continuar implementación hasta nueva autorización de CENTRAL.
+
+---
+
+## 0. RESUMEN EJECUTIVO CANÓNICO
+
+FÉNIX v2 no es un proyecto nuevo. Parte de un CORE STABLE `v2.0.0` ya cerrado y evoluciona hacia `v2.1.0`.
+
+La implementación `v2.1.0-rc.1` llegó a superar un **Final Engineering / PRE-QA automated gate** completo con build, lint, suites v2.1, CORE + backup oficial de 759 registros, E2E 3/3 y captura visual 26/26. Esa candidata fue empaquetada como:
+
+- `FENIX_v2.1.0-rc.1_SOURCE_BUNDLE.zip`
+- `FENIX_v2.1.0-rc.1_ENGINEERING_EVIDENCE_20260908-123953.zip`
+
+Sin embargo, CENTRAL auditó SOURCE + EVIDENCE y rechazó el paso a QA independiente:
+
+**`REJECT FOR QA — CONTINUE ENGINEERING PRE-QA`**
+
+Quedan abiertos exactamente tres bloqueantes de CENTRAL:
+
+1. `CENTRAL-RC1-001 — Visual Parity no cerrada`
+2. `CENTRAL-RC1-002 — ExerciseMotion no específico 33/33`
+3. `CENTRAL-RC1-003 — Media FÉNIX custom todavía esquemática`
+
+La candidata automatizada anterior NO puede considerarse release candidate aceptable para QA independiente.
+
+La ejecución correctiva posterior intentó varios wrappers PowerShell. El último wrapper determinista `REPAIR_FENIX_v2.1_RC1_DETERMINISTIC_FINAL_v1.2.ps1` **no funcionó según el usuario**, pero el usuario todavía no ha aportado la salida exacta de PowerShell. Por tanto:
+
+> **ESTADO EXACTO DEL WORKING TREE LOCAL DESPUÉS DEL ÚLTIMO INTENTO: DESCONOCIDO.**
+
+Codex debe comenzar inspeccionando el repositorio real, no asumir que el último correctivo quedó aplicado ni que no quedó aplicado.
+
+No hay autorización para:
+- reset;
+- reseed;
+- clean;
+- checkout destructivo;
+- commit;
+- tag;
+- release;
+- push de `production`;
+- envío directo a QA independiente.
+
+---
+
+# 1. ROL, AUTORIDAD Y LÍMITES DE ESTE ESPECIALISTA
+
+## 1.1 Rol
+
+`01 · FÉNIX v2 — INGENIERÍA / IMPLEMENTACIÓN II` es la autoridad de **ejecución técnica** del proyecto FÉNIX v2.
+
+Su función es transformar especificaciones y decisiones aprobadas por CENTRAL en implementación verificable, manteniendo los contratos de dominio, la integridad de datos y la regresión cerrada.
+
+## 1.2 Puede
+
+- inspeccionar source, bundles, scripts, tests y evidencia;
+- implementar únicamente scope autorizado;
+- corregir defectos inequívocos por causa raíz;
+- hacer barridos horizontales de la clase de error;
+- refactorizar cuando sea necesario para cumplir contratos existentes;
+- crear regression tests;
+- ejecutar self-test;
+- ejecutar PRE-QA adversarial/root-cause;
+- ejecutar shadow QA técnico;
+- crear scripts de reparación/gate;
+- preparar candidatas RC;
+- preparar SOURCE/EVIDENCE para CENTRAL;
+- informar STOP CONDITIONS reales.
+
+## 1.3 No puede unilateralmente
+
+- redefinir producto;
+- cambiar ownership entre Hoy / Training / Nutrition / Progreso;
+- cambiar comportamiento funcional aprobado;
+- cambiar semántica de historial;
+- cambiar identidad de sesión;
+- cambiar definición de racha;
+- cambiar reglas Pre/Post de Nutrition;
+- cambiar contratos cross-module;
+- cambiar schema;
+- introducir migraciones;
+- introducir backend/cloud no aprobado;
+- reinterpretar los Golden Renders;
+- modificar los Golden Renders para hacer pasar la implementación;
+- relajar Media Freeze;
+- cerrar formalmente una release;
+- hacer commit/tag/release final sin CENTRAL;
+- tocar `production`;
+- enviar directamente a QA independiente.
+
+## 1.4 Autoridad superior
+
+`00 · FÉNIX v2 — CENTRAL` mantiene autoridad global sobre:
+
+- baseline;
+- arquitectura;
+- requisitos;
+- contratos;
+- decisiones;
+- versión;
+- alcance;
+- aceptación;
+- prioridad;
+- QA;
+- release;
+- cierre.
+
+Ante contradicción funcional o contractual material:
+
+`STOP → DOCUMENTAR → DEVOLVER A CENTRAL`
+
+No convertir defectos implementativos resolubles en STOP CONDITION.
+
+---
+
+# 2. ESTADO EXACTO ACTUAL DEL ÁREA
+
+## 2.1 Baseline estable
+
+**Release:** `FÉNIX v2 CORE STABLE — v2.0.0`
+
+**Commit / production baseline:**
+
+`deac3890f4d1b794cae8f3acde5a12bf7c35cf94`
+
+**Tag:** `v2.0.0`
+
+**Rama de desarrollo:** `main`
+
+**Rama de producción:** `production`
+
+**Source release SHA-256:**
+
+`f98d902d245dcd3cc0a6db5eca4d40afa4b1bca3e7f7f00a9238d16f32fab617`
+
+**DB:** `fenix-db`
+
+**Schema:** `5`
+
+**Migraciones:** `NONE`
+
+**Backup oficial histórico:**
+- 759 registros
+- SHA-256 `3686d872e64d83f7fea7053fab9f2e32508bd525c50180431a5b437bad8e8732`
+
+CORE `v2.0.0` quedó QA PASS con 0 incidencias abiertas.
+
+## 2.2 Objetivo activo
+
+Release objetivo:
+
+`v2.1.0`
+
+Candidata histórica principal:
+
+`v2.1.0-rc.1`
+
+CENTRAL sugirió para la candidata correctiva posterior un identificador inequívoco, **preferiblemente** `v2.1.0-rc.1.1` o equivalente.
+
+No existe en este contexto una decisión formal que obligue a cambiar `package.json` a `2.1.0-rc.1.1`.
+
+**Versión exacta que Codex debe usar para la próxima candidata: DESCONOCIDO / decidir con CENTRAL si el repo no contiene ya una decisión posterior.**
+
+## 2.3 Última candidata automatizada plenamente validada
+
+Artefactos auditados por CENTRAL:
+
+### SOURCE
+
+`FENIX_v2.1.0-rc.1_SOURCE_BUNDLE.zip`
+
+SHA-256:
+
+`3dcc4f61552eafc2ae868dc6818652b34756d37db882b15285ca9864fcf54ee6`
+
+### EVIDENCE
+
+`FENIX_v2.1.0-rc.1_ENGINEERING_EVIDENCE_20260908-123953.zip`
+
+SHA-256:
+
+`a305aab3ada4922c4d5529b0e094cb10af3f78387991579ab15e17049417c2c8`
+
+Ese bundle contenía un Final Gate automático PASS.
+
+## 2.4 Decisión posterior de CENTRAL
+
+CENTRAL auditó esos artefactos y dictó:
+
+**`REJECT FOR QA — CONTINUE ENGINEERING PRE-QA`**
+
+Razón: tres defectos ALTOS abiertos:
+
+- `CENTRAL-RC1-001`
+- `CENTRAL-RC1-002`
+- `CENTRAL-RC1-003`
+
+Por tanto, cualquier declaración anterior de “lista para QA” queda invalidada.
+
+## 2.5 Estado del working tree local
+
+Ruta conocida:
+
+`C:\Users\Amin\Projects\fenix`
+
+Entorno conocido:
+- Windows
+- PowerShell
+- Node `v24.19.0`
+- npm `11.17.0`
+
+Último estado local verificable antes de los intentos correctivos tardíos:
+- branch `main`
+- `production` intacta
+- `package.json` `2.1.0-rc.1`
+- schema 5
+- no migraciones
+- candidata automatizada PASS disponible.
+
+Después:
+- `REPAIR_FENIX_v2.1_RC1_CONSOLIDATED_001_AND_FINAL_GATE_v1.1.ps1` falló antes de aplicar el patch completo en:
+  `src/features/training/training.css:1`
+- luego se entregó `REPAIR_FENIX_v2.1_RC1_DETERMINISTIC_FINAL_v1.2.ps1`
+- el usuario ha confirmado únicamente: **“no funcionó”**
+- la salida PowerShell del último script todavía no se ha aportado.
+
+Por tanto:
+
+**Working tree actual exacto = DESCONOCIDO.**
+
+Codex debe inspeccionarlo físicamente antes de escribir.
+
+---
+
+# 3. CONTRATOS FUNCIONALES VIGENTES — NO ROMPER
+
+## 3.1 Ownership de módulos
+
+### Hoy
+- capa de orquestación y presentación;
+- consume hechos de otros módulos;
+- no se convierte en propietario de Training, Nutrition o Progreso;
+- no modifica directamente estados pertenecientes a otros módulos.
+
+### Training
+Autoridad sobre:
+- sesiones;
+- planificación de entrenamiento;
+- rutina;
+- ejercicios;
+- series;
+- ejecución;
+- estados de sesión;
+- reprogramación;
+- omisión;
+- inicio/final;
+- duración;
+- rendimiento.
+
+### Nutrition
+Autoridad sobre:
+- comidas;
+- recetas;
+- cantidades;
+- estructura diaria;
+- macros;
+- consumo;
+- alternativas;
+- planificación;
+- adaptación alimentaria al contexto Training.
+
+### Progreso
+Autoridad sobre:
+- peso;
+- medidas;
+- tendencias;
+- adherencia;
+- racha;
+- evolución;
+- estadísticas derivadas.
+
+Progreso consume hechos; no modifica hechos fuente para obtener una estadística deseada.
+
+## 3.2 Separación histórica obligatoria
+
+No colapsar:
+
+`definition → planning → instance → execution → history`
+
+Editar una plantilla no reescribe hechos históricos.
+
+Nueva planificación no destruye ejecuciones previas.
+
+## 3.3 Identidad Training
+
+Varias sesiones distintas pueden compartir la misma fecha efectiva.
+
+La identidad de sesión no es “el día”.
+
+Reprogramar debe preservar la identidad de la sesión cuando corresponda.
+
+## 3.4 Estados Training vigentes
+
+Conceptuales / usados:
+- `prevista`
+- `reprogramada`
+- `omitida`
+- `en curso`
+- `completada`
+- `incompleta`
+
+Además:
+- descanso programado;
+- sesión extraordinaria no planificada;
+- inicio accidental descartado.
+
+## 3.5 Training → Hoy
+
+Hoy puede consumir:
+- id de sesión;
+- nombre;
+- estado;
+- duración estimada;
+- inicio real;
+- final real;
+- duración real;
+- rutina;
+- movilidad;
+- sesiones previstas/completadas;
+- datos de racha/presentación.
+
+Hoy no modifica la sesión.
+
+## 3.6 Training → Nutrition
+
+Nutrition puede consumir:
+- identidad de sesión;
+- fecha prevista;
+- fecha efectiva;
+- estado;
+- inicio real;
+- final real;
+- duración estimada cuando exista.
+
+Pre/Post se asocian conceptualmente a identidad de sesión, no solo al día.
+
+### Reprogramación
+Si una sesión se reprograma:
+- bloques Training pendientes de Nutrition pueden trasladarse al nuevo contexto;
+- mantener receta/cantidad seleccionada cuando sea razonable;
+- dejan de aplicar en el día original;
+- comidas ya `completed` / consumidas no se reescriben;
+- comidas `skipped` explícitamente tampoco se reescriben.
+
+### Omisión
+Si una sesión se marca omitida:
+- Pre/Post pendientes pueden desactivarse/eliminarse;
+- Nutrition adapta la estructura restante;
+- consumos ya registrados no se destruyen.
+
+## 3.7 Racha
+
+Definición:
+
+`racha = instancias de PlannedWorkoutSession previstas consecutivas cumplidas`
+
+No son días consecutivos.
+
+Orden canónico:
+
+`scheduledDate → createdAt → id`
+
+Reglas:
+- completada: incrementa;
+- descanso programado: neutral;
+- reprogramada: neutral mientras se resuelve;
+- reprogramada completada: cuenta;
+- omitida: rompe;
+- incompleta: rompe;
+- extraordinaria no planificada: neutral;
+- inicio accidental descartado: neutral.
+
+La racha se deriva de hechos; no es fuente primaria editable.
+
+## 3.8 Backup/Restore
+
+Debe preservar:
+- integridad referencial;
+- unicidades runtime;
+- identidad lógica;
+- coherencia de snapshot;
+- atomicidad de restore;
+- rollback razonable ante fallo;
+- schema 5.
+
+No introducir `migration6` sin autorización.
+
+## 3.9 Identity policy Nutrition
+
+Canónica:
+
+`normalizeIngredientName(value) = trim() → toLocaleLowerCase('es')`
+
+`normalizeShoppingUnit(value) = trim() → non-empty | null`
+
+La unidad es case-sensitive:
+
+`kg ≠ KG`
+
+Runtime y validator de backup deben compartir la misma política.
+
+## 3.10 Fecha / zona horaria
+
+Policy validada:
+- zona conceptual `Europe/Madrid`;
+- fechas de dominio strict `YYYY-MM-DD`;
+- regresiones DST cubiertas.
+
+---
+
+# 4. DECISIONES APROBADAS Y VIGENTES
+
+## 4.1 Arquitectura / producto
+
+- FÉNIX debe evolucionar; no reconstruirse innecesariamente desde cero.
+- Local-first.
+- Offline importante.
+- Sin login obligatorio.
+- Export/import/backup/restore.
+- Historial no destructivo.
+- Documentación y QA obligatorios.
+- Uso principal iPhone.
+- UI oscura, clara, rápida y mobile-first.
+- Calidad e integridad de datos > velocidad.
+
+## 4.2 Proceso de release
+
+Flujo:
+
+`ESPECIFICAR → APROBAR → IMPLEMENTAR → BUILD/TEST → HANDOFF → QA → CORREGIR/RETEST si FAIL → CERRAR si PASS`
+
+Para v2.1, Ingeniería usa:
+
+`implementación consolidada → self-test → PRE-QA adversarial/root-cause → shadow QA → CENTRAL → QA independiente solo si CENTRAL autoriza`
+
+## 4.3 PRE-QA root-cause
+
+Para cada defecto:
+1. localizar causa raíz;
+2. corregir caso;
+3. barrer hermanos;
+4. añadir regression;
+5. repetir gate relevante.
+
+No devolver un “fix puntual” si la clase hermana permanece abierta.
+
+## 4.4 Patrón de mutación concurrente
+
+Preferido:
+
+`transaction → reread current → validate → mutate atomically → version++ → commit → publish freshness`
+
+Evitar:
+
+`read outside transaction → compute → update later`
+
+## 4.5 Design System v2
+
+Scope aprobado:
+- AppHeader
+- WeekDaySelector
+- tabs
+- cards
+- buttons
+- dialogs/sheets
+- empty states
+- media frames
+- feedback
+- offline/update states
+
+Accesibilidad:
+- targets críticos mínimo 44 px;
+- dialogs accesibles;
+- no depender de `window.confirm` como UX final aprobada.
+
+## 4.6 PWA
+
+Aprobado:
+- update seguro;
+- no interrumpir sesión activa;
+- offline indicator;
+- manifest;
+- service worker;
+- badging solo feature-detected;
+- notificaciones solo si arquitectura real las soporta;
+- no inventar backend.
+
+## 4.7 Media Freeze
+
+Definitivo:
+
+- 26 RepDB
+- 7 FÉNIX
+- total 33/33 ejercicios
+
+RepDB fijado a:
+
+`@repdb/exercises@2026.8.1`
+
+Curl femoral:
+
+`RepDB leg-curl`
+
+visual canónico:
+
+`lying leg curl`
+
+Uso RepDB:
+- package-local;
+- atribución;
+- no redistribución como dataset.
+
+## 4.8 7 ejercicios FÉNIX propios
+
+- Remo T con pecho apoyado
+- Curl Bayesian en polea
+- Extensión de tríceps overhead en polea
+- Open Book
+- 90/90 Hip Switch
+- Wall Slides
+- Respiración y movilidad suave
+
+Contrato final vigente:
+- media propia;
+- inequívocamente identificable;
+- mecánica/anatomía suficientemente correcta;
+- coherente con catálogo;
+- start/peak o equivalente explicativo;
+- offline;
+- no derivada de terceros con licencia incompatible;
+- asset esquemático solo puede sobrevivir como fallback, no como media principal final.
+
+## 4.9 ExerciseMotion
+
+Debe ser:
+- específico de cada ejercicio;
+- 33/33;
+- lightweight;
+- offline;
+- pausable;
+- compatible `prefers-reduced-motion`;
+- fallback estático.
+
+Puede reutilizar primitives internas.
+
+No puede reutilizar una **escena/cinemática completa genérica por familia** para ejercicios distintos.
+
+La especificidad debe reflejar, según el ejercicio:
+- stance/ángulo;
+- implemento;
+- trayectoria;
+- orientación corporal;
+- articulaciones relevantes;
+- inicio/fin.
+
+Un `motionId` único o tiempos/amplitudes diferentes NO bastan.
+
+---
+
+# 5. DECISIONES SUPERSEDED / DEROGADAS
+
+## 5.1 Media Freeze 25+8
+
+**Derogada:**
+- 25 RepDB + 8 FÉNIX.
+
+**Sustituida por:**
+- 26 RepDB + 7 FÉNIX = 33/33.
+
+Motivo:
+`STOP-MEDIA-01`, resolución CENTRAL:
+`Curl femoral = RepDB leg-curl`.
+
+## 5.2 Source ID Hip Thrust incorrecto
+
+Implementación inicial:
+`barbell-hip-thrust`
+
+Resultado:
+asset inexistente en package.
+
+Sustituido por resolución package-local real:
+- id: `hip-thrust`
+- start/peak package real.
+
+La clase quedó cerrada dentro de `PREQA-V21-MEDIA-001`.
+
+## 5.3 Visual test monolítico
+
+Anterior:
+- 26 estados en un test secuencial;
+- un fallo N impedía ver N+1…26.
+
+Sustituido por:
+- 26 tests `@visual` independientes;
+- contexto limpio por estado;
+- worker=1 determinista;
+- nombres exactos de screenshot;
+- flujo directo a cada superficie.
+
+## 5.4 Timeout visual monolítico
+
+Contrato antiguo:
+- `test.setTimeout(120_000)` global asociado al test monolítico.
+
+Sustituido por:
+- matriz independiente;
+- contratos de RecipeVisual / Training responsive actualizados para no depender de arquitectura monolítica.
+
+## 5.5 Playwright preview no hermético
+
+Anterior:
+- puerto 4173;
+- `reuseExistingServer:true`;
+- posibilidad de reutilizar servidor stale.
+
+Sustituido por:
+- `127.0.0.1:41731`;
+- `--strictPort`;
+- `reuseExistingServer:false`;
+- service worker permitido explícitamente;
+- boot estable y diagnósticos.
+
+## 5.6 Runner URL pathname en Windows
+
+Anterior:
+- derivar ruta nativa desde pathname URL;
+- produjo `C:\C:\...`.
+
+Sustituido por:
+- `fileURLToPath`;
+- paths nativos.
+
+## 5.7 RecipeVisual sin ownership geométrico
+
+Anterior:
+- fallback SVG podía invadir hit surfaces adyacentes.
+
+Sustituido por:
+- `recipe-visual.css` component-owned;
+- dimensiones acotadas;
+- `pointer-events:none`;
+- variantes responsive.
+
+## 5.8 Paridad = “captura existe”
+
+**Derogada explícitamente por CENTRAL.**
+
+No es válido:
+
+`26/26 screenshots captured = 26/26 parity`
+
+Regla vigente:
+- `CAPTURE PASS` y `PARITY PASS` son estados distintos;
+- comparación Golden↔capture;
+- matriz 26/26;
+- 8 ejes;
+- sin `PENDING`.
+
+## 5.9 ExerciseMotion genérico por familia
+
+Implementación previa:
+- artwork compartido por familias como `press`, `row`, `curl`, etc.;
+- diferencias principalmente por `motionProfile` (duración, amplitud, rotación, fase).
+
+CENTRAL lo rechazó.
+
+Regla vigente:
+- representación de movimiento específica 33/33 más allá de ID/timing.
+
+## 5.10 7 SVG FÉNIX esquemáticos como media final
+
+CENTRAL los rechazó como placeholder/esquemáticos.
+
+Regla vigente:
+- solo fallback de emergencia;
+- media final propia start/peak o equivalente.
+
+---
+
+# 6. CONTRADICCIONES / AMBIGÜEDADES QUE CODEX NO DEBE RESOLVER SILENCIOSAMENTE
+
+## 6.1 Versión de siguiente candidata
+
+CENTRAL:
+- “preferiblemente `v2.1.0-rc.1.1` o identificador equivalente inequívoco”.
+
+Tooling/candidata histórica:
+- `package.json = 2.1.0-rc.1`;
+- Final Gate histórico exige `2.1.0-rc.1`;
+- bundles históricos usan `rc.1`.
+
+No existe aquí una orden inequívoca de cambiar package version.
+
+**Estado: DESCONOCIDO / CENTRAL.**
+
+## 6.2 Final Gate histórico vs criterio de CENTRAL
+
+Final Gate histórico declaraba:
+
+`26/26 VISUAL CAPTURES: PASS (manual parity review still required before CENTRAL handoff)`
+
+Engineering handoff posterior presentó candidata como lista para QA.
+
+CENTRAL rechazó esa conclusión.
+
+**Prevalece CENTRAL: la paridad no estaba cerrada.**
+
+## 6.3 Baseline funcional antiguo: “perfeccionamiento visual fino posponible”
+
+La fuente baseline pre-auditoría permitía posponer perfeccionamiento visual fino para CORE STABLE.
+
+FÉNIX v2.1 tiene después un Design Freeze explícito de 26 Golden Renders y paridad estricta.
+
+No reinterpretar esto como conflicto para relajar v2.1.
+
+Para v2.1 prevalece el Design Freeze posterior.
+
+## 6.4 QA fixture de fecha fija
+
+Durante Ingeniería se intentó fijar el visual QA al 3 de septiembre de 2026 y usar datos sintéticos para hacer estados poblados comparables.
+
+CENTRAL exige:
+- comportamiento real;
+- datos veraces;
+- comparación real contra Goldens.
+
+No existe decisión CENTRAL explícita que prohíba fixtures sintéticos aislados de QA, pero tampoco deben usarse para falsear la paridad.
+
+**Uso exacto de fixtures para el cierre RC1: debe limitarse a reproducibilidad y no cambiar semántica/verdad visual.**
+
+---
+
+# 7. DEPENDENCIAS Y CONTRATOS CROSS-MODULE
+
+## 7.1 Hoy ↔ Training
+
+Productor:
+Training
+
+Consumidor:
+Hoy
+
+Training expone estado real.
+
+Hoy:
+- presenta;
+- prioriza;
+- puede permitir iniciar mediante API/acción autorizada;
+- no se apropia del lifecycle.
+
+El paso Training de Hoy se completa cuando Training marca la sesión completada.
+
+## 7.2 Hoy ↔ Nutrition
+
+Productor:
+Nutrition
+
+Consumidor:
+Hoy
+
+Hoy muestra comida relevante según prioridad Nutrition:
+- Pre-entreno;
+- Post-entreno;
+- principal;
+- snack;
+- cena.
+
+Comidas realizadas se saltan.
+
+Hoy muestra progreso diario:
+- kcal;
+- proteína;
+- carbohidratos;
+- grasas.
+
+La autoridad de consumo sigue en Nutrition.
+
+## 7.3 Hoy ↔ Progreso
+
+Productor:
+Progreso
+
+Consumidor:
+Hoy
+
+Tarjeta compacta aprobada:
+- tendencia de peso;
+- variación respecto a periodo previo;
+- micrográfico 3–4 semanas;
+- adherencia reciente cuando corresponda;
+- racha Training derivada.
+
+Calidad de tendencia:
+- mínimo 3 registros válidos últimos 7 días;
+- ambos periodos cumplen mínimo para comparación;
+- si no: último valor real + “Tendencia: datos insuficientes”.
+
+Días sin registro no equivalen a incumplimiento.
+
+## 7.4 Training ↔ Nutrition
+
+Ver sección 3.6.
+
+Regla más importante:
+- identidad de sesión;
+- no reescribir consumos cerrados.
+
+## 7.5 Training ↔ Progreso
+
+Training produce hechos de sesión y rendimiento.
+
+Progreso deriva:
+- racha;
+- rendimiento;
+- estadísticas.
+
+Progreso no reescribe Training para mejorar métricas.
+
+## 7.6 CENTRAL ↔ Ingeniería
+
+CENTRAL decide scope/acceptance.
+
+Ingeniería:
+- implementa;
+- prueba;
+- documenta;
+- devuelve candidata.
+
+Engineering no puede autorizar QA.
+
+## 7.7 Ingeniería ↔ QA
+
+QA es adversarial e independiente.
+
+QA:
+- no modifica implementación;
+- puede reabrir bloques mediante regresión reproducible;
+- clasifica CRÍTICA / ALTA / MEDIA / BAJA.
+
+Ingeniería no envía directamente a QA sin CENTRAL.
+
+---
+
+# 8. MODELO CONCEPTUAL / DATOS / ESTADOS RELEVANTES
+
+No se reproduce aquí un schema físico completo porque no está íntegramente presente en este contexto. Los siguientes conceptos sí están confirmados por source/tests/historial.
+
+## 8.1 Training
+
+Conceptos:
+- rutina / plantilla;
+- ejercicio;
+- custom exercise;
+- planificación;
+- `PlannedWorkoutSession`;
+- sesión efectiva;
+- ExerciseSet;
+- warm-up set;
+- working set;
+- carga;
+- repeticiones;
+- RIR;
+- sustitución;
+- superserie;
+- historial;
+- rendimiento.
+
+Separar:
+- plantilla;
+- instancia;
+- ejecución real.
+
+## 8.2 Nutrition
+
+Conceptos confirmados:
+- DailyMeal;
+- NutritionGoal;
+- Ingredient;
+- Recipe;
+- RecipeIngredient;
+- ShoppingItem;
+- meal completion/skip;
+- alternative;
+- training-linked meal;
+- week/day planning;
+- consumption.
+
+Identidad lógica activa protegida por runtime + backup.
+
+## 8.3 Progreso
+
+Conceptos:
+- peso;
+- body measurement;
+- featured exercise / performance;
+- adherencia;
+- tendencia;
+- objetivo;
+- corrección;
+- eliminación.
+
+Regla:
+“corrección” no es lo mismo que “delete”.
+
+## 8.4 Hoy / rutina
+
+Conceptos:
+- rutina diaria;
+- WorkShift;
+- trabajo/día libre;
+- paso/acción;
+- one-off;
+- estado día 0;
+- reflejos compactos de Training/Nutrition/Progreso.
+
+## 8.5 Backup
+
+Snapshot debe preservar:
+- FK/integridad;
+- unicidades;
+- identidad;
+- estado Training pendiente/activo;
+- orden ExerciseSet;
+- Nutrition identities;
+- schema 5.
+
+---
+
+# 9. UX, COMPORTAMIENTO E INTERACCIÓN APROBADOS
+
+## 9.1 Global
+
+- mobile-first iPhone;
+- dark mode;
+- negro profundo/carbón;
+- rojo FÉNIX `#DE090A`;
+- blanco/gris;
+- verde para completado;
+- premium/minimalista;
+- navegación inferior simple;
+- targets ≥44 px;
+- interacción frecuente de baja fricción.
+
+Bottom navigation primaria:
+- Hoy
+- Training
+- Nutrition
+- Progreso
+
+Ajustes NO es un quinto tab.
+
+## 9.2 Training
+
+Tabs:
+- Hoy
+- Rutinas
+- Ejercicios
+- Historial
+
+Debe soportar:
+- selector semanal;
+- `actualToday` separado de `selectedDate`;
+- empezar sesión;
+- sesión en curso;
+- registro rápido de sets;
+- CRUD rutinas;
+- custom exercises;
+- add/remove/reorder;
+- superseries;
+- detalle ejercicio/rutina;
+- historial;
+- rendimiento;
+- Wake Lock feature-detected.
+
+Duración objetivo de rutina no es ownership técnico del gate; pertenece a producto Training.
+
+## 9.3 Nutrition
+
+Superficies:
+- Hoy
+- Semana
+- Recetas
+- Compra
+- Detalle receta
+- Detalle comida
+- Crear/Editar receta
+
+No fotos de comida como requisito funcional del producto vNext original; RecipeVisual puede usar media propia aprobada de la app donde el scope v2.1 la introdujo.
+
+Nutrition Hoy debe actuar como “nutricionista operativo” y no convertirse en simple formulario.
+
+## 9.4 Progreso
+
+Superficies:
+- Resumen
+- Peso
+- Rendimiento
+- Adherencia
+- Cuerpo/Medidas
+
+No basar tendencia en peso diario aislado.
+
+## 9.5 Ajustes
+
+Goldens:
+- Principal
+- Rutina diaria
+- Datos / Backup / Restore
+
+Resto de subsecciones reutiliza shell de detalle cuando no haya nueva geometría aprobada.
+
+## 9.6 Sheets/dialogs
+
+- accesibles;
+- sin clipping;
+- mobile-safe;
+- editor/detalle según Golden;
+- no introducir capas CSS tácticas globales para “forzar” paridad.
+
+---
+
+# 10. REQUISITOS VISUALES Y GOLDEN RENDERS
+
+## 10.1 Paquete canónico
+
+`FENIX_v2.1_GOLDEN_RENDERS_FINAL_26.zip`
+
+SHA-256:
+
+`0f797dd2962f44ec7ae82d46f770d6b70c462927ad6a938728ea86375056bffc`
+
+Contiene 26 renders individuales aprobados.
+
+Collages/posters y renders alternativos posteriores:
+**DESCARTADOS**.
+
+## 10.2 Regla de paridad
+
+- estricta;
+- no “inspiración”;
+- no inventar UI;
+- no modificar Golden;
+- no reinterpretar Golden para justificar implementación;
+- no confundir framing externo del mockup con layout app;
+- comparar la superficie app real contra la superficie representada.
+
+## 10.3 26 estados
+
+### Hoy
+1. `01_HOY_Principal.png`
+2. `02_HOY_Dia_0.png`
+
+### Training
+3. `03_TRAINING_Hoy.png`
+4. `04_TRAINING_Rutinas.png`
+5. `05_TRAINING_Ejercicios.png`
+6. `06_TRAINING_Historial.png`
+7. `07_TRAINING_Sesion_en_curso.png`
+8. `08_TRAINING_Detalle_rutina.png`
+9. `09_TRAINING_Detalle_ejercicio.png`
+10. `10_TRAINING_Crear_Editar_rutina.png`
+11. `11_TRAINING_Crear_Editar_ejercicio.png`
+
+### Nutrition
+12. `12_NUTRITION_Hoy.png`
+13. `13_NUTRITION_Semana.png`
+14. `14_NUTRITION_Recetas.png`
+15. `15_NUTRITION_Compra.png`
+16. `16_NUTRITION_Detalle_receta.png`
+17. `17_NUTRITION_Detalle_comida.png`
+18. `18_NUTRITION_Crear_Editar_receta.png`
+
+### Progreso
+19. `19_PROGRESO_Resumen.png`
+20. `20_PROGRESO_Peso.png`
+21. `21_PROGRESO_Rendimiento.png`
+22. `22_PROGRESO_Adherencia.png`
+23. `23_PROGRESO_Cuerpo_Medidas.png`
+
+### Ajustes
+24. `24_AJUSTES_Principal.png`
+25. `25_AJUSTES_Rutina_diaria.png`
+26. `26_AJUSTES_Datos_Backup_Restore.png`
+
+## 10.4 Visual Parity Matrix requerida por CENTRAL
+
+Cada estado debe cerrar los 8 ejes:
+
+- `STRUCT`
+- `GEO`
+- `TYPE`
+- `SPACE`
+- `COLOR`
+- `ICON`
+- `MEDIA`
+- `INTERACTION`
+
+Estados válidos para la candidata final:
+- PASS
+- FAIL
+
+No puede quedar:
+- PENDING
+
+Debe existir evidencia:
+- Golden;
+- captura actual;
+- side-by-side;
+- resultado 8 ejes;
+- conclusión de paridad.
+
+No hay en este contexto un umbral numérico de pixel-diff aprobado.
+
+No inventarlo.
+
+---
+
+# 11. FUNCIONALIDAD YA IMPLEMENTADA Y VALIDADA
+
+Lo siguiente fue validado en la candidata `v2.1.0-rc.1` antes del rechazo visual/media de CENTRAL.
+
+## 11.1 Build / tooling
+
+PASS:
+- TypeScript;
+- Vite production build;
+- PWA generateSW;
+- lint zero warnings en los gates relevantes;
+- release-source contract;
+- git diff whitespace integrity.
+
+## 11.2 Media técnica RepDB
+
+PASS:
+- 26 mappings RepDB;
+- 49 WebP locales seleccionados;
+- package `2026.8.1`;
+- 2 aliases de filename del package normalizados;
+- selective precache/package-local policy;
+- Media Freeze count técnico 33/33.
+
+IMPORTANTE:
+Este PASS técnico NO cierra `CENTRAL-RC1-002/003`.
+
+## 11.3 Domain v2.1
+
+Se validaron suites de:
+- backup negative/corruption;
+- concurrency matrix;
+- config/media TypeScript contract;
+- date/timezone;
+- Design System/accessibility;
+- Nutrition seed ownership;
+- Playwright harness;
+- Playwright hermetic boot;
+- Progress mutation sweep;
+- PWA source;
+- React effect contracts;
+- RecipeVisual ownership;
+- launcher portability;
+- Settings responsive;
+- Today mutation sweep;
+- Training editor mutation sweep;
+- Training responsive overflow;
+- Golden reachability;
+- visual matrix source.
+
+En la candidata final antes de CENTRAL, el domain gate reportó 21–22 suites según el punto exacto del historial.
+
+No usar el número como contrato de negocio; usar los nombres presentes en el repo actual.
+
+## 11.4 CORE regresión
+
+PASS:
+- 41 scripts;
+- official backup 759 roundtrip.
+
+Clases cubiertas:
+- freshness;
+- Nutrition concurrency;
+- exact dedup / anti ping-pong;
+- reconciliation;
+- Training identity;
+- post-commit invalidation;
+- streak;
+- stress;
+- Today latest-wins;
+- rollback causality;
+- ExerciseSet parent/order;
+- session lifecycle;
+- Training integrity;
+- backup integrity;
+- Nutrition integrity;
+- PWA/mobile;
+- appetite material change;
+- backup cross-entity;
+- improvised idempotency;
+- NutritionGoal singleton;
+- streak determinism;
+- substitution;
+- Nutrition library lifecycle/stress;
+- backup/runtime identity alignment.
+
+## 11.5 E2E
+
+Última candidata automatizada pre-CENTRAL:
+
+`3/3 PASS`
+
+Harness:
+- dedicated preview;
+- no server reuse;
+- logical double submit;
+- offline event/reload semantics;
+- canonical evidence paths.
+
+## 11.6 Visual capture
+
+Última candidata automatizada:
+
+`26/26 screenshots captured`
+
+Esto valida:
+- reachability;
+- screenshot naming;
+- isolated visual flow;
+- overflow checks.
+
+NO valida paridad.
+
+---
+
+# 12. FUNCIONALIDAD PENDIENTE / BACKLOG — PRIORIDAD
+
+## P0 — ANTES DE QA INDEPENDIENTE
+
+### P0.1 Recuperar estado físico real del repo
+Por el último script fallido:
+- inspeccionar `git status`;
+- inspeccionar diff;
+- identificar archivos parcialmente modificados;
+- comprobar package version;
+- comprobar branch;
+- comprobar refs production;
+- no limpiar automáticamente.
+
+### P0.2 `CENTRAL-RC1-001`
+Cerrar Visual Parity real 26/26:
+- implementar estructura Golden faltante;
+- no solo CSS si markup no representa Golden;
+- mantener comportamiento real;
+- mantener datos veraces;
+- side-by-side 26/26;
+- matriz 8 ejes;
+- cero PENDING;
+- distinguir CAPTURE vs PARITY.
+
+### P0.3 `CENTRAL-RC1-002`
+Cerrar ExerciseMotion específico 33/33:
+- no scene/kinematics completa compartida;
+- test que pruebe especificidad más allá de `motionId`;
+- verificar start/end/trajectory/stance/equipment/orientation relevantes.
+
+### P0.4 `CENTRAL-RC1-003`
+Reemplazar 7 media FÉNIX esquemáticas:
+- final media;
+- start/peak o equivalente;
+- correcta;
+- coherente;
+- propia;
+- offline;
+- registry actualizado;
+- attribution/license registry coherente.
+
+### P0.5 Regresión completa
+Después de los tres:
+1. build/typecheck;
+2. lint;
+3. release-source;
+4. v2.1 domain;
+5. CORE + 759;
+6. E2E;
+7. offline;
+8. 26 captures;
+9. 26 parity review;
+10. media 33/33;
+11. motion specificity 33/33;
+12. `git diff --check`;
+13. root-cause horizontal sweep.
+
+### P0.6 Artefactos finales
+SOURCE + EVIDENCE correctivos:
+- hashes;
+- root causes 001/002/003;
+- visual matrix final;
+- side-by-side;
+- media registry;
+- motion specificity registry/test;
+- Final Gate PASS;
+- schema 5;
+- migrations NONE;
+- production untouched.
+
+## P1
+
+Solo después de CENTRAL aceptar candidata:
+- handoff único a QA independiente;
+- responder a QA si encuentra regresión.
+
+## P2
+
+Cualquier mejora no necesaria para cerrar los tres bloqueantes:
+- fuera de scope;
+- CENTRAL decide.
+
+---
+
+# 13. BUGS, RIESGOS, DEUDA Y EDGE CASES
+
+## 13.1 Riesgo crítico actual: working tree incierto
+
+Último script no funcionó.
+
+No se sabe si:
+- no llegó a escribir nada;
+- escribió parcialmente;
+- aplicó overlay y falló después;
+- alteró solo QA;
+- alteró CSS/media.
+
+**No asumir.**
+
+## 13.2 Visual gate incompleto
+
+El gate histórico comprueba captura, no similitud Golden.
+
+`VISUAL_PARITY_MATRIX_v2.1.md` del Evidence anterior seguía con estados `PENDING`.
+
+Debe corregirse.
+
+## 13.3 Drift visual sistémico
+
+CENTRAL detectó drift material en:
+- Hoy Principal;
+- Training Hoy;
+- Nutrition Hoy;
+- Progreso Resumen;
+- y obligó revisión 26/26.
+
+Ejemplos señalados:
+- Hoy: hero/rutina, card AHORA, horario laboral, bloques Mañana/Desarrollo/Noche, module cards;
+- Training Hoy: focal next session vs agenda/cards;
+- Nutrition Hoy: ring, macros, apetito, “Te toca ahora”, timeline;
+- Progreso: cards verticales ricas vs dashboard 2×2;
+- Ajustes era más cercano, pero no exento.
+
+## 13.4 Motion uniqueness falsa
+
+33 `motionId` únicos no equivalen a 33 movimientos específicos.
+
+No hacer tests tautológicos.
+
+## 13.5 Media FÉNIX placeholder
+
+Los 7 SVG existentes fueron considerados esquemáticos por CENTRAL.
+
+No marcarlos como final por renombrarlos.
+
+## 13.6 CRLF/LF
+
+Windows ha producido repetidamente warnings:
+
+`LF will be replaced by CRLF`
+
+`git diff --check` pasó históricamente, pero los patches por contexto fueron frágiles.
+
+Preferir:
+- inspección de hashes;
+- edición estructurada;
+- no depender de line 1/contexto exacto;
+- no normalizar masivamente line endings salvo decisión explícita.
+
+## 13.7 PowerShell wrapper debt
+
+Incidencias de tooling:
+- interpolation `$ExpectedVersion:` produjo ParserError;
+- Git pager detuvo output hasta `q`;
+- placeholders de ruta `C:\RUTA\...` confundieron ejecución;
+- `git apply` falló por contexto/line ending;
+- script determinista final reportado como “no funcionó”, detalle desconocido.
+
+Codex debería reducir drásticamente wrappers intermedios y ejecutar directamente en el repo cuando su entorno lo permita.
+
+## 13.8 Servidor stale
+
+Clase cerrada:
+- no volver a `reuseExistingServer:true` para Final/E2E.
+
+## 13.9 Hit testing visual
+
+RecipeVisual debe permanecer bounded/pointer-transparent.
+
+## 13.10 Settings overflow
+
+No reintroducir:
+- grid intrinsic overflow;
+- solución mediante `overflow-x:hidden`.
+
+La corrección aceptada usa shrinkability:
+- `min-width:0`
+- `minmax(0,fr)`
+- width/min-width controlados.
+
+## 13.11 Training overflow
+
+Mantener cards shrinkable y copy wrap-safe.
+
+## 13.12 Restore/runtime uniqueness
+
+No permitir que backup acepte identities que runtime rechazaría.
+
+## 13.13 Historia
+
+No reescribir sesiones/comidas históricas al editar plantillas o planificación.
+
+---
+
+# 14. INCIDENCIAS QA / PRE-QA HISTÓRICAS
+
+## CLOSED — no reabrir sin regresión reproducible
+
+### CORE histórico
+- F2-B01
+- F2-B02
+- F2-RC1
+- F2-RC1.1
+- F2-RC2
+- F2-RC2.1
+- F2-RC2.2
+
+### v2.1 PRE-QA
+- `PREQA-V21-MEDIA-001` — CLOSED
+- `PREQA-V21-TSCONFIG-001` — CLOSED
+- `PREQA-V21-REACT-001` — CLOSED
+- `PREQA-V21-RUNNER-001` — CLOSED
+- `PREQA-V21-BROWSER-001` — CLOSED
+- `PREQA-V21-VISUAL-001` — CLOSED (Training overflow class)
+- `PREQA-V21-RECIPE-VISUAL-001` — CLOSED
+- `PREQA-V21-E2E-HERMETIC-001` — CLOSED
+- `PREQA-V21-LINT-CAUSE-001` — CLOSED
+- `PREQA-V21-VISUAL-MATRIX-002` — CLOSED
+- `PREQA-V21-CONTRACT-COHERENCE-001` — CLOSED
+- `PREQA-V21-SETTINGS-RESPONSIVE-001` — CLOSED
+- `PREQA-V21-E2E-SURFACE-001` — CLOSED
+
+## NOT ACCEPTED AS FINAL CLOSURE
+
+### `PREQA-V21-GOLDEN-PARITY-001`
+
+Ingeniería construyó un contrato automático y una consolidación visual.
+
+Automated sub-gates pasaron.
+
+CENTRAL auditó y determinó que la paridad real seguía abierta.
+
+Por tanto:
+
+**Status canónico: SUPERSEDED / NOT ACCEPTED como cierre final.**
+
+Sustituido por:
+`CENTRAL-RC1-001`.
+
+## OPEN — BLOQUEANTES DE CENTRAL
+
+### `CENTRAL-RC1-001 — ALTA`
+Visual Parity 26/26 no cerrada.
+
+### `CENTRAL-RC1-002 — ALTA`
+ExerciseMotion no específico 33/33.
+
+### `CENTRAL-RC1-003 — ALTA`
+7 media FÉNIX propios todavía placeholder/esquemáticos.
+
+QA independiente:
+**BLOQUEADO.**
+
+---
+
+# 15. INVARIANTES Y REGRESIONES QUE NUNCA DEBEN PERDERSE
+
+## 15.1 Baseline
+
+- `production` sigue en `deac3890...`
+- schema 5
+- no migration6
+- backup 759 pasa roundtrip
+
+## 15.2 Training
+
+- no orphan ExerciseSet;
+- order íntegro;
+- stale toggle tras finish rechazado;
+- stale remove tras cambio de lifecycle rechazado;
+- stale substitute rechazado;
+- múltiples sesiones mismo día conservan identidad;
+- historial no se reescribe por template edit.
+
+## 15.3 Nutrition
+
+- DailyMeal stale mutation protegida;
+- completion/replacement causality;
+- Training-linked meal identity;
+- no ping-pong;
+- no overwrite/resurrection de seed;
+- Ingredient/Recipe/Shopping lifecycle transaccional;
+- NutritionGoal singleton;
+- improvised retry idempotent;
+- runtime↔backup uniqueness alineada.
+
+## 15.4 Today
+
+- latest-wins persistence guard;
+- rollback causality;
+- Day 0 truthful;
+- WorkShift mutation serial/segura;
+- Hoy no adquiere ownership.
+
+## 15.5 Progreso
+
+- correction != delete;
+- weight/body/featured mutations transaccionales;
+- tendencia datos insuficientes truthful;
+- streak determinista.
+
+## 15.6 Backup/Restore
+
+- corruption prevalidation;
+- semantic postcheck;
+- FK;
+- logical uniqueness;
+- atomic rollback;
+- active ExerciseSet order;
+- pending Training lifecycle.
+
+## 15.7 UI/PWA
+
+- 44 px touch floor;
+- no native confirm final;
+- hermetic Playwright;
+- no stale preview;
+- offline indicator;
+- update no interrumpe sesión;
+- lazy modules;
+- RecipeVisual bounded/pointer-transparent;
+- Settings no overflow masking;
+- Training shrinkability.
+
+## 15.8 Visual
+
+- exactamente 26 Golden contract surfaces;
+- 26 visual states independientes;
+- screenshot names exactos;
+- capture ≠ parity;
+- Golden inmutable;
+- no CSS override final global tipo `final-v2.css`.
+
+## 15.9 Media
+
+- 26 RepDB + 7 FÉNIX;
+- RepDB 2026.8.1;
+- Curl femoral → `leg-curl`;
+- source asset package real;
+- 7 FÉNIX final aún pendiente;
+- 33/33 specific motion aún pendiente.
+
+---
+
+# 16. ARTEFACTOS, DOCUMENTOS, BUNDLES Y SHA-256
+
+## 16.1 Gobierno / baseline
+
+### `PROMPT MAESTRO — FÉNIX v2.docx`
+SHA-256:
+`85f8c3d7d9dc9d07f456272663df77a1176f7ea1cafeb7146f596d18e6aa8d06`
+
+### `FÉNIX v2 — Baseline Funcional.docx`
+SHA-256:
+`c83e91b31218e8d6dfadbbce8b64fa51d9e7b9c466abcd1d4292504d6894af8c`
+
+### `PROMPT_CONTINUIDAD_01_FENIX_v2_INGENIERIA_II_v1.0.md`
+SHA-256 del archivo disponible:
+`721bc95cfc2088ae5f47b1b3bcf04a09af9136259caee085edd9870015289a8d`
+
+### `FENIX_v2_ENGINEERING_II_CONTINUITY_BUNDLE_v1.0.zip`
+SHA-256 del archivo disponible:
+`0fad19e82ed25d7f8324dd5cb78d0ccc5bf1ba29501d856d02521b0031d0667e`
+
+## 16.2 Golden Freeze
+
+### `FENIX_v2.1_GOLDEN_RENDERS_FINAL_26.zip`
+SHA-256:
+`0f797dd2962f44ec7ae82d46f770d6b70c462927ad6a938728ea86375056bffc`
+
+Este hash es canónico.
+
+## 16.3 Candidata rechazada por CENTRAL
+
+### `FENIX_v2.1.0-rc.1_SOURCE_BUNDLE.zip`
+SHA-256:
+`3dcc4f61552eafc2ae868dc6818652b34756d37db882b15285ca9864fcf54ee6`
+
+### `FENIX_v2.1.0-rc.1_ENGINEERING_EVIDENCE_20260908-123953.zip`
+SHA-256:
+`a305aab3ada4922c4d5529b0e094cb10af3f78387991579ab15e17049417c2c8`
+
+Estos son canónicos como **artefactos auditados/rechazados**, no como release aceptada.
+
+## 16.4 Devolución CENTRAL
+
+### `FENIX_v2.1_RC1_CENTRAL_CORRECTION_BUNDLE_v1.0.zip`
+SHA-256 del archivo disponible:
+`837f4c2d6490b48da58be8bc26fd01c37e8188768c0878c5ae8a17a06f39498a`
+
+Contenido conocido:
+- `CENTRAL_HANDOFF_FENIX_v2.1_RC1_CORRECTION_v1.0.md`
+- `CENTRAL_RC1_AUDIT_REPORT.md`
+- comparativas visuales representativas.
+
+## 16.5 Scripts de cierres históricos relevantes
+
+Hashes conocidos de scripts/wrappers exitosos históricos:
+
+- Media v1.3 FINAL:
+  `0d2fdf702bfbce01e4b9a963f30bbf353caa3322743b5578e63ebc06206e4da2`
+- TSCONFIG v1.1:
+  `fdce7b9f88c4c12f524aa8d110b5bf12169b3cea02dbad41798f49594559d9b9`
+- React:
+  `97e260601ba7f51cabdd80cb8c91cc0def645ee52a0ec74c0816f6652ce9b56a`
+- Runner:
+  `34e1a755eca5b74af4ff30f09aeae4cb346052467f42d46f29a47247edd2c892`
+- Browser wrapper v1.1:
+  `d0b63455d6b066459947cfb3efc860ef5fb12580019d4d476b08002bb99a6f12`
+- Training visual responsive:
+  `1dd9f082b05d15ccb7032e872e18bd826b3ec93a35a4e851da96f8f107c3a74f`
+- RecipeVisual:
+  `436aadfc966ba991ce654d910d68a64c4ce995e3f5ae3efe1d2df21c9f9db168`
+- Hermetic wrapper:
+  `1b9e84da60ad4de02cbd748612f86fafa18451745f6feedb9de0ce3f3eb3cce8`
+- Lint cause:
+  `cc2f498aed9ae56ca5f8caec491ca24b9629c46a7ffeace1f1bad32fb905ec96`
+- Visual Matrix 002:
+  `efa6a2037e2644ce112da607f634e52a7c0f6bfdd315e6868a8846240d72d16a`
+- Contract Coherence:
+  `e5585c59946edde0545838b33a61ba9d59542f0c2796caeaadca2242b231c0dc`
+- Settings responsive:
+  `524f60a19d607ca59477d2f0668da71545c88e0025da931ce20163f4123874ed`
+
+## 16.6 Intentos posteriores NO canónicos / fallidos
+
+### `REPAIR_FENIX_v2.1_RC1_CONSOLIDATED_001_AND_FINAL_GATE_v1.1.ps1`
+SHA-256:
+`055b3b352a61d3bb839a592b2641690bc68930a5fd1d05bfbd65361aca4c48b2`
+
+Resultado:
+FAIL en `git apply`:
+`src/features/training/training.css:1`
+
+No considerar reparación aplicada.
+
+### `REPAIR_FENIX_v2.1_RC1_DETERMINISTIC_FINAL_v1.2.ps1`
+SHA-256:
+`057064aa05f15bd6a3706d5a5c0201c36a9a10e2cd081f0e2f13190547ecea3b`
+
+Resultado:
+usuario reporta “no funcionó”.
+
+Salida exacta:
+**DESCONOCIDO.**
+
+No considerar source de verdad.
+
+### `FENIX_RC1_CONSOLIDATED_OVERLAY_v1.2.zip`
+SHA-256:
+`37efeac9a03725e0ddba7b48e98cb868e1472585a45896a67a2eff0e9a6c0755`
+
+### `FENIX_RC1_CONSOLIDATED_OVERLAY_v1.3.zip`
+SHA-256:
+`6c9a2f33beeb0bb2e86c395cf843a0970687d5fb6c621c73b683028c41db2cbf`
+
+Estos overlays fueron artefactos de trabajo de Ingeniería y NO fueron aceptados por CENTRAL ni validados en el PC del usuario.
+
+No aplicarlos ciegamente.
+
+---
+
+# 17. ROOT-CAUSE HISTORY DE v2.1
+
+## PREQA-V21-MEDIA-001 — CLOSED
+
+Causa raíz:
+source slugs / filename assumptions no coincidían con package real RepDB.
+
+Solución:
+- resolver source asset desde package/exercises metadata;
+- normalizar únicamente destino FÉNIX runtime;
+- 26/26 mappings;
+- 49/49 assets;
+- 2 filename aliases;
+- 33/33 freeze.
+
+## PREQA-V21-TSCONFIG-001 — CLOSED
+
+Causa:
+NodeNext typing de `media-freeze-v21.mjs`.
+
+Solución:
+- adjacent `.d.mts`;
+- typecheck contract.
+
+## PREQA-V21-REACT-001 — CLOSED
+
+Causa:
+state sync effects / Wake Lock dependency.
+
+Solución:
+- derived state;
+- keyed work-shift draft;
+- Wake Lock session identity.
+
+## PREQA-V21-RUNNER-001 — CLOSED
+
+Causa:
+URL pathname → path Windows.
+
+Solución:
+`fileURLToPath` + native path.
+
+## PREQA-V21-BROWSER-001 — CLOSED
+
+Causa:
+semántica offline assertion, double submit, paths evidence.
+
+Solución:
+- offline event vs reload;
+- `requestSubmit`;
+- paths canónicos.
+
+## PREQA-V21-VISUAL-001 — CLOSED
+
+Causa:
+Training intrinsic min-content overflow.
+
+Solución:
+shrinkability/wrapping, no clipping.
+
+## PREQA-V21-RECIPE-VISUAL-001 — CLOSED
+
+Causa:
+RecipeVisual sin geometry owner.
+
+Solución:
+component-owned CSS bounded/pointer-transparent.
+
+## PREQA-V21-E2E-HERMETIC-001 — CLOSED
+
+Causa:
+preview stale/reused.
+
+Solución:
+41731 strict + no reuse.
+
+## PREQA-V21-LINT-CAUSE-001 — CLOSED
+
+Causa:
+rethrow sin `{ cause:error }`.
+
+Solución:
+preserve caught error cause.
+
+## PREQA-V21-VISUAL-MATRIX-002 — CLOSED
+
+Causa:
+26 estados secuenciales.
+
+Solución:
+26 independent tests.
+
+## PREQA-V21-CONTRACT-COHERENCE-001 — CLOSED
+
+Causa:
+tests históricos exigían arquitectura visual derogada.
+
+Solución:
+actualizar contratos RecipeVisual/Training responsive.
+
+## PREQA-V21-SETTINGS-RESPONSIVE-001 — CLOSED
+
+Causa:
+nested CSS grid intrinsic widths.
+
+Solución:
+`min-width:0` + `minmax(0,fr)` + controls fluidos.
+
+## PREQA-V21-GOLDEN-PARITY-001 — NO ACEPTADO COMO CIERRE
+
+Engineering corrigió densidad/fixtures y obtuvo:
+- 26/26 captures;
+- functional gate PASS.
+
+CENTRAL demostró drift visual material.
+
+Sustituido por `CENTRAL-RC1-001 OPEN`.
+
+## PREQA-V21-E2E-SURFACE-001 — CLOSED
+
+Causa:
+E2E dependía de heading Recipes ocultado por nuevo surface ownership.
+
+Solución:
+- Recipes readiness por CTA `+ Nueva receta`;
+- Shopping readiness por owner surface.
+
+No confundir este cierre con paridad visual.
+
+---
+
+# 18. STOP CONDITIONS QUE REQUIEREN CENTRAL
+
+Codex debe detenerse y pedir CENTRAL si aparece:
+
+1. necesidad real de schema >5;
+2. necesidad de migración;
+3. cambio de identidad/session model;
+4. cambio de racha;
+5. cambio de Nutrition Pre/Post;
+6. cambio de ownership;
+7. Golden contradictorio con comportamiento funcional aprobado y no resoluble como presentación;
+8. media canónica que requiera licencia no aprobada;
+9. imposibilidad técnica de cumplir media/motion sin cambiar contrato;
+10. versión de candidata si el repo/CENTRAL no permite determinarla inequívocamente;
+11. cualquier contradicción entre especificaciones vigentes no superseded;
+12. necesidad de tocar `production`;
+13. necesidad de destruir/reseed/reset datos para avanzar.
+
+No es STOP CONDITION:
+- CSS;
+- locator E2E;
+- overflow;
+- path;
+- test stale;
+- source mapping;
+- refactor de presentation;
+- fixtures QA reproducibles;
+si pueden resolverse sin cambiar contrato.
+
+---
+
+# 19. QUÉ NO DEBE ASUMIR NI REINTERPRETAR CODEX
+
+Codex NO debe asumir:
+
+- que el último script correctivo se aplicó;
+- que el último script correctivo no se aplicó;
+- que el working tree está limpio;
+- que SOURCE bundle rechazado coincide con working tree actual;
+- que 26 screenshots = parity;
+- que Golden es inspiración;
+- que puede cambiar Golden;
+- que `motionId` único = motion específico;
+- que `motionProfile` diferente = biomecánica específica;
+- que 7 SVG esquemáticos son media final;
+- que 25+8 sigue vigente;
+- que Hip Thrust usa `barbell-hip-thrust`;
+- que puede restaurar CSS legacy global;
+- que puede añadir `final-v2.css`;
+- que puede ocultar overflow para pasar gate;
+- que puede cambiar schema;
+- que puede borrar historia;
+- que puede resetear el repo para “volver a una base conocida”;
+- que puede enviar a QA sin CENTRAL;
+- que `v2.1.0-rc.1.1` ya está formalmente aprobado como package version;
+- que los overlays/scripts de Ingeniería tardíos son canónicos.
+
+Codex debe preferir:
+1. repo físico actual;
+2. decisiones CENTRAL;
+3. Golden hash canónico;
+4. correction bundle;
+5. source/evidence rechazados como baseline de comparación;
+6. historial PRE-QA solo para no reabrir clases cerradas.
+
+---
+
+# 20. PRÓXIMA ACCIÓN RECOMENDADA DESDE EL PUNTO ACTUAL
+
+## Paso 1 — solo inspección, sin modificar
+
+Codex debe abrir el repo real y determinar:
+
+- `git status --short`
+- branch;
+- HEAD;
+- refs `production`;
+- package version;
+- diff completo;
+- archivos nuevos no tracked;
+- si existen restos de los scripts correctivos;
+- estado real de:
+  - Training presentation;
+  - Nutrition presentation;
+  - Today presentation;
+  - Progress;
+  - Settings;
+  - ExerciseMotion;
+  - media registry;
+  - 7 FÉNIX assets;
+  - visual spec;
+  - parity matrix.
+
+No hacer reset/clean/checkout.
+
+## Paso 2 — establecer base de corrección
+
+Comparar working tree actual con:
+
+- SOURCE rechazado hash `3dcc4f...`;
+- CENTRAL correction bundle;
+- Golden ZIP hash `0f797d...`.
+
+Clasificar cada diferencia:
+- ya aplicada correctamente;
+- parcialmente aplicada;
+- no aplicada;
+- regresión accidental;
+- desconocida.
+
+## Paso 3 — cerrar los tres defectos como un solo bloque
+
+### A. Visual
+- implementar Golden real;
+- estructural si hace falta;
+- no solo CSS;
+- mantener dominio;
+- comparar 26/26;
+- matriz 8 ejes;
+- side-by-side.
+
+### B. Motion
+- 33/33 escenas/movimientos distinguibles;
+- test semántico/estructural real.
+
+### C. Media
+- 7 final assets propios;
+- registry;
+- offline;
+- license/attribution.
+
+## Paso 4 — self-test completo
+
+- build;
+- lint;
+- domain;
+- CORE+759;
+- E2E;
+- offline;
+- visual captures;
+- parity 26/26;
+- media;
+- motion;
+- git diff check;
+- horizontal root-cause sweep.
+
+## Paso 5 — entregar una sola candidata a CENTRAL
+
+Incluye:
+- SOURCE;
+- EVIDENCE;
+- SHA-256;
+- 3 root causes;
+- visual matrix 26/26 PASS;
+- side-by-side 26/26;
+- media registry 33/33;
+- motion specificity 33/33;
+- schema 5;
+- migrations NONE;
+- production untouched;
+- Final Gate PASS.
+
+Después:
+**esperar CENTRAL.**
+
+No QA independiente directo.
+
+---
+
+# 21. CRITERIO DE FINALIZACIÓN DE ESTA ÁREA
+
+Ingeniería II solo puede considerarse cerrada para v2.1 cuando:
+
+- `CENTRAL-RC1-001 = CLOSED`
+- `CENTRAL-RC1-002 = CLOSED`
+- `CENTRAL-RC1-003 = CLOSED`
+- todas las clases anteriores siguen sin regresión;
+- CORE + 759 PASS;
+- schema 5;
+- no migration;
+- visual parity 26/26 real PASS;
+- 7 FÉNIX final;
+- motion specificity 33/33;
+- source/evidence completos;
+- CENTRAL acepta candidata para QA.
+
+No basta:
+- compile;
+- lint;
+- test:v21;
+- 26 captures;
+- buen aspecto subjetivo.
+
+---
+
+# 22. FREEZE DE MIGRACIÓN
+
+A partir de la emisión de este handoff:
+
+**01 · FÉNIX v2 — INGENIERÍA / IMPLEMENTACIÓN II no debe continuar implementando ni emitir nuevas correcciones hasta nueva autorización de CENTRAL.**
+
+Toda continuación debe hacerse en Codex o tras decisión explícita de CENTRAL.
+
+---
+
+# 23. CHECKLIST DE ARRANQUE PARA CODEX
+
+Antes de editar:
+
+- [ ] Leer `PROMPT MAESTRO — FÉNIX v2`
+- [ ] Leer baseline funcional
+- [ ] Leer este handoff
+- [ ] Leer CENTRAL correction bundle
+- [ ] Validar Golden SHA `0f797d...`
+- [ ] Inspeccionar working tree físico
+- [ ] No reset
+- [ ] No clean
+- [ ] No checkout destructivo
+- [ ] No commit/tag/push
+- [ ] Confirmar schema 5
+- [ ] Confirmar production baseline
+- [ ] Enumerar estado real de RC1-001/002/003
+- [ ] Implementar consolidado
+- [ ] Ejecutar gates
+- [ ] Entregar a CENTRAL
+
+---
+
+**FIN DEL HANDOFF CANÓNICO — INGENIERÍA / IMPLEMENTACIÓN II**

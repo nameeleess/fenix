@@ -1,0 +1,72 @@
+/* Active session owns its header, reference, editable set table and queue.
+   Catalog/detail/media implementations retain their separate ownership. */
+.training-active-header { display:block; margin:0 0 8px; padding:0 }
+.training-active-header .ds-app-header { min-height:112px; padding-top:0 }
+.training-active-header .ds-app-header__back { width:30px; height:28px; border-radius:8px }
+.training-active-header .ds-app-header h1 { font-size:32px }
+.training-active-header .ds-app-header p { font-size:11px }
+.training-active-header .ds-app-header__actions { align-self:end; padding-bottom:2px }
+.training-active-header .ds-kicker { font-size:9px; letter-spacing:.16em }
+.training-finish-shortcut { min-height:30px; padding:4px 12px; border:1px solid #333; border-radius:8px; color:white; background:linear-gradient(120deg,#191919,#0a0a0b); font-size:11px }
+.training-current-card,.training-upcoming-card { padding:7px; border:1px solid #29292b; border-radius:11px; background:linear-gradient(115deg,#101011,#080809) }
+.training-current-card__top { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:8px; min-height:86px; align-items:start }
+.training-current-card__top>div { min-width:0 }
+.training-current-card__top h2 { display:flex; align-items:center; gap:8px; margin:3px 0 9px; font-size:16px; line-height:1.2 }
+.training-current-number { display:grid; place-items:center; flex:none; width:27px; height:27px; border:1px solid #333; border-radius:50%; font-size:15px; font-weight:400 }
+.training-current-card__top .training-exercise-visual--v21 { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:3px; align-items:center; min-width:0 }
+.training-current-card__top .training-exercise-visual__media { height:77px; min-height:77px; min-width:0; border:0; background:transparent; border-radius:6px }
+.training-current-card__top .training-exercise-anatomy svg { height:65px }
+.training-current-card__top .training-motion-controls { grid-column:1/-1; display:flex; justify-content:center; gap:3px }
+.training-current-card__top .training-motion-controls button { min-height:24px; padding:2px 4px; font-size:8px }
+.training-reference-grid { display:block; margin:0 }
+.training-reference-grid p { margin:4px 0; color:#bbb; font-size:10px; line-height:1.4 }
+.training-reference-grid span { color:#f21a22 }
+.training-set-table-heading,.training-set-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)) 48px; gap:0; align-items:center }
+.training-set-table-heading { min-height:25px; border:1px solid #252527; border-radius:7px 7px 0 0; background:linear-gradient(#19191a,#101011); font-size:10px; color:#bbb; text-align:center }
+.training-set-section { margin:0; border:1px solid #252527; border-top:0 }
+.training-set-section__title { display:flex; justify-content:space-between; gap:8px; min-height:20px; align-items:center; padding:3px 9px; border-bottom:1px solid #252527; color:#aaa; font-size:9px }
+.training-set-row { position:relative; min-height:27px; border-bottom:1px solid #252527; padding:0; font-size:11px }
+.training-set-row:last-child { border-bottom:0 }
+.training-set-row>label { display:block; position:relative; margin:0; border-left:1px solid #202022 }
+.training-set-row>label>span { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap }
+.training-set-row input { width:100%; min-height:26px; border:0; border-radius:0; padding:3px; background:transparent; color:#ddd; font:inherit; text-align:center; appearance:textfield }
+.training-set-row input::-webkit-inner-spin-button,.training-set-row input::-webkit-outer-spin-button { appearance:none; margin:0 }
+.training-set-row input:focus { outline:1px solid #f21a22; outline-offset:-1px }
+.training-set-row input:disabled { color:#999 }
+.training-set-row__index { text-align:center }
+.training-set-row__index summary { display:grid; place-items:center; min-height:26px; cursor:pointer; list-style:none }
+.training-set-row__index summary::-webkit-details-marker { display:none }
+.training-set-row__remove { min-height:28px; border:1px solid #333; border-radius:5px; background:#181819; color:#eaa; padding:3px; font-size:9px }
+.training-set-row__complete { min-height:26px; border:0; border-left:1px solid #252527; background:transparent; color:#bbb; font-size:19px; line-height:1 }
+.training-set-row.is-completed .training-set-row__complete { color:#13cf27 }
+.training-set-row.is-completed:not(.is-warmup) { box-shadow:inset 3px 0 #f01320; background:linear-gradient(100deg,#2f080b,#130708) }
+.training-set-row .training-inline-error { grid-column:1/-1; margin:2px 4px; color:#ff8990; font-size:10px }
+.training-set-row.is-simple { grid-template-columns:40px minmax(0,1fr) 48px }
+.training-set-row__simple { display:flex; gap:8px; align-items:center; min-height:32px; font-size:11px }
+.training-set-row__simple span { color:#aaa; font-size:9px }
+.training-set-section>.training-secondary-button { width:100%; min-height:28px; border:0; border-top:1px solid #333; border-radius:0; background:transparent; color:#ccc; font-size:10px }
+.training-current-actions { display:flex; gap:0; margin-top:7px; padding:5px; border:1px solid #333; border-radius:9px; background:linear-gradient(115deg,#111112,#09090a) }
+.training-current-actions button,.training-current-actions>span { display:grid; place-items:center; flex:1; min-height:28px; border:0; border-right:1px solid #333; border-radius:0; padding:3px 5px; background:transparent; color:#ddd; font-size:10px; font-weight:400; text-align:center }
+.training-current-actions>span { border-right:0; color:#999; font-size:9px }
+.training-session-context { margin-top:5px; color:#aaa; font-size:10px }
+.training-session-context summary { min-height:24px; cursor:pointer; padding:4px }
+.training-session-context p { line-height:1.4; margin:5px }
+.training-rest-timer { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; margin:7px 0; border:1px solid #29292b; border-radius:10px; background:linear-gradient(115deg,#141415,#09090a) }
+.training-rest-timer span { display:block; color:#bbb; font-size:10px }
+.training-rest-timer strong { display:block; color:#ff101a; font-size:26px; line-height:1.1 }
+.training-rest-timer strong small { color:#999; font-size:10px; font-weight:400 }
+.training-rest-timer__icon { width:40px; height:40px; border:3px solid #af0710; border-radius:50%; padding:4px; flex:none }
+.training-rest-timer__icon .ds-section-icon { width:26px; height:26px; color:#fa111a }
+.training-rest-timer>div { flex:1 }
+.training-rest-timer button { min-height:32px; padding:4px 12px; border:1px solid #333; border-radius:7px; background:#101011; color:#ddd; font-size:11px }
+.training-rest-timer.is-done strong { color:#12cd28 }
+.training-upcoming-card { margin-top:7px }
+.training-upcoming-card>.training-kicker { color:#aaa; font-size:10px; letter-spacing:0; font-weight:400 }
+.training-upcoming-list { display:grid; gap:0; margin-top:5px }
+.training-upcoming-list button { display:grid; grid-template-columns:25px minmax(0,1fr) 16px; gap:6px; align-items:center; min-height:26px; border:0; border-top:1px solid #28282a; padding:3px 6px; background:transparent; color:#ddd; text-align:left }
+.training-upcoming-list button>span { color:#aaa; font-size:11px }
+.training-upcoming-list .ds-section-icon { width:20px; height:20px; color:#aaa }
+.training-upcoming-list strong { font-size:11px; font-weight:400 }
+.training-upcoming-list small { display:block; margin-top:2px; color:#888; font-size:8px }
+.training-upcoming-list b { font-weight:400; color:#999 }
+@media(min-width:600px){.training-current-card__top{min-height:125px}.training-current-card__top .training-exercise-visual__media{height:110px}.training-set-row{min-height:36px}.training-set-row input{min-height:35px}}

@@ -1,0 +1,1422 @@
+# FENIX_CODEX_HANDOFF_HOY_RUTINA_v1.0
+
+**Proyecto:** FÉNIX  
+**Área:** 01 · FÉNIX — HOY / RUTINA  
+**Destino:** Codex / repositorio canónico  
+**Versión del handoff:** 1.0  
+**Fecha de emisión:** 2026-09-08  
+**Estado del handoff:** CANÓNICO PARA MIGRACIÓN  
+**Regla posterior a emisión:** NO continuar trabajo funcional ni técnico de esta área hasta nueva autorización de CENTRAL.
+
+---
+
+## 0. Propósito y reglas de lectura
+
+Este documento conserva el conocimiento vigente de **01 · FÉNIX — HOY / RUTINA** para que Codex pueda continuar el proyecto sin depender de este chat.
+
+No es una nueva especificación, no rediseña el producto, no autoriza implementación nueva y no sustituye los documentos superiores de gobierno.
+
+Jerarquía que Codex debe respetar:
+
+1. PROMPT MAESTRO — PROYECTO FÉNIX.
+2. FÉNIX — MANIFIESTO DE FUENTES.
+3. Decisiones expresamente aprobadas por el usuario.
+4. FÉNIX — PROTOCOLO DE COORDINACIÓN v1.0.
+5. Resoluciones vigentes de CENTRAL.
+6. Contratos aprobados de los especialistas propietarios de cada dominio.
+7. Este handoff como consolidación del área Hoy/Rutina.
+
+Para datos personales/históricos, la autoridad es:
+
+1. corrección expresa posterior del usuario;
+2. exportación histórica FÉNIX/Notion;
+3. datos creados posteriormente dentro de FÉNIX.
+
+Principio obligatorio: **migrar información útil, no copiar ciegamente limitaciones de Notion**.
+
+Si Codex encuentra una contradicción no resuelta por una decisión posterior inequívoca, debe aplicar una STOP CONDITION y elevarla a CENTRAL; no debe reconciliarla por intuición.
+
+---
+
+# 1. Rol, autoridad y límites de 01 · FÉNIX — HOY / RUTINA
+
+## 1.1 Misión
+
+Hoy/Rutina es el especialista funcional propietario de la experiencia cotidiana de FÉNIX y de la pantalla **Hoy**, que además es la **Home principal** de la aplicación.
+
+Objetivo nuclear aprobado:
+
+> **Ayudar al usuario a saber qué toca ahora y ejecutarlo con la mínima fricción posible.**
+
+Hoy debe funcionar como sistema de orquestación diaria: rutina, contexto temporal, trabajo, acceso contextual a Training, comida relevante de Nutrition y señales compactas de Progreso.
+
+## 1.2 Autoridad funcional
+
+Hoy/Rutina decide:
+
+- qué necesita mostrar Hoy;
+- qué acciones de rutina diaria existen;
+- cómo se organiza funcionalmente el día;
+- qué constituye plantilla de rutina frente a ejecución de una fecha;
+- estados y semántica de tareas propias de Hoy;
+- qué información contextual necesita consumir de otros módulos;
+- jerarquía funcional de la pantalla;
+- experiencia de “qué toca ahora”;
+- fricción, orden, bloques, historial funcional y comportamiento cotidiano;
+- requisitos de UX propios de Hoy.
+
+## 1.3 Límites absolutos
+
+Hoy/Rutina **NO** es propietario de:
+
+- programación del entrenamiento;
+- selección de ejercicios;
+- técnica de ejercicios;
+- lifecycle de sesiones Training;
+- macros, recetas, objetivos nutricionales o consumo;
+- interpretación científica de progreso;
+- cálculo de tendencias longitudinales;
+- cálculo canónico de rachas;
+- arquitectura, código, persistencia, schema, migraciones, IndexedDB/Dexie, PWA, service worker, seguridad, backup/restore, deployment o testing técnico.
+
+Ownership canónico:
+
+- **Rutina/tarea diaria → Hoy/Rutina**.
+- **Ejercicio/sesión/ejecución de entrenamiento → Training**.
+- **Receta/comida/ingrediente/consumo → Nutrition**.
+- **Métrica derivada/tendencia/adherencia/racha → Progreso**.
+- **Arquitectura/implementación/integridad técnica → CENTRAL + Ingeniería bajo autorización de CENTRAL**.
+
+Hoy puede mostrar y accionar operaciones autorizadas sobre otros módulos, pero no crear copias independientes ni reinterpretar sus estados.
+
+---
+
+# 2. Estado exacto actual del área
+
+## 2.1 Estado funcional
+
+- FASE 1 — Auditoría funcional y coordinación cross-module: **CERRADA / APROBADA**.
+- FASE 2 — Diseño funcional consolidado de Hoy: **CERRADA / APROBADA**.
+- Documento `ESPECIFICACIÓN APROBADA PARA IMPLEMENTACIÓN — 01 · FÉNIX — HOY / RUTINA v1.0`: **APROBADO**.
+- Los contratos con Training, Nutrition y Progreso para Hoy fueron resueltos funcionalmente.
+- La antigua exploración visual basada en Layout 1 + Layout 5 fue posteriormente reemplazada como autoridad visual por los **Golden Renders v2.1 exactos**.
+
+## 2.2 Estado técnico global que afecta a Hoy
+
+Baseline formal estable:
+
+- Release: **FÉNIX v2.0.0 CORE STABLE**.
+- Commit/tag de producción: `deac3890f4d1b794cae8f3acde5a12bf7c35cf94` / `v2.0.0`.
+- Rama `production` preservada en ese commit.
+- DB: `fenix-db`.
+- Schema: `5`.
+- Migraciones de baseline v2.0.0: **NONE**.
+- QA final v2.0.0: **PASS, 0 incidencias abiertas**.
+
+Candidata actual de evolución:
+
+- Objetivo de release: `v2.1.0`.
+- Candidata: `v2.1.0-rc.1`.
+- Rama de trabajo: `main`.
+- `production`: **UNTOUCHED** respecto a v2.0.0.
+- v2.1 incluye, para Hoy: paridad Golden, Día 0, WorkShift trabajo/día libre, editor de rutina diaria en Ajustes y hardening de mutaciones legacy.
+- La última evidencia conocida registra **FINAL ENGINEERING / PRE-QA ADVERSARIAL GATE: PASS** y **26/26 visual captures: PASS**.
+- La propia salida de Ingeniería indica que la **revisión manual de paridad visual** seguía requerida antes del handoff final a CENTRAL.
+- No existe en este contexto evidencia canónica suficiente para declarar `v2.1.0` release final, tag final, merge a `production` o QA independiente final completado. Estado de esas acciones: **NO AUTORIZADO / NO CONFIRMADO**.
+
+## 2.3 Estado por la migración a Codex
+
+A partir de la emisión de este handoff:
+
+- este especialista queda en **PAUSA DE MIGRACIÓN**;
+- no debe avanzar diseño;
+- no debe emitir nuevas decisiones;
+- no debe modificar contratos;
+- no debe autorizar implementación;
+- Codex debe esperar nueva autorización de CENTRAL antes de continuar.
+
+---
+
+# 3. Contratos funcionales vigentes y reglas que no pueden romperse
+
+## 3.1 Hoy = Home
+
+- **Hoy es la pantalla Home principal de FÉNIX.**
+- No debe existir una Home adicional delante de Hoy salvo nueva decisión formal.
+- Bottom navigation canónica: **Hoy · Training · Nutrition · Progreso**.
+
+## 3.2 Hoy es orquestador, no fuente de verdad universal
+
+Hoy consume datos de otros módulos; no duplica ownership.
+
+Regla inmutable:
+
+> Si un dato ya tiene propietario en Training, Nutrition o Progreso, Hoy no puede mantener una segunda copia editable equivalente.
+
+## 3.3 Plantilla ≠ ejecución diaria
+
+Debe existir separación estricta entre:
+
+- **PLANTILLA**: estructura reutilizable futura;
+- **EJECUCIÓN DE UN DÍA**: qué correspondía y qué ocurrió en una fecha concreta.
+
+Cambiar la plantilla no puede reescribir el pasado.
+
+Modificar una ejecución concreta no debe modificar automáticamente la plantilla futura.
+
+## 3.4 Historial no destructivo
+
+- No reciclar físicamente los mismos checks entre días.
+- No sobrescribir un día anterior para “reiniciar” la rutina.
+- Cada fecha debe conservar su estado real.
+- Un día pasado debe ser solo lectura por defecto.
+- Si existe corrección histórica, no puede ser una reescritura silenciosa que falsee lo ocurrido.
+
+## 3.5 Ausencia de información ≠ incumplimiento
+
+Regla transversal aprobada:
+
+> **SIN REGISTRAR ≠ NO CUMPLIDO.**
+
+No abrir FÉNIX un día no equivale a 0 %.
+
+Un pendiente histórico no debe convertirse automáticamente en OMITIDO.
+
+## 3.6 Secuencia recomendada, no bloqueo rígido
+
+- El usuario puede completar pasos fuera de orden.
+- Hoy debe seguir mostrando un **siguiente recomendado**.
+- Una tarea antigua pendiente no puede secuestrar para siempre la acción `AHORA` si el contexto real del día ya ha cambiado.
+
+## 3.7 Estructura adaptativa
+
+No crear docenas de plantillas rígidas para cada combinación entrenamiento/trabajo/libre.
+
+La estructura del día se adapta a contexto real:
+
+- entrenamiento o descanso;
+- trabajo o día libre;
+- horario real;
+- tareas aplicables/no aplicables;
+- acciones específicas de la fecha.
+
+## 3.8 Cumplimiento diario
+
+Para tareas propias de Hoy:
+
+- `PENDIENTE`
+- `COMPLETADA`
+- `OMITIDA`
+- `NO APLICA`
+
+Semántica:
+
+- COMPLETADA suma.
+- OMITIDA permanece en denominador y no suma.
+- NO APLICA sale del denominador.
+- PENDIENTE permanece en denominador durante el día.
+- Todos los elementos computables pesan igual en la definición funcional original de Hoy v1.
+
+Componentes de otros módulos cuentan a través de su estado original, no mediante un checkbox duplicado en Hoy.
+
+## 3.9 Día 0 / Iniciar día
+
+`Iniciar día` es una acción/ritual de UX, no una precondición para que existan datos.
+
+No debe:
+
+- contar como tarea;
+- afectar al porcentaje;
+- determinar adherencia;
+- convertir un día no abierto en fracaso.
+
+La pantalla Día 0 debe ser **truthful**: no presentar progreso, acciones o hechos no confirmados como si ya hubieran ocurrido.
+
+---
+
+# 4. Decisiones aprobadas vigentes
+
+## 4.1 Dirección funcional de Hoy
+
+Hoy debe permitir comprender rápidamente:
+
+- qué toca ahora;
+- progreso del día;
+- bloque actual;
+- entrenamiento relevante;
+- comida relevante;
+- horario laboral real;
+- Progreso resumido;
+- qué queda después.
+
+## 4.2 Bloques funcionales del día
+
+Modelo aprobado original:
+
+- **MAÑANA**
+- **POSTENTRENO**
+- **DESARROLLO**
+- **TRABAJO**
+- **NOCHE**
+
+Regla visual/UX: bloque actual desplegado; resto resumido/colapsado y accesible.
+
+## 4.3 Rutina base histórica transformada
+
+Transformaciones aprobadas desde Notion:
+
+- Levantarse → mantener.
+- Higiene mañana → mantener.
+- Movilidad mañana → contexto/propiedad de Training cuando proceda.
+- Pre-entreno → Nutrition.
+- Preparar gym → mantener como un único check.
+- Entrenar → estado sincronizado desde Training.
+- Ducha y recuperación → eliminar como check.
+- Comida post-entreno → Nutrition.
+- `Desarrollo 60–120 min` → bloque flexible, no check genérico.
+- Comida principal → Nutrition.
+- Jornada laboral → contextual según horario.
+- `Snack del trabajo` → **Snack**, independiente de trabajar o librar.
+- Cena → Nutrition.
+- Higiene noche → mantener.
+- Movilidad noche → puede aparecer en Hoy; contenido técnico, si procede de Training, sigue siendo de Training.
+- Registro diario manual → sustituir por historial de ejecución.
+
+## 4.4 Despertar y gimnasio
+
+- Despertar objetivo: **07:00**.
+- Máximo habitual: **07:15**.
+- Aplicable todos los días salvo domingo.
+- Domingo: esa regla no aplica.
+- En días con entrenamiento: objetivo contextual de estar en el gimnasio a las **08:00**, salvo excepción específica de fecha.
+
+## 4.5 Desarrollo
+
+`Desarrollo` representa el espacio libre del mediodía, especialmente cuando se trabaja de tarde.
+
+Usos aprobados como ejemplos reales del usuario:
+
+- estudiar oposiciones/Mossos;
+- cocinar comidas de los próximos 2–3 días;
+- proyectos/estudio/lectura cuando corresponda.
+
+UX aprobada:
+
+- aproximadamente 1–3 acciones relevantes;
+- permitir `+ Añadir acción`;
+- no convertir Hoy en gestor de proyectos/productividad compleja.
+
+## 4.6 Trabajo / WorkShift
+
+Hoy necesita conocer por fecha:
+
+- trabaja / libre;
+- hora de inicio;
+- hora de finalización.
+
+Reglas:
+
+- si libra, bloque Trabajo desaparece/no aplica;
+- puede modificarse un turno de un día concreto por cambio de última hora;
+- un cambio puntual no altera otros días ni el patrón futuro;
+- el usuario debe poder gestionar contenido personal ordinario sin editar código.
+
+La importación automática avanzada de calendarios mediante PDF/imagen no fue requisito obligatorio de Hoy v1.
+
+## 4.7 Tareas puntuales
+
+Debe existir capacidad tipo `+ Añadir para hoy`.
+
+Una tarea puntual:
+
+- pertenece solo a esa fecha;
+- puede editarse/reordenarse/eliminarse mientras el día sea editable;
+- cuenta para cumplimiento;
+- no modifica automáticamente la plantilla futura.
+
+Convertir una tarea puntual en recurrente quedó fuera del scope inicial.
+
+## 4.8 Fin del día
+
+- No existe cierre manual obligatorio.
+- El día finaliza automáticamente.
+- Pendientes sin resolución no se transforman arbitrariamente en omitidos.
+
+## 4.9 Mensajes y cabecera
+
+- No es necesario saludo personal en Hoy.
+- Fecha: sí, pero discreta.
+- Se permiten microcopys motivacionales breves, siempre subordinados a la acción actual.
+
+---
+
+# 5. Decisiones superseded / derogadas
+
+## 5.1 Regla de 45 minutos hasta el gimnasio — DEROGADA
+
+Versión antigua:
+
+- máximo 45 minutos desde despertar hasta ir al gimnasio.
+
+Sustitución aprobada:
+
+- objetivo contextual de estar en el gimnasio a las **08:00**.
+
+## 5.2 `Snack del trabajo` — SUPERSEDED
+
+Versión antigua:
+
+- snack asociado semánticamente a la jornada laboral.
+
+Sustitución:
+
+- **Snack** es una comida de media tarde gestionada por Nutrition y puede existir también en día libre.
+
+## 5.3 `Ducha y recuperación` como check — DEROGADA
+
+Sustitución:
+
+- deja de ser tarea computable de Hoy.
+
+## 5.4 `Desarrollo 60–120 min` como check único — DEROGADA
+
+Sustitución:
+
+- bloque flexible Desarrollo con pocas acciones concretas.
+
+## 5.5 Tres estados simples de Training en integración inicial — SUPERSEDED/AMPLIADO por lifecycle v2
+
+Contrato inicial de la primera especificación de Hoy mostraba principalmente:
+
+- PENDIENTE
+- EN CURSO
+- COMPLETADA
+
+Contrato v2 canónico posterior de Training amplía lifecycle a:
+
+- prevista/pending;
+- reprogramada;
+- omitida;
+- en curso;
+- completada;
+- incompleta.
+
+Hoy no debe colapsar ni reescribir el lifecycle canónico de Training. Puede mostrar un subconjunto de presentación según el estado, pero la fuente de verdad es Training.
+
+## 5.6 Racha inicial que solo contemplaba OMITIDA — SUPERSEDED/AMPLIADA
+
+Regla final v2:
+
+- COMPLETADA: +1.
+- descanso programado: neutral.
+- reprogramada: neutral hasta resolverse.
+- OMITIDA: rompe.
+- INCOMPLETA: rompe.
+- extraordinaria no planificada: neutral.
+- inicio accidental descartado: neutral.
+- sin registrar: incertidumbre, no incumplimiento.
+
+## 5.7 Layout 1 + Layout 5 como autoridad visual — SUPERSEDED
+
+Históricamente el usuario aprobó Layout 1 y Layout 5 como referencias preferidas y la especificación Hoy v1 usó “Layout 5 principal + Layout 1 funcional”.
+
+Esto **ya no gobierna la implementación v2.1**.
+
+Sustitución canónica:
+
+- **Golden Renders individuales v2.1 exactos**.
+- Para Hoy existen dos Goldens: **Hoy Principal** y **Hoy Día 0**.
+- Regla: paridad visual estricta, no “inspiración”.
+
+## 5.8 “Implementación bloqueada hasta congelar diseño” — SUPERSEDED por freeze + autorización posterior
+
+Durante la auditoría v2.1 se prohibió implementar hasta cerrar Golden Renders.
+
+Después:
+
+- 26/26 Goldens quedaron aprobados;
+- scope v2.1 fue autorizado;
+- el patch `v2.1.0-rc.1` fue aplicado y pasó gates de Ingeniería/PRE-QA.
+
+No usar la antigua prohibición pre-freeze para negar el estado técnico ya alcanzado.
+
+---
+
+# 6. Dependencias y contratos cross-module
+
+## 6.1 Hoy ↔ Training
+
+### Ownership
+
+Training posee:
+
+- identidad de sesión;
+- sesión prevista;
+- reprogramación;
+- lifecycle;
+- contenido de rutina;
+- ejercicios;
+- movilidad vinculada al entrenamiento;
+- inicio/final reales;
+- ejecución;
+- sustituciones;
+- resultado terminal.
+
+Hoy consume y presenta.
+
+### Datos que Hoy puede necesitar/consumir
+
+- identificador de sesión;
+- nombre;
+- estado;
+- duración estimada;
+- inicio real;
+- final real;
+- duración real;
+- rutina/plantilla correspondiente;
+- movilidad asociada;
+- sesiones previstas/completadas de la semana;
+- fecha prevista;
+- fecha efectiva.
+
+### Invariantes
+
+- Hoy no declara unilateralmente una sesión completada.
+- Una sesión `EN CURSO` debe abrir/continuar la sesión real, no la pantalla genérica si existe un destino contextual.
+- La finalización formal pertenece a Training.
+- El estado de Hoy se sincroniza con Training.
+- Reprogramación conserva identidad de sesión; no debe aparecer como fallo antiguo + sesión nueva.
+- Varias sesiones diferentes pueden compartir fecha efectiva y seguir siendo identidades distintas.
+- Sesión extraordinaria no debe confundirse con una planificada salvo sustitución formal de Training.
+
+## 6.2 Hoy ↔ Nutrition
+
+### Ownership
+
+Nutrition posee:
+
+- comidas;
+- recetas;
+- planificación;
+- rol nutricional del evento;
+- estado de comida;
+- consumo confirmado;
+- kcal/macros.
+
+### Roles funcionales iniciales
+
+- Pre-entreno.
+- Post-entreno.
+- Comida principal.
+- Snack.
+- Cena.
+
+### Relevancia contextual
+
+Nutrition decide la comida relevante usando contexto + secuencia:
+
+1. contexto de Training para Pre/Post;
+2. después secuencia restante del día;
+3. realizadas/omitidas dejan de ser activas;
+4. si no hay planificación aplicable, Hoy no inventa comida.
+
+### Estados mínimos de comida
+
+- PENDIENTE.
+- REALIZADA.
+- OMITIDA.
+
+### Invariantes
+
+- una comida se considera realizada solo por confirmación nutricional explícita;
+- iniciar Training no significa haber comido pre-entreno;
+- terminar Training no significa haber comido post-entreno;
+- Hoy puede ofrecer la acción, pero la mutación debe ocurrir sobre el registro de Nutrition;
+- kcal/proteína/carbohidrato/grasa visibles en Hoy representan **consumo confirmado**, no plan teórico;
+- comidas `completed` o `skipped` no se reescriben automáticamente;
+- en v2, Pre/Post se asocian a identidad de sesión Training, no solo a fecha.
+
+## 6.3 Hoy ↔ Progreso
+
+Progreso posee métricas derivadas y analítica longitudinal.
+
+### Tarjeta compacta de Progreso aprobada
+
+Indicador 1: **tendencia de peso**.
+
+- tendencia/media reciente;
+- variación frente a periodo anterior;
+- micrográfico aproximado 3–4 semanas;
+- no usar cambios diarios como señal de progreso.
+
+Calidad original aprobada:
+
+- mínimo 3 registros válidos en últimos 7 días para tendencia semanal;
+- ambos periodos deben cumplir mínimo para comparación;
+- si no: mostrar último valor real + `Tendencia: datos insuficientes`.
+
+Indicador 2: **adherencia reciente**, con distinción explícita:
+
+- cumplido;
+- no cumplido;
+- sin registrar;
+- no aplicaba/no programado.
+
+No esconder cobertura de datos. Ejemplo conceptual:
+
+`4/5 cumplidos · 2 sin registrar`
+
+### Racha de entrenamiento
+
+Progreso calcula; Training aporta hechos; Hoy muestra.
+
+Definición canónica v2:
+
+> número de instancias `PlannedWorkoutSession` consecutivas cumplidas desde la última sesión planificada con resultado que rompe racha.
+
+Orden canónico de racha v2:
+
+`scheduledDate → createdAt → id`
+
+Neutral/break según contrato final ya enumerado.
+
+## 6.4 Hoy ↔ CENTRAL
+
+CENTRAL es autoridad sobre:
+
+- integración transversal;
+- arquitectura;
+- cambios de contrato;
+- autorizaciones;
+- release gates;
+- resolución de STOP CONDITIONS;
+- control de scope;
+- aceptación/rechazo de propuestas técnicas alternativas.
+
+Hoy/Rutina no puede autorizar por sí mismo un cambio técnico que altere semántica funcional.
+
+## 6.5 Hoy ↔ Ingeniería
+
+Ingeniería:
+
+- solo implementa scope autorizado por CENTRAL;
+- no cambia ownership;
+- no cambia lifecycle;
+- no cambia semántica de historial;
+- no cambia schema/migraciones sin autorización;
+- debe corregir por causa raíz y barrer clases hermanas;
+- no envía directamente a QA independiente;
+- no toca `production` salvo autorización.
+
+Para v2.1, Today/Hoy ya tiene hardening específico de mutaciones y pruebas de concurrencia.
+
+## 6.6 Hoy ↔ QA
+
+QA debe validar desde contratos, no desde preferencias de diseño propias.
+
+Prioridades de regresión para Hoy:
+
+- historial no destructivo;
+- Day 0 truthful;
+- focus/`AHORA` correcto;
+- mutaciones atómicas y latest-wins;
+- one-off task;
+- WorkShift;
+- editor de rutina;
+- cross-module state consistency;
+- offline/PWA;
+- paridad visual exacta con los Goldens Hoy Principal y Hoy Día 0;
+- accesibilidad/tap targets/overflow móvil.
+
+---
+
+# 7. Modelo conceptual, datos y estados relevantes
+
+## 7.1 Entidades/conceptos funcionales propios
+
+### Plantilla diaria
+
+Define pasos y organización reutilizable futura.
+
+Debe ser administrable por el usuario desde FÉNIX.
+
+### Ejecución diaria
+
+Snapshot/instancia funcional de una fecha concreta.
+
+Preserva:
+
+- qué aplicaba;
+- qué se completó;
+- qué se omitió;
+- qué no aplicaba;
+- qué quedó sin resultado;
+- one-offs;
+- contexto de trabajo;
+- referencias cross-module pertinentes.
+
+### Paso/tarea de rutina
+
+Estado funcional original de Hoy:
+
+- PENDIENTE.
+- COMPLETADA.
+- OMITIDA.
+- NO APLICA.
+
+### One-off / tarea solo para hoy
+
+Pertenece únicamente a la ejecución de esa fecha.
+
+### Bloque del día
+
+Modelo funcional:
+
+- MAÑANA.
+- POSTENTRENO.
+- DESARROLLO.
+- TRABAJO.
+- NOCHE.
+
+### WorkShift
+
+Concepto v2.1 explícito:
+
+- trabajo / día libre;
+- horario opcional/concreto;
+- editable por fecha.
+
+Nombre exacto de tabla/entidad IndexedDB: **DESCONOCIDO** desde este especialista.
+
+### Día 0
+
+Estado de Home antes de iniciar operativamente el día; debe ser truthful y no atribuir hechos inexistentes.
+
+## 7.2 Datos cross-module referenciados
+
+Hoy puede referenciar, no poseer:
+
+- sesión Training por identidad;
+- DailyMeal/comida Nutrition por identidad;
+- tendencia/adherencia/racha derivada por Progreso.
+
+## 7.3 Modelo técnico exacto
+
+Nombres exactos de interfaces TypeScript, tablas Dexie, claves e índices específicos de Today salvo lo expresamente conocido por Ingeniería: **DESCONOCIDO** para este especialista.
+
+Codex debe leer el repositorio y los documentos técnicos; no inferirlos desde esta especificación funcional.
+
+---
+
+# 8. UX, comportamiento e interacción aprobados
+
+## 8.1 Principios UX
+
+Hoy debe ser:
+
+- extremadamente rápido;
+- claro;
+- práctico;
+- minimalista;
+- accionable;
+- usable con una mano;
+- comprensible de un vistazo;
+- resistente a toques accidentales;
+- con el mínimo número razonable de acciones redundantes.
+
+No convertirlo en:
+
+- dashboard empresarial;
+- agenda compleja;
+- gestor de proyectos;
+- sistema obsesivo de productividad;
+- colección de estadísticas sin valor.
+
+## 8.2 Jerarquía funcional aprobada
+
+Conceptualmente:
+
+1. cabecera / fecha;
+2. Hero Hoy;
+3. `AHORA` / siguiente acción;
+4. bloque actual;
+5. Training contextual;
+6. Nutrition contextual;
+7. Progreso compacto;
+8. resto del día resumido;
+9. bottom nav.
+
+**Nota:** la geometría visual exacta actual no se decide por este esquema textual; la dictan los Golden Renders v2.1.
+
+## 8.3 Lógica `AHORA`
+
+Prioridad funcional aprobada original:
+
+1. sesión Training en curso → `Continuar entrenamiento`;
+2. contexto nutricional prioritario Pre/Post cuando corresponda;
+3. acción ordinaria pendiente del bloque actual;
+4. contexto laboral puede determinar bloque;
+5. secuencia restante.
+
+Una tarea antigua pendiente sigue accesible pero no domina necesariamente el foco.
+
+## 8.4 Training card
+
+Debe poder comunicar, según contexto:
+
+- nombre de sesión;
+- duración estimada/real cuando proceda;
+- estado;
+- CTA Entrenar/Continuar;
+- progreso semanal;
+- racha derivada.
+
+Día de descanso: mostrar versión compacta tipo `Descanso programado`, sin penalizar ni ocupar espacio excesivo.
+
+## 8.5 Nutrition card
+
+Es dinámica durante el día.
+
+Puede mostrar:
+
+- rol de comida actual;
+- contenido resumido;
+- kcal/proteína de esa comida;
+- acción para marcar realizada;
+- progreso compacto de kcal/P/C/G consumidos.
+
+## 8.6 Progreso card
+
+V1 compacta:
+
+- tendencia de peso;
+- adherencia reciente;
+- micrográfico(s) compactos;
+- no sobrecargar con IMC, % grasa BIA, volumen total, PR global, score fitness, etc.
+
+## 8.7 Editor de rutina diaria
+
+En v2.1 se integra en **Ajustes → Rutina diaria**.
+
+Debe respetar independencia funcional: contenido personal ordinario se gestiona desde la app, no editando código.
+
+---
+
+# 9. Requisitos visuales y Golden Renders
+
+## 9.1 Dirección visual histórica
+
+Históricamente:
+
+- modo oscuro;
+- estética premium/minimalista;
+- cards grandes/redondeadas;
+- jerarquía clara;
+- Layout 1 como referencia funcional;
+- Layout 5 como referencia premium.
+
+Esta dirección explica la intención, pero **no gobierna ya la paridad v2.1**.
+
+## 9.2 Autoridad visual actual v2.1
+
+Paquete canónico:
+
+`FENIX_v2.1_GOLDEN_RENDERS_FINAL_26.zip`
+
+SHA-256:
+
+`0f797dd2962f44ec7ae82d46f770d6b70c462927ad6a938728ea86375056bffc`
+
+Para Hoy:
+
+1. **Golden Render — HOY Principal**.
+2. **Golden Render — HOY Día 0**.
+
+Reglas de paridad:
+
+- paridad visual estricta;
+- no tratar Goldens como “inspiración”;
+- no inventar UI;
+- un Golden por layout/pantalla;
+- accesibilidad, safe areas y compatibilidad pueden justificar ajustes necesarios, no rediseños libres;
+- Design System v2 debe ser propietario de patrones compartidos;
+- no añadir capas CSS parche tipo `final-v2.css`;
+- retirar/evitar overrides legacy en superficies tocadas;
+- geometría compacta iPhone;
+- no overflow ocultado como falsa solución;
+- target mínimo de interacción aprobado por gate: **44 px**.
+
+Los collages/posters y renders posteriores erróneos están **DESCARTADOS**.
+
+## 9.3 Goldens globales relevantes indirectamente
+
+Hoy comparte Design System con los 26 Goldens globales. Cualquier cambio global de AppHeader/cards/buttons/dialogs puede afectar Hoy y debe ser regresado horizontalmente.
+
+---
+
+# 10. Funcionalidad ya implementada y validada
+
+## 10.1 v2.0.0 CORE STABLE
+
+Hoy/Progreso core tuvo cobertura PASS, incluida:
+
+- focus `0/1/2/active/terminal`;
+- tendencias con casos insuficientes/suficientes (`2+2/3+3` en suite de regresión);
+- Today latest-wins persistence guard;
+- Today final-write rollback causality;
+- integración con contracts de Training/Nutrition/Progreso;
+- PWA/mobile source hardening;
+- backup/restore schema 5 y baseline real.
+
+## 10.2 v2.1.0-rc.1 — Hoy
+
+Implementado dentro del scope conocido:
+
+- paridad de las superficies Hoy;
+- estado Día 0;
+- WorkShift trabajo/día libre;
+- rutina diaria editable desde Ajustes;
+- hardening de mutaciones legacy;
+- Today mutation sweep para `start/task/one-off/workshift/routine`;
+- Day0 truthfulness;
+- concurrency matrix Today `H01-H04`;
+- React effect contract con draft de WorkShift keyeado;
+- stable Today boot en Playwright hermético;
+- Golden reachability;
+- visual matrix independiente.
+
+## 10.3 Estado de validación conocido
+
+Gates conocidos PASS en candidata v2.1:
+
+- build TypeScript/Vite/PWA;
+- lint zero warnings;
+- schema 5 preservado;
+- backup negativo/corruption;
+- concurrency matrix;
+- date/timezone Europe/Madrid + strict `YYYY-MM-DD`;
+- Design System/accessibility;
+- Golden parity source contract;
+- Today mutation sweep;
+- Playwright hermetic boot;
+- PWA source gate;
+- CORE regression + backup oficial;
+- Playwright E2E en la ejecución final conocida;
+- Playwright visual 26/26;
+- final Engineering/PRE-QA adversarial gate PASS.
+
+**Limitación de cierre:** la salida final conocida aún exigía **manual parity review** antes de handoff a CENTRAL. No declarar v2.1 final desde este handoff.
+
+---
+
+# 11. Funcionalidad pendiente / backlog por prioridad
+
+## P0 — MIGRACIÓN / RELEASE CONTROL
+
+1. **No tocar nada hasta autorización de CENTRAL.**
+2. Tras autorización, Codex debe verificar estado real del repo y artefactos frente a este handoff.
+3. Completar/reproducir la revisión manual de paridad de los 26 Goldens si CENTRAL la sigue considerando pendiente.
+4. Entregar candidata exacta a CENTRAL, sin mutarla entre gate y revisión.
+5. QA independiente solo si CENTRAL autoriza.
+6. Commit/tag/push/merge a `production` solo por el flujo autorizado de CENTRAL.
+
+## P1 — Cierre de v2.1 Hoy
+
+- validar Hoy Principal contra Golden exacto;
+- validar Hoy Día 0 contra Golden exacto;
+- validar iPhone real/safe areas/one-hand/tap targets;
+- validar WorkShift en uso real;
+- validar editor de rutina diaria en uso real;
+- validar que `AHORA` no se desincroniza de Training/Nutrition;
+- validar offline/reload sin pérdida de estado;
+- validar historial no destructivo y one-offs.
+
+## P2 — Uso real / feedback post-release
+
+Solo después de release y autorización:
+
+- revisar fricción real;
+- revisar toques redundantes;
+- revisar prioridades incorrectas de `AHORA`;
+- revisar estructura nocturna, que quedó explícitamente abierta a cambios futuros por uso real;
+- revisar si Desarrollo necesita refinamiento, sin convertirlo en task manager.
+
+## P3 — Fuera de alcance / futuro no aprobado para implementación automática
+
+No implementar sin nueva decisión:
+
+- notificaciones inteligentes avanzadas;
+- widgets de sistema;
+- IA necesaria para funcionamiento de Hoy;
+- importación avanzada automática de horario desde PDF/imagen;
+- agenda/calendario general;
+- gamificación compleja;
+- score global de fitness;
+- personalización exhaustiva de cards;
+- conversión one-off → recurrente desde Hoy;
+- inferencias automáticas de acciones humanas sin confirmación suficiente.
+
+---
+
+# 12. Bugs, riesgos, deuda conocida y edge cases
+
+## 12.1 Riesgos funcionales
+
+### Duplicación de ownership
+
+Riesgo: Today cree su propio estado “completado” para Training/Nutrition.
+
+Mitigación canónica: consumir estado original y mutar solo a través del propietario.
+
+### `SIN REGISTRAR` convertido en fracaso
+
+Riesgo crítico de analítica falsa.
+
+Mitigación: estado de incertidumbre separado.
+
+### Reprogramación duplicada
+
+Riesgo: representar una sesión movida como omitida + nueva.
+
+Prohibido: conservar identidad.
+
+### `AHORA` secuestrado por tareas antiguas
+
+Riesgo de UX: una pendiente matinal domina toda la tarde.
+
+Mitigación: foco contextual por bloque/Training/Nutrition.
+
+### WorkShift stale draft / cambios de fecha
+
+Riesgo de mutar un turno equivocado al cambiar selected date.
+
+Existe contract de React effect: draft keyeado por WorkShift.
+
+### One-off double mutation / concurrencia
+
+Riesgo: duplicación o resurrection de tareas puntuales.
+
+Existe Today mutation sweep y concurrency matrix H01-H04; debe mantenerse.
+
+### Day0 falsamente poblado
+
+Riesgo: mostrar hechos no ocurridos/progreso artificial al iniciar.
+
+Existe `Day0 truthfulness` como regresión obligatoria.
+
+### Offline/reload
+
+Riesgo: shell disponible pero estado o indicador offline incorrecto.
+
+Playwright distinguió `offline-event` vs `offline-reload`; mantener contrato.
+
+## 12.2 Riesgos visuales
+
+- CSS legacy que sobreescribe Goldens.
+- parches acumulativos globales.
+- overflow ocultado.
+- geometría no compacta en iPhone.
+- cambios globales de Design System que rompan Hoy sin tocar sus archivos.
+- visual fixture sintético que no represente el estado real o sea nondeterministic.
+
+## 12.3 Deuda conocida
+
+- Warnings de Git sobre normalización LF→CRLF aparecen en outputs de Windows. No consta como fallo funcional; `git diff --check` pasó. No convertirlo en cambio de line endings masivo sin autorización.
+- Estado exacto de deuda CSS residual fuera de superficies tocadas: **DESCONOCIDO**.
+- Estado exacto de métricas de bundle performance específicas de Today: **DESCONOCIDO**.
+
+## 12.4 Edge cases obligatorios
+
+- domingo sin regla habitual de despertar;
+- día sin Training;
+- día libre sin Trabajo;
+- Snack en día libre;
+- cambio de turno de última hora;
+- sesión reprogramada;
+- múltiples sesiones distintas en misma fecha efectiva;
+- sesión extraordinaria;
+- sesión incompleta;
+- inicio accidental descartado;
+- comida omitida;
+- comida completada que nunca debe reescribirse;
+- ausencia de planificación Nutrition;
+- tendencia peso con datos insuficientes;
+- adherencia con faltantes;
+- racha con incertidumbre;
+- abrir Hoy tarde;
+- tarea pasada pendiente;
+- editar plantilla después de existir historial;
+- one-off y delete/undo/concurrencia cuando exista;
+- offline tras carga válida;
+- reload offline;
+- update PWA durante sesión Training activa: no interrumpir sesión.
+
+---
+
+# 13. Incidencias QA / PRE-QA históricas relevantes
+
+## 13.1 v2.0 B01 — clases de causalidad Today
+
+Formalmente el bloque B01 cerró en `v2.0.0-b01.5`.
+
+Clases/regresiones directamente relevantes a Hoy:
+
+- `C03 Today latest-wins persistence guard` — **CLOSED / PASS**.
+- `D08-D12 Today final-write rollback causality` — **CLOSED / PASS**.
+- `F2-RC1 Hoy + Progreso core (focus 0/1/2/active/terminal + trend 2+2/3+3)` — **CLOSED / PASS**.
+
+Los IDs QA exactos que corresponden específicamente a cada una de estas subclases no pueden determinarse con certeza desde este especialista: **DESCONOCIDO**.
+
+## 13.2 v2.1 PRE-QA global con impacto potencial en Hoy
+
+### PREQA-V21-E2E-HERMETIC-001
+
+- Síntoma histórico: harness/browser hermético falló; incluía offline/reload y estabilidad de boot.
+- Evidencia pre-fix preservada.
+- Estado conocido posterior: Playwright hermetic boot PASS; final gate PASS.
+- **CLOSED**.
+
+Evidencia preservada SHA-256:
+
+`1a5b33f51723de9abc4a6d89750b792be3f12d97be9043ddec68c59d47083c27`
+
+### PREQA-V21-VISUAL-001
+
+- Clase visual/responsive inicial.
+- Reparación aplicada + regresión PASS.
+- **CLOSED**.
+
+Evidencia preservada SHA-256:
+
+`4b665d3ce05213dc1d1fc21ce182a132d2c0203f060590fe7f933a8e4272993e`
+
+### PREQA-V21-VISUAL-MATRIX-002
+
+- Matriz visual/contratos de estados.
+- Reparación aplicada; 26-state visual matrix PASS.
+- **CLOSED**.
+
+Evidencia preservada SHA-256:
+
+`395a12a7029fceb9a91d9a13931cebb703fcbf22fd552b94fd4310d2a851b2d7`
+
+### PREQA-V21-CONTRACT-COHERENCE-001
+
+- Coherencia de contratos/fixture/matriz.
+- Reparación aplicada; suites posteriores PASS.
+- **CLOSED**.
+
+SHA de evidencia pre-fix: **DESCONOCIDO** desde el contexto disponible.
+
+### PREQA-V21-SETTINGS-RESPONSIVE-001
+
+- Afectaba Ajustes, pero incluye `Ajustes → Rutina diaria`, dependencia directa de Hoy.
+- Reparación aplicada; Settings responsive contract PASS.
+- **CLOSED**.
+
+Evidencia preservada SHA-256:
+
+`033ba5ef22ea1b8767e86771749da272f3820fe7db8ffbfa024226af61bbe3df`
+
+### PREQA-V21-GOLDEN-PARITY-001
+
+- Clase de paridad exacta Golden.
+- Reparación aplicada; Golden parity source contract PASS; 26/26 visual matrix PASS; final Engineering/PRE-QA gate conocido PASS.
+- La salida final seguía requiriendo **manual parity review** antes del handoff a CENTRAL.
+- Estado de defecto de código: **CLOSED en PRE-QA de Ingeniería**.
+- Estado de revisión manual de aceptación visual: **PENDIENTE / NO CONFIRMADO**.
+
+Evidencia visual pre-fix preservada SHA-256:
+
+`55263558cc1b69ba2c226402f4fd61b3eb36f0e41a906a8b14ce80324d93073f`
+
+## 13.3 Incidencias v2.0 no específicas de Hoy pero que no deben reabrirse sin regresión
+
+QA final v2.0.0: PASS, 0 abiertas.
+
+Entre las clases cerradas globales que pueden afectar indirectamente lo que Hoy muestra:
+
+- DailyMeal stale mutations;
+- pending Training meal lifecycle in backup;
+- stale substitute Training;
+- streak same-day nondeterministic;
+- appetite no-op;
+- backup cross-entity integrity;
+- Nutrition logical duplicate rules.
+
+No reabrir por intuición; solo por regresión reproducible.
+
+---
+
+# 14. Invariantes y casos de regresión que nunca deben perderse
+
+## 14.1 Invariantes de dominio
+
+1. Hoy no posee Training/Nutrition/Progreso.
+2. Plantilla y ejecución diaria están separadas.
+3. Cambiar plantilla no reescribe historia.
+4. No abrir la app ≠ incumplir.
+5. `SIN REGISTRAR ≠ NO CUMPLIDO`.
+6. `NO APLICA` no penaliza porcentaje.
+7. `OMITIDA` sí es resultado negativo real de una tarea propia cuando se marca explícitamente.
+8. Today no puede inventar consumo Nutrition.
+9. Today no puede inventar finalización Training.
+10. Training reprogramado conserva identidad.
+11. Pre/Post Nutrition sigue identidad de sesión, no solo fecha.
+12. Comidas completed/skipped no se reescriben automáticamente.
+13. Racha se deriva una sola vez en Progreso.
+14. Racha no usa días naturales.
+15. Día 0 no fabrica progreso.
+16. Trabajo/día libre y turno son contextuales por fecha.
+17. One-off no modifica plantilla futura.
+
+## 14.2 Invariantes técnicos/regresión conocidos
+
+- `C03 Today latest-wins` PASS.
+- `D08-D12 Today final write rollback causality` PASS.
+- Today concurrency matrix `H01-H04` PASS.
+- Today mutation sweep `start/task/one-off/workshift/routine tx + Day0 truthfulness` PASS.
+- Europe/Madrid DST + strict YYYY-MM-DD PASS.
+- React effect keyed work-shift draft PASS.
+- stable Today boot en harness hermético PASS.
+- backup oficial schema 5 roundtrip PASS.
+- PWA/offline shell y data contract PASS en gate final conocido.
+- Golden reachability 26/26 PASS.
+- Golden visual matrix 26/26 PASS.
+- no nueva capa de overrides legacy.
+- 44px interaction floor.
+
+## 14.3 Casos de regresión UX
+
+- abrir por primera vez: Día 0 correcto;
+- iniciar día: no suma como tarea;
+- completar/desmarcar tarea;
+- marcar omitida/no aplica;
+- completar fuera de orden;
+- saltar temporalmente a bloque posterior;
+- abrir a media tarde con tareas matinales pendientes;
+- Training pasa pendiente→en curso→terminal y Today refleja;
+- Nutrition cambia comida relevante tras confirmación y contexto;
+- WorkShift cambia solo fecha objetivo;
+- one-off se conserva solo en fecha;
+- historial pasado no cambia tras editar rutina;
+- Progreso insuficiente no inventa tendencia;
+- racha incertidumbre no inventa cifra.
+
+---
+
+# 15. Artefactos, documentos, bundles, versiones y SHA-256 canónicos conocidos
+
+## 15.1 Gobierno / fuentes
+
+- `FENIX_MANIFIESTO_DE_FUENTES_v1.0.md` — vigente.
+- `FENIX_PROTOCOLO_DE_COORDINACION_v1.0.md` — vigente.
+- `FENIX_Notion_Export_2026-08-28.zip` — export histórico disponible; autoridad personal según manifiesto.
+- `ESPECIFICACIÓN APROBADA PARA IMPLEMENTACIÓN — 01 · FÉNIX — HOY / RUTINA v1.0` — aprobada; copia localizada en File Library bajo título genérico `Se ha pegado el markdown.md`.
+
+SHA-256 exacto de la especificación Hoy v1: **DESCONOCIDO**.
+
+## 15.2 Baseline v2.0.0
+
+- Release: `v2.0.0`.
+- Commit/tag/production: `deac3890f4d1b794cae8f3acde5a12bf7c35cf94`.
+- Source release SHA-256: `f98d902d245dcd3cc0a6db5eca4d40afa4b1bca3e7f7f00a9238d16f32fab617`.
+- Backup oficial: `fenix-backup-2026-09-06T13-27-03-525Z.json`.
+- Backup SHA-256: `3686d872e64d83f7fea7053fab9f2e32508bd525c50180431a5b437bad8e8732`.
+- Registros: `759`.
+- Schema: `5`.
+
+## 15.3 Golden Renders v2.1
+
+- `FENIX_v2.1_GOLDEN_RENDERS_FINAL_26.zip`.
+- SHA-256: `0f797dd2962f44ec7ae82d46f770d6b70c462927ad6a938728ea86375056bffc`.
+- Hoy: Golden #1 Principal, #2 Día 0.
+
+## 15.4 Candidata v2.1.0-rc.1 — último gate conocido
+
+- Evidence ZIP: `FENIX_v2.1.0-rc.1_ENGINEERING_EVIDENCE_20260908-104931.zip`.
+- Evidence SHA-256: `912b4ac8dc42bd0b2defa567864b2af0008db53062f93391207f21b9a62abddf`.
+- Source bundle: `FENIX_v2.1.0-rc.1_SOURCE_BUNDLE.zip`.
+- Source files: `213`.
+- Source SHA-256: `1a7898441c5a0c325496901d075839dc025b6b831652b8445790945668ab2c58`.
+- Final gate transcript: `qa/v2.1/evidence/FINAL_GATE_20260908-104931.txt`.
+
+## 15.5 Evidencia PRE-QA preservada relevante
+
+- `PREQA-V21-E2E-HERMETIC-001_FAILED_PRE_FIX_20260908-022633.zip` — SHA `1a5b33f51723de9abc4a6d89750b792be3f12d97be9043ddec68c59d47083c27`.
+- `PREQA-V21-VISUAL-001_FAILED_PRE_FIX_20260908-020053.zip` — SHA `4b665d3ce05213dc1d1fc21ce182a132d2c0203f060590fe7f933a8e4272993e`.
+- `PREQA-V21-VISUAL-MATRIX-002_FAILED_PRE_FIX_20260908-024532.zip` — SHA `395a12a7029fceb9a91d9a13931cebb703fcbf22fd552b94fd4310d2a851b2d7`.
+- `PREQA-V21-SETTINGS-RESPONSIVE-001_FAILED_PRE_FIX_20260908-102225.zip` — SHA `033ba5ef22ea1b8767e86771749da272f3820fe7db8ffbfa024226af61bbe3df`.
+- `PREQA-V21-GOLDEN-PARITY-001_PRE_FIX_VISUAL_20260908-123014.zip` — SHA `55263558cc1b69ba2c226402f4fd61b3eb36f0e41a906a8b14ce80324d93073f`.
+
+## 15.6 Runtime/development known
+
+- React + TypeScript + Vite.
+- PWA / Workbox.
+- Dexie / IndexedDB.
+- DB `fenix-db`, schema 5.
+- offline-first.
+- sin backend runtime, login o cloud sync en baseline conocido.
+- entorno local histórico: `C:\Users\Amin\Projects\fenix`.
+- Node `v24.19.0`.
+- npm `11.17.0`.
+- Playwright contract observado: `1.62.1`.
+
+## 15.7 Artefactos visuales históricos Layout 1 / Layout 5
+
+Se generaron y fueron aprobados como referencias conceptuales antes del Golden Freeze.
+
+Nombres/hashes canónicos de esos PNG históricos dentro del repositorio: **DESCONOCIDO**.
+
+No tratarlos como fuente de paridad v2.1.
+
+---
+
+# 16. STOP CONDITIONS que requieren decisión de CENTRAL
+
+Codex debe detenerse y elevar a CENTRAL si ocurre cualquiera de estos casos:
+
+1. Cambiar ownership entre Hoy, Training, Nutrition o Progreso.
+2. Cambiar semántica de `SIN REGISTRAR`, `OMITIDA`, `NO APLICA` o cumplimiento.
+3. Cambiar lifecycle de Training o identidad de sesión.
+4. Cambiar definición/orden de racha.
+5. Cambiar asociación Pre/Post Nutrition a sesión.
+6. Reescribir comidas completed/skipped automáticamente.
+7. Reescribir historial diario por cambio de plantilla.
+8. Cambiar schema 5 o introducir migraciones.
+9. Introducir backend/cloud/login/sync no autorizado.
+10. Tocar `production`, tag, commit de release o deployment sin autorización.
+11. Enviar candidata a QA independiente sin autorización de CENTRAL.
+12. Desviarse materialmente de Golden Hoy Principal o Día 0.
+13. Detectar contradicción material entre Golden y contrato funcional que no pueda resolverse sin cambiar comportamiento.
+14. Necesitar una nueva pantalla/layout no cubierto por Goldens y que altere geometría de producto.
+15. Encontrar datos históricos cuya interpretación requiera inventar qué ocurrió.
+16. Necesitar borrar/resetear/reseed IndexedDB o datos reales para avanzar.
+17. Cualquier fix que “solucione” una prueba debilitando/eliminando el invariante funcional.
+
+No es STOP si se trata de un bug implementativo inequívoco cuya solución está determinada por contratos existentes y puede corregirse por causa raíz sin cambiar comportamiento aprobado.
+
+---
+
+# 17. Qué NO debe asumir ni reinterpretar Codex
+
+Codex NO debe asumir:
+
+- que Layout 1/5 siguen siendo autoridad visual actual;
+- que Hoy puede marcar un Training como completado por su cuenta;
+- que terminar Training consume automáticamente Post-entreno;
+- que iniciar Training consume automáticamente Pre-entreno;
+- que una receta tiene un rol fijo eterno (cena/post/etc.);
+- que `Sin registrar` es equivalente a `omitida` o 0 %;
+- que una sesión movida de fecha es dos sesiones;
+- que dos sesiones en la misma fecha son la misma identidad;
+- que descanso rompe racha;
+- que sesión extra incrementa racha;
+- que incomplete Training puede tratarse como completed;
+- que el día debe cerrarse manualmente;
+- que hay que crear una Home adicional;
+- que el usuario quiere un gestor de productividad completo;
+- que todos los pasos requieren hora fija;
+- que domingo tiene la misma regla de despertar;
+- que Snack depende de jornada laboral;
+- que Ducha debe volver a ser check;
+- que el antiguo `Desarrollo 60–120` debe restaurarse como una única tarea;
+- que un Golden es una “idea” que se puede reinterpretar;
+- que un collage/poster antiguo es Golden;
+- que puede añadir CSS final de parche para acercarse visualmente;
+- que puede modificar producción porque la candidata de Ingeniería pasa gates;
+- que final gate de Ingeniería equivale a release final o QA independiente final.
+
+Cuando un dato figure como **DESCONOCIDO**, Codex debe buscarlo en repositorio/artefactos canónicos o preguntar a CENTRAL; nunca completarlo por plausibilidad.
+
+---
+
+# 18. Próxima acción recomendada desde el punto actual
+
+## Acción inmediata por la migración
+
+**NINGUNA IMPLEMENTACIÓN.**
+
+Codex debe:
+
+1. incorporar este handoff al repositorio como fuente permanente;
+2. leer los handoffs canónicos de CENTRAL, Ingeniería, QA, Training, Nutrition y Progreso;
+3. verificar que el repo montado coincide con la candidata/commit/bundle que CENTRAL designe como punto de migración;
+4. no modificar archivos hasta que CENTRAL emita autorización explícita post-migración.
+
+## Cuando CENTRAL reactive v2.1
+
+La secuencia recomendada, preservando el estado actual, es:
+
+1. confirmar baseline y SHA de la candidata exacta;
+2. confirmar que `production` sigue intacta en v2.0.0;
+3. confirmar que todos los root-cause closures v2.1 siguen presentes;
+4. reproducir/inspeccionar la evidencia del final Engineering/PRE-QA gate;
+5. completar la revisión manual de paridad Golden si sigue pendiente;
+6. entregar a CENTRAL la candidata byte-exacta con evidencias;
+7. CENTRAL decide autorización a QA independiente;
+8. solo tras cierre QA/CENTRAL proceder a release/commit/tag/push/deploy según su runbook.
+
+Para Hoy específicamente, no existe una nueva fase funcional autorizada. La siguiente intervención del especialista Hoy/Rutina, una vez liberada la versión correspondiente, debe ser **feedback de uso real**, no rediseño preventivo.
+
+---
+
+# 19. Contradicciones / ambigüedades conocidas que NO deben resolverse por inferencia
+
+## 19.1 Estado final exacto de aceptación visual v2.1
+
+Hecho A:
+
+- Ingeniería registra final Engineering/PRE-QA gate PASS y 26/26 visual captures PASS.
+
+Hecho B:
+
+- la misma salida indica `manual parity review still required before CENTRAL handoff`.
+
+Por tanto:
+
+- automatización/pre-QA: PASS;
+- aceptación manual visual final/CENTRAL: **NO CONFIRMADA en este contexto**.
+
+Codex no debe declarar v2.1 cerrado solo por el gate automatizado.
+
+## 19.2 Estado final de QA independiente v2.1
+
+No existe en el contexto de este especialista evidencia suficiente para afirmar que QA independiente v2.1 haya emitido PASS final después del último bundle.
+
+Estado: **DESCONOCIDO / NO CONFIRMADO**.
+
+## 19.3 Commit/tag final de v2.1
+
+No conocido.
+
+Estado: **DESCONOCIDO / NO CONFIRMADO**.
+
+## 19.4 Modelo físico exacto de datos de WorkShift/Today
+
+La semántica funcional está congelada, pero nombres exactos de tablas/campos/índices no están bajo autoridad de este especialista.
+
+Estado: **DESCONOCIDO aquí; leer repositorio/arquitectura técnica**.
+
+---
+
+# 20. Resumen ejecutivo canónico
+
+- **Hoy = Home** y orquestador diario.
+- Su objetivo es mostrar **qué toca ahora** con mínima fricción.
+- **No posee** Training, Nutrition ni Progreso.
+- **Plantilla y ejecución diaria son distintas** y el historial no se reescribe.
+- **Sin registrar no es incumplimiento**.
+- Rutina adaptativa; no docenas de plantillas.
+- Trabajo se modela por fecha con WorkShift/día libre y cambios puntuales.
+- Training, Nutrition y Progreso tienen contratos de ownership cerrados.
+- Golden actual de Hoy: **Principal + Día 0**, dentro del paquete 26/26.
+- Layout 1/5 son historia de diseño, no autoridad visual actual.
+- v2.0.0 es baseline estable en `production`.
+- v2.1.0-rc.1 es candidata de Ingeniería en `main`; producción sigue intacta.
+- Gates automatizados finales conocidos: PASS; revisión manual de paridad/CENTRAL aún no confirmada.
+- Tras este handoff: **STOP de trabajo hasta autorización de CENTRAL**.
+
+---
+
+**FIN — FENIX_CODEX_HANDOFF_HOY_RUTINA_v1.0**

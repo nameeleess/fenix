@@ -10,12 +10,7 @@
     var(--fenix-bg);
 }
 
-.training-page button,
-.training-page input,
-.training-page select,
-.training-page textarea {
-  font: inherit;
-}
+
 
 .training-loading {
   display: grid;
@@ -23,8 +18,7 @@
   color: var(--fenix-text-muted);
 }
 
-.training-main-header,
-.training-active-header {
+.training-main-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -40,27 +34,24 @@
   display: block;
   color: var(--fenix-accent);
   font-size: 0.68rem;
-  font-weight: 850;
+  font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-.training-main-header h1,
-.training-active-header h1 {
+.training-main-header h1 {
   margin: 3px 0 5px;
   font-size: clamp(2.1rem, 8vw, 3.2rem);
   line-height: 0.95;
   letter-spacing: -0.055em;
 }
 
-.training-main-header p,
-.training-active-header p {
+.training-main-header p {
   margin: 0;
   color: var(--fenix-text-muted);
 }
 
-.training-resume-button,
-.training-finish-shortcut {
+.training-resume-button {
   min-height: 42px;
   border: 1px solid rgb(var(--fenix-accent-rgb) / 0.25);
   border-radius: 12px;
@@ -173,8 +164,6 @@
 .training-routine-card,
 .training-catalog-card,
 .training-history-card,
-.training-current-card,
-.training-upcoming-card,
 .training-mini-card {
   border: 1px solid var(--fenix-border);
   border-radius: var(--fenix-radius-lg);
@@ -190,16 +179,13 @@
 .training-secondary-programs,
 .training-routine-card,
 .training-catalog-card,
-.training-history-card,
-.training-current-card,
-.training-upcoming-card {
+.training-history-card {
   padding: 18px;
 }
 
 .training-session-hero__header,
 .training-routine-card__header,
 .training-catalog-card__heading,
-.training-current-card__top,
 .training-section-heading {
   display: flex;
   align-items: flex-start;
@@ -209,7 +195,6 @@
 
 .training-session-hero h2,
 .training-routine-card h2,
-.training-current-card h2,
 .training-section-heading h2,
 .training-empty-card h2 {
   margin: 4px 0 6px;
@@ -220,7 +205,6 @@
 .training-routine-card p,
 .training-empty-card p,
 .training-catalog-card p,
-.training-current-card p,
 .training-secondary-programs p {
   color: var(--fenix-text-muted);
 }
@@ -296,8 +280,7 @@
   border-bottom: 1px solid var(--fenix-border-soft);
 }
 
-.training-session-preview > div > span,
-.training-upcoming-list button > span {
+.training-session-preview > div > span {
   display: grid;
   place-items: center;
   width: 26px;
@@ -392,20 +375,6 @@
 .training-secondary-programs__grid p { min-height: 54px; margin: 0 0 12px; font-size: 0.82rem; }
 .training-secondary-programs__grid button { width: 100%; min-height: 40px; border: 1px solid var(--fenix-border-strong); border-radius: 11px; color: var(--fenix-text); background: var(--fenix-surface-elevated); }
 
-.training-active-header {
-  position: sticky;
-  top: 0;
-  z-index: 12;
-  margin: calc(-24px - env(safe-area-inset-top)) -16px 14px;
-  padding: calc(17px + env(safe-area-inset-top)) 16px 13px;
-  border-bottom: 1px solid var(--fenix-border);
-  background: rgba(5,5,6,0.92);
-  backdrop-filter: blur(18px);
-}
-
-.training-active-header h1 { font-size: 1.65rem; }
-.training-active-header p { font-size: 0.76rem; }
-
 .training-back-button {
   flex: 0 0 38px;
   width: 38px;
@@ -416,33 +385,6 @@
   background: var(--fenix-surface);
   font-size: 1.65rem;
 }
-
-.training-rest-timer {
-  position: sticky;
-  top: calc(79px + env(safe-area-inset-top));
-  z-index: 11;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-  padding: 10px 14px;
-  border: 1px solid rgb(var(--fenix-accent-rgb) / 0.25);
-  border-radius: 14px;
-  background: rgba(18, 18, 19, 0.95);
-  box-shadow: 0 12px 34px rgba(0,0,0,0.28);
-}
-
-.training-rest-timer span,
-.training-rest-timer strong { display: block; }
-.training-rest-timer span { color: var(--fenix-accent); font-size: 0.62rem; font-weight: 850; letter-spacing: 0.1em; }
-.training-rest-timer strong { margin-top: 2px; font-size: 1.4rem; }
-.training-rest-timer button { border: 0; color: var(--fenix-text-muted); background: transparent; }
-.training-rest-timer.is-done { border-color: rgba(121,185,107,0.25); }
-.training-rest-timer.is-done strong { color: var(--fenix-success); }
-
-.training-current-card__top h2 { font-size: 1.65rem; }
-.training-current-card__top p { margin: 5px 0 0; }
 
 .training-exercise-orb {
   display: grid;
@@ -455,57 +397,9 @@
   background: radial-gradient(circle, rgb(var(--fenix-accent-rgb) / 0.18), transparent 70%);
   color: var(--fenix-accent);
   font-size: 0.68rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
-.training-reference-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin: 16px 0 10px;
-}
-
-.training-reference-grid > div,
-.training-technique-note {
-  padding: 12px;
-  border: 1px solid var(--fenix-border-soft);
-  border-radius: 13px;
-  background: var(--fenix-surface-soft);
-}
-
-.training-reference-grid span,
-.training-technique-note span {
-  color: var(--fenix-text-dim);
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
-.training-reference-grid strong { display: block; margin-top: 5px; font-size: 0.77rem; line-height: 1.45; }
-.training-technique-note p { margin: 5px 0 0; font-size: 0.82rem; line-height: 1.45; }
-
-.training-set-section { margin-top: 18px; }
-.training-set-section__title { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-.training-set-section__title span { font-size: 0.7rem; font-weight: 850; letter-spacing: 0.08em; }
-.training-set-section__title small { color: var(--fenix-text-dim); text-align: right; }
-
-.training-set-row {
-  position: relative;
-  display: grid;
-  grid-template-columns: 52px 1fr 1fr 1fr 42px 34px;
-  gap: 6px;
-  align-items: end;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--fenix-border-soft);
-}
-
-.training-set-row.is-completed { opacity: 0.72; }
-.training-set-row.is-warmup { background: rgba(255,255,255,0.012); }
-.training-set-row__index { align-self: center; }
-.training-set-row__index span { display: block; font-weight: 800; }
-.training-set-row__index small { color: var(--fenix-text-dim); font-size: 0.6rem; }
-
-.training-set-row label span,
 .training-field > span {
   display: block;
   margin-bottom: 4px;
@@ -514,7 +408,6 @@
   font-weight: 750;
 }
 
-.training-set-row input,
 .training-field input,
 .training-field select,
 .training-field textarea,
@@ -528,48 +421,9 @@
   background: var(--fenix-bg-soft);
 }
 
-.training-set-row input:disabled { opacity: 0.4; }
-.training-set-row__complete,
-.training-set-row__remove {
-  height: 39px;
-  border-radius: 10px;
-  border: 1px solid var(--fenix-border-soft);
-  color: var(--fenix-text);
-  background: var(--fenix-surface-elevated);
-  font-size: 1.1rem;
-}
-.training-set-row__complete { color: var(--fenix-success); }
-.training-set-row__remove { color: var(--fenix-text-dim); }
-.training-inline-error { grid-column: 1 / -1; margin: 2px 0 0; color: var(--fenix-danger) !important; font-size: 0.7rem; }
-
-.training-set-section > .training-secondary-button { width: 100%; margin-top: 10px; }
-.training-current-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 18px; }
-.training-current-actions .training-secondary-button { grid-column: 1 / -1; }
-
-.training-upcoming-card { margin-top: 12px; }
-.training-upcoming-list { display: grid; gap: 3px; margin-top: 10px; }
-.training-upcoming-list button {
-  display: grid;
-  grid-template-columns: 32px 1fr 24px;
-  gap: 10px;
-  align-items: center;
-  width: 100%;
-  min-height: 55px;
-  border: 0;
-  border-bottom: 1px solid var(--fenix-border-soft);
-  color: var(--fenix-text);
-  background: transparent;
-  text-align: left;
-}
-.training-upcoming-list button.is-current { background: rgb(var(--fenix-accent-rgb) / 0.04); }
-.training-upcoming-list strong,
-.training-upcoming-list small { display: block; }
-.training-upcoming-list small { margin-top: 2px; color: var(--fenix-text-dim); }
-.training-upcoming-list b { color: var(--fenix-text-dim); }
-
 .training-routines-grid,
-.training-exercise-catalog,
-.training-history-list { display: grid; gap: 12px; }
+.training-exercise-catalog { display: grid; gap: 12px; }
+.training-history-list { display: grid; gap: 4px; }
 .training-routine-card__header > strong { color: var(--fenix-accent); }
 
 .training-routine-exercise {
@@ -596,7 +450,7 @@
 .training-field textarea { min-height: 78px; resize: vertical; }
 .training-check-field { display: flex; align-items: center; gap: 8px; margin: 10px 0 14px; color: var(--fenix-text-muted); }
 
-.training-history-card { display: grid; gap: 12px; }
+.training-history-card { display: block; }
 .training-history-card > strong { color: var(--fenix-text-muted); }
 .training-history-card h3 { margin: 4px 0; }
 .training-history-card p { margin: 0; color: var(--fenix-text-dim); }
@@ -651,21 +505,13 @@
   .training-session-hero__header,
   .training-routine-card__header,
   .training-catalog-card__heading { align-items: flex-start; }
-  .training-secondary-programs__grid,
-  .training-reference-grid { grid-template-columns: 1fr; }
+  .training-secondary-programs__grid { grid-template-columns: 1fr; }
   .training-secondary-programs__grid p { min-height: auto; }
   .training-routine-exercise {
     grid-template-columns: repeat(3, 1fr);
   }
   .training-routine-exercise > div { grid-column: 1 / -1; }
   .training-routine-exercise button { grid-column: 1 / -1; }
-  .training-set-row {
-    grid-template-columns: 42px 1fr 1fr 1fr 38px 30px;
-    gap: 4px;
-  }
-  .training-set-row input { padding: 8px 4px; }
-  .training-current-actions { grid-template-columns: 1fr 1fr; }
-  .training-current-actions .training-secondary-button { grid-column: 1 / -1; }
   .training-muscle-map { grid-template-columns: 76px 1fr; }
 }
 
@@ -679,19 +525,11 @@
   .training-secondary-programs,
   .training-routine-card,
   .training-catalog-card,
-  .training-history-card,
-  .training-current-card,
-  .training-upcoming-card { padding: 15px; }
-  .training-set-row { grid-template-columns: 34px 1fr 1fr 1fr 36px; }
-  .training-set-row__remove { display: none; }
-  .training-set-section__title { display: block; }
-  .training-set-section__title small { display: block; margin-top: 3px; text-align: left; }
+  .training-history-card { padding: 15px; }
   .training-attention-banner { display: block; }
   .training-attention-banner span { display: block; margin-top: 3px; }
   .training-main-header { align-items: center; }
   .training-main-header h1 { font-size: 2.35rem; }
-  .training-active-header { margin-left: -12px; margin-right: -12px; padding-left: 12px; padding-right: 12px; }
-  .training-finish-shortcut { padding: 0 9px; font-size: 0.72rem; }
 }
 
 /* F2-B02: same-day planned session identities */
@@ -705,7 +543,7 @@
   top: 5px;
   color: var(--fenix-text);
   font-size: 0.56rem;
-  font-weight: 850;
+  font-weight: 500;
 }
 
 .training-same-day-panel {
@@ -822,3 +660,393 @@
     flex-direction: column;
   }
 }
+
+/* v2.1 media registry */
+
+.training-exercise-visual--v21 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  grid-template-areas: "media anatomy" "controls controls";
+  gap: 10px;
+  align-items: stretch;
+}
+
+.training-exercise-visual__media {
+  grid-area: media;
+  position: relative;
+  min-height: 160px;
+  border: 1px solid var(--fenix-border);
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 35%, rgb(var(--fenix-accent-rgb) / .13), transparent 55%), #08090b;
+}
+
+.training-exercise-visual__media picture {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.training-exercise-visual__media picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* v2.1 · editor, catálogo y selector compartidos */
+.training-page>.ds-app-header,.training-page>.ds-segmented,.training-page>.ds-week-selector,.training-page>.training-selected-day-context,.training-page>.training-routines-screen,.training-page>.training-exercises-screen{margin-left:auto;margin-right:auto;width:min(calc(100% - 32px),488px)}.training-page>.ds-segmented{margin-bottom:14px}.training-selected-day-context{display:grid;gap:3px;margin-top:10px;margin-bottom:10px;padding:10px 12px;border-radius:12px;border:1px solid var(--fenix-border-soft);background:var(--fenix-surface);font-size:11px}.training-selected-day-context small{color:var(--fenix-text-muted)}.training-section-heading--action{align-items:flex-end;gap:12px}.training-section-heading--action p{margin:4px 0 0;color:var(--fenix-text-muted);font-size:11px}.training-routine-card--summary{display:grid;gap:12px}.training-routine-summary-list{display:grid;gap:6px}.training-routine-summary-list>span{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--fenix-border-soft);font-size:12px}.training-routine-summary-list small{color:var(--fenix-text-muted)}.training-routine-editor-v21,.training-custom-exercise-editor,.training-exercise-detail-v21{display:grid;gap:13px}.training-routine-editor-v21__heading{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-top:6px}.training-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.training-editor-grid--sets{grid-template-columns:repeat(3,minmax(0,1fr))}.training-editor-grid label,.training-routine-editor-row label{display:grid;gap:4px;color:var(--fenix-text-muted);font-size:9px}.training-editor-grid input,.training-editor-grid select,.training-routine-editor-row input,.training-routine-editor-row select,.training-custom-exercise-editor input,.training-custom-exercise-editor select,.training-custom-exercise-editor textarea{width:100%;min-height:40px;border:1px solid var(--fenix-border);border-radius:10px;background:var(--fenix-surface);color:var(--fenix-text);padding:8px 9px}.training-routine-editor-row{display:grid;gap:10px;padding:12px;border:1px solid var(--fenix-border);border-radius:14px;background:var(--fenix-surface)}.training-routine-editor-row__top{display:grid;grid-template-columns:28px minmax(0,1fr) 34px 34px 34px;align-items:center;gap:5px}.training-routine-editor-row__top button{min-height:34px;border:1px solid var(--fenix-border);border-radius:8px;background:transparent;color:var(--fenix-text)}.training-catalog-tools{display:grid;grid-template-columns:minmax(0,1fr) 132px;gap:8px;margin:10px 0}.training-catalog-tools input,.training-catalog-tools select{min-height:44px;border:1px solid var(--fenix-border);border-radius:12px;background:var(--fenix-surface);color:var(--fenix-text);padding:0 11px}.training-exercise-catalog--grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.training-exercise-catalog--grid>*{min-width:0}.training-catalog-card--button{width:100%;min-width:0;text-align:left;color:inherit}.training-catalog-card--button .training-catalog-card__heading>div{min-width:0;flex:1 1 auto}.training-catalog-card--button .training-catalog-card__heading h3,.training-catalog-card--button .training-catalog-card__heading p{overflow-wrap:anywhere}.training-catalog-card--button .training-exercise-visual--v21{grid-template-columns:1fr}.training-catalog-card--button .training-exercise-visual__anatomy{display:none}.training-exercise-detail-v21__meta{display:flex;align-items:center;justify-content:space-between;color:var(--fenix-text-muted);font-size:11px}.training-exercise-detail-v21 section{padding:12px;border:1px solid var(--fenix-border);border-radius:12px;background:var(--fenix-surface)}.training-exercise-detail-v21 section p{margin:6px 0 0;color:var(--fenix-text-muted);line-height:1.45}.training-custom-exercise-editor textarea{min-height:90px;resize:vertical}@media(max-width:390px){.training-editor-grid--sets,.training-exercise-catalog--grid{grid-template-columns:1fr 1fr}.training-catalog-tools{grid-template-columns:1fr}.training-routine-editor-row__top{grid-template-columns:24px minmax(0,1fr) 32px 32px 32px}}
+
+/* v2.1 Golden 08 · Routine detail */
+.training-routine-detail-v21{display:grid;gap:14px}
+.training-routine-detail-v21__hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(138px,.95fr);gap:14px;padding:15px;border:1px solid var(--fenix-border);border-radius:18px;background:var(--fenix-carbon),var(--fenix-surface)}
+.training-routine-detail-v21__hero h2{margin:3px 0 4px;font-size:25px;letter-spacing:-.025em}
+.training-routine-detail-v21__hero p{margin:0;color:var(--fenix-text-muted);font-size:11px;line-height:1.5}
+.training-routine-detail-v21__meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.training-routine-detail-v21__section{display:grid;gap:8px}
+.training-routine-detail-v21__section>header{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:0 2px}
+.training-routine-detail-v21__section>header>strong{font-size:10px;color:var(--fenix-text-muted);font-weight:700}
+.training-routine-detail-v21__list{display:grid;gap:7px}
+.training-routine-detail-v21__exercise{display:grid;grid-template-columns:38px 76px minmax(0,1fr);gap:10px;align-items:center;min-height:82px;padding:8px;border:1px solid var(--fenix-border);border-radius:14px;background:var(--fenix-surface)}
+.training-routine-detail-v21__order{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#1a1c20;color:var(--fenix-text);font-weight:850}
+.training-routine-detail-v21__exercise-visual{height:64px;overflow:hidden;border-radius:10px}
+.training-routine-detail-v21__exercise-visual .training-exercise-visual--v21{display:block;height:100%}
+.training-routine-detail-v21__exercise-visual .training-exercise-visual__media{height:100%;min-height:0}
+.training-routine-detail-v21__exercise-visual .training-exercise-visual__anatomy{display:none}
+.training-routine-detail-v21__exercise>div:last-child{display:grid;gap:3px;min-width:0}
+.training-routine-detail-v21__exercise strong{font-size:13px}
+.training-routine-detail-v21__exercise span,.training-routine-detail-v21__exercise small{font-size:10px;color:var(--fenix-text-muted)}
+.training-routine-detail-v21__actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:sticky;bottom:0;padding-top:6px;background:linear-gradient(transparent,var(--fenix-bg) 24%)}
+@media(max-width:390px){.training-routine-detail-v21__hero{grid-template-columns:1fr}.training-routine-detail-v21__hero .training-routine-map{max-height:210px}.training-routine-detail-v21__exercise{grid-template-columns:34px 68px minmax(0,1fr)}}
+
+/* v2.1 mobile interaction floor */
+.training-inline-actions button{min-height:44px}
+.training-editor-grid input,.training-editor-grid select,.training-routine-editor-row input,.training-routine-editor-row select,.training-custom-exercise-editor input,.training-custom-exercise-editor select{min-height:44px}
+.training-routine-editor-row__top{grid-template-columns:28px minmax(0,1fr) 44px 44px 44px}
+.training-routine-editor-row__top button{min-width:44px;min-height:44px}
+
+/* v2.1 Golden parity · Training mobile composition */
+@media (max-width:600px){
+  .training-page{width:100%;max-width:none;margin:0;padding:0 15px calc(72px + env(safe-area-inset-bottom))}
+  .training-page>.ds-app-header,.training-page>.ds-segmented,.training-page>.ds-week-selector,.training-page>.training-selected-day-context,.training-page>.training-routines-screen,.training-page>.training-exercises-screen{width:100%;max-width:none;margin-left:0;margin-right:0}
+  .training-page>.ds-segmented{margin-bottom:10px}
+  .training-selected-day-context{gap:1px;margin:5px 0;padding:6px 8px;border-radius:10px;font-size:9px}.training-selected-day-context small{font-size:8px}
+  .training-session-hero,.training-empty-card,.training-secondary-programs,.training-routine-card,.training-catalog-card,.training-history-card{padding:9px;border-radius:13px}.training-status-pill{padding:4px 6px;font-size:8px}
+  .training-muscle-map{grid-template-columns:56px minmax(0,1fr);gap:7px;margin:7px 0;padding:6px 7px;border-radius:11px}.training-muscle-map__figure{height:58px}.training-muscle-map__figure svg{height:56px}.training-muscle-map__content strong{margin:2px 0;font-size:10px;line-height:1.15}.training-muscle-map__content small{display:none}
+  .training-session-preview{margin-bottom:5px}.training-session-preview>div{grid-template-columns:24px 1fr;gap:5px;padding:3px 0}.training-session-preview>div>span{width:22px;height:22px;border-radius:6px;font-size:8px}.training-session-preview strong{font-size:10px}.training-session-preview small,.training-session-preview__more{font-size:8px}.training-session-preview__more{margin-top:3px}
+  .training-primary-button,.training-secondary-button,.training-danger-button,.training-ghost-button{min-height:44px;padding-inline:9px;border-radius:10px;font-size:10px}
+  .training-home-grid{gap:5px;margin:5px 0}.training-mini-card{min-height:74px;padding:8px;border-radius:12px}.training-mini-card strong{margin:2px 0;font-size:16px}.training-mini-card small{font-size:8px;line-height:1.2}
+  .training-secondary-programs{margin-top:5px}.training-secondary-programs__grid{gap:5px;margin-top:5px}.training-secondary-programs__grid article{padding:7px;border-radius:10px}.training-secondary-programs__grid h3{margin:2px 0;font-size:11px}.training-secondary-programs__grid p{margin-bottom:4px;font-size:8px;line-height:1.2}.training-secondary-programs__grid button{min-height:44px;font-size:9px}
+  .training-section-heading{gap:7px;margin-bottom:5px}.training-section-heading h2{font-size:18px;margin:2px 0}.training-section-heading--action{align-items:center;gap:6px}.training-section-heading--action p{margin:2px 0 0;font-size:8.5px;line-height:1.25}.training-section-heading--action>.ds-button{flex:0 0 auto;padding:0 10px;font-size:9px}
+  .training-routines-grid,.training-exercise-catalog,.training-history-list{gap:5px}
+  .training-routine-card--summary{grid-template-columns:minmax(0,1fr) 84px;grid-template-areas:"head map" "actions actions";gap:5px;align-items:center}.training-routine-card--summary>.training-routine-card__header{grid-area:head}.training-routine-card--summary>.training-anatomy--compact{grid-area:map;width:84px;max-width:84px;margin:0;padding:3px}.training-routine-card--summary>.training-routine-summary-list{display:none}.training-routine-card--summary>.training-inline-actions{grid-area:actions}
+  .training-routine-card__header h2{margin:2px 0;font-size:14px}.training-routine-card__header p{display:-webkit-box;overflow:hidden;margin:0;font-size:8.5px;line-height:1.2;-webkit-line-clamp:2;-webkit-box-orient:vertical}.training-routine-card__header>strong{font-size:9px}.training-anatomy--compact .training-anatomy__figures svg{height:68px}
+  .training-inline-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}.training-inline-actions button{min-height:44px;padding:0 4px;font-size:8px;border-radius:9px}
+  .training-catalog-tools{grid-template-columns:minmax(0,1fr) 112px;gap:5px;margin:5px 0}.training-catalog-tools input,.training-catalog-tools select{min-height:44px;padding:0 8px;border-radius:10px;font-size:10px}
+  .training-exercise-catalog--grid{grid-template-columns:1fr;gap:4px}.training-exercise-catalog--grid>*{min-width:0}.training-catalog-card--button{display:grid;grid-template-columns:78px minmax(0,1fr);align-items:center;gap:7px;min-height:76px;padding:5px 7px}.training-catalog-card--button .training-exercise-visual--v21{display:block}.training-catalog-card--button .training-exercise-visual__media{min-height:64px;height:64px;border-radius:10px}.training-catalog-card--button .training-exercise-motion{padding:6px}.training-catalog-card--button .training-exercise-motion>svg{max-height:56px}.training-catalog-card--button .training-catalog-card__heading{gap:5px;align-items:center}.training-catalog-card--button .training-catalog-card__heading span{font-size:7px}.training-catalog-card--button .training-catalog-card__heading h3{margin:2px 0;font-size:11px;line-height:1.1}.training-catalog-card--button .training-catalog-card__heading p{font-size:8px;line-height:1.15}.training-catalog-card--button .ds-pill{font-size:6.5px}
+  .training-history-card h3{font-size:13px}.training-history-card p{font-size:10px}.training-history-exercises{gap:0}.training-history-exercises>div{padding:5px 0;font-size:9px}.training-history-exercises small{font-size:7.5px}
+  .training-page--active{padding-top:0}.training-back-button{width:44px;height:44px;border-radius:10px}.training-exercise-orb{width:52px;min-width:52px;height:52px;border-radius:13px}
+  .training-routine-detail-v21{gap:7px}.training-routine-detail-v21__hero{grid-template-columns:minmax(0,1fr) 112px;gap:7px;padding:9px;border-radius:14px}.training-routine-detail-v21__hero h2{font-size:19px}.training-routine-detail-v21__hero p{font-size:9px;line-height:1.3}.training-routine-detail-v21__meta{gap:4px;margin-top:6px}.training-routine-detail-v21__hero .training-anatomy{grid-template-columns:1fr;padding:4px}.training-routine-detail-v21__hero .training-anatomy__figures svg{height:92px}.training-routine-detail-v21__hero .training-anatomy__copy{display:none}.training-routine-detail-v21__section{gap:5px}.training-routine-detail-v21__list{gap:4px}.training-routine-detail-v21__exercise{grid-template-columns:28px 58px minmax(0,1fr);gap:6px;min-height:66px;padding:5px;border-radius:11px}.training-routine-detail-v21__order{width:28px;height:28px;font-size:10px}.training-routine-detail-v21__exercise-visual{height:54px}.training-routine-detail-v21__exercise strong{font-size:10px}.training-routine-detail-v21__exercise span,.training-routine-detail-v21__exercise small{font-size:7.5px}.training-routine-detail-v21__actions{gap:5px}
+  .training-exercise-detail-v21{gap:7px}.training-exercise-detail-v21>.training-exercise-visual--v21{grid-template-columns:minmax(0,1fr) 92px}.training-exercise-detail-v21>.training-exercise-visual--v21 .training-exercise-visual__media{min-height:210px}.training-exercise-detail-v21 section{padding:8px}.training-exercise-detail-v21 section p{font-size:9px;line-height:1.3}.training-field{margin:7px 0}.training-field span{font-size:8px}.training-field textarea{min-height:70px}
+  .training-routine-editor-v21,.training-custom-exercise-editor{gap:7px}.training-routine-editor-row{gap:6px;padding:7px;border-radius:11px}.training-editor-grid{gap:5px}.training-editor-grid--sets{grid-template-columns:repeat(3,minmax(0,1fr))}.training-routine-editor-row__top{grid-template-columns:22px minmax(0,1fr) 44px 44px 44px;gap:3px}.training-custom-exercise-editor textarea{min-height:72px}
+}
+
+.training-exercise-visual--v21>.training-exercise-anatomy{grid-area:anatomy}
+.training-exercise-visual__credit{position:absolute;right:5px;bottom:5px;padding:2px 5px;border-radius:4px;background:#08090bcc;color:var(--fenix-muted);font-size:8px;pointer-events:none}
+.training-exercise-visual--v21>.training-motion-controls{grid-area:controls}
+
+.training-history-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:18px 12px;margin:12px 0;border:1px solid var(--fenix-border);border-radius:16px;background:var(--fenix-surface)}
+.training-history-summary>div{display:flex;flex-direction:column;gap:6px;text-align:center;min-width:0}
+.training-history-summary .ds-section-icon{width:23px;height:23px;align-self:center;color:#f00}
+.training-history-summary>div+div{border-left:1px solid #242426}
+.training-history-summary strong{font-size:22px;font-weight:600}.training-history-summary span{font-size:11px;color:var(--fenix-muted)}
+.training-history-heading{font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;margin:18px 0 10px}
+.training-history-card>summary{display:grid;grid-template-columns:60px 28px minmax(0,1fr) 24px 12px;align-items:center;gap:9px;cursor:pointer;min-height:32px;list-style:none}
+.training-history-card>summary::-webkit-details-marker{display:none}
+.training-history-date{text-align:left;border-right:1px solid #29292b;padding-right:8px}
+.training-history-date strong{display:block;font-size:12px;font-weight:500}
+.training-history-date span{display:block;font-size:10px;color:#999;text-transform:capitalize}
+.training-history-status{display:grid;place-items:center;width:19px;height:19px;border:1px solid currentColor;border-radius:50%;font-size:14px;color:#bbb}
+.training-history-status.is-completed{color:#12ca22}
+.training-history-card>summary>.ds-section-icon{width:24px;height:27px;color:#fa101a}
+.training-history-card>summary>.ds-section-icon:last-child{width:12px;height:18px;color:#888}
+.training-history-card[open] .training-history-exercises{margin-top:12px}
+
+
+.anatomy-base { fill:#292c2f; stroke:#55595d; stroke-width:1; }
+.anatomy-zone { fill:#303337; stroke:#484d51; stroke-width:.7; }
+.anatomy-zone.is-active { fill:var(--fenix-accent); stroke:#ff393a; }
+.training-anatomy { display:grid; grid-template-columns:116px minmax(0,1fr); gap:10px; align-items:center; min-width:0; }
+.training-anatomy__figures { display:flex; align-items:center; min-width:0; }
+.training-anatomy__figures svg { width:50%; height:116px; }
+.training-anatomy__copy { font-size:11px; color:var(--fenix-text-muted); }
+.training-anatomy__copy strong,.training-anatomy__copy small { display:block; margin-top:4px; }
+.training-anatomy--compact { display:block; }
+.training-exercise-anatomy { display:grid; place-items:center; min-width:0; }
+.training-exercise-anatomy svg { width:100%; max-height:160px; }
+.training-session-overview .training-anatomy { margin: 0; padding: 0; }
+.training-session-overview .training-anatomy__figures svg { width: 50%; height: 170px; }
+
+.training-motion-controls{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.training-motion-controls button{min-height:44px;padding:0 12px;border:1px solid var(--fenix-border);border-radius:10px;background:var(--fenix-surface);color:var(--fenix-muted);font-size:12px}
+
+.training-exercise-catalog--grid{grid-template-columns:minmax(0,1fr)}
+.training-catalog-card--button{display:grid;grid-template-columns:86px minmax(0,1fr) 55px;align-items:center;gap:8px;padding:8px;min-height:100px}
+.training-catalog-card--button .training-exercise-visual--v21{display:contents}
+.training-catalog-card--button .training-exercise-visual__media{grid-area:auto;grid-column:1;grid-row:1;min-height:82px;border:0;background:transparent}
+.training-catalog-card--button .training-exercise-anatomy{grid-area:auto;grid-column:3;grid-row:1}
+.training-catalog-card--button .training-catalog-card__heading{grid-column:2;grid-row:1;display:block}
+.training-catalog-card--button .training-catalog-card__heading h3{font-size:13px;font-weight:550;line-height:1.3;margin:3px 0}
+.training-catalog-card--button .training-catalog-card__heading p{font-size:10px;line-height:1.3}
+.training-catalog-card--button .training-catalog-card__heading .ds-pill{font-size:7px;min-height:18px;margin-top:4px}
+.training-unavailable-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.training-unavailable-actions>*,.training-unavailable-action{min-height:44px;border:1px solid var(--fenix-border);border-radius:10px;padding:8px;background:var(--fenix-surface);color:var(--fenix-muted);font-size:10px;text-align:center}
+.training-unavailable-actions small,.training-unavailable-action small{display:block;font-size:9px;margin-top:4px}
+.training-unavailable-action{width:100%;margin-top:8px}
+
+/* Training home: semantic header, prescribed exercise list and supporting anatomy. */
+.training-session-hero{position:relative;margin-top:10px;padding:13px 11px 10px;background:linear-gradient(125deg,#0d0d0e,#070708);border-color:#303032}
+.training-session-hero__header{display:block;margin-bottom:17px}
+.training-session-hero .training-kicker{font-size:10px;letter-spacing:.13em}
+.training-session-title{display:flex;align-items:center;gap:10px;margin:7px 0 9px}
+.training-session-title h2{font-size:28px;margin:0;line-height:1;font-weight:700}
+.training-session-title .training-status-pill{border:0;background:#270607;color:#ff1920;text-transform:none;font-size:11px;font-weight:400;padding:6px 9px}
+.training-session-hero__header p{display:flex;align-items:center;gap:5px;font-size:10px;margin:0;line-height:1.4;flex-wrap:wrap}
+.training-session-hero__header p .ds-section-icon{width:14px;height:14px}
+.training-session-menu{position:absolute;right:3px;top:2px;z-index:3}
+.training-session-menu summary{list-style:none;width:44px;height:44px;display:grid;place-items:center;cursor:pointer;color:#777;font-size:18px}
+.training-session-menu summary::-webkit-details-marker{display:none}
+.training-session-menu>div{position:absolute;right:6px;top:38px;min-width:130px;display:grid;border:1px solid #444;border-radius:8px;background:#141416;padding:5px}
+.training-session-menu button{min-height:44px;text-align:left;border:0;border-radius:4px;background:transparent;color:white;padding:0 8px;font-size:12px}
+.training-session-overview{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);align-items:end;gap:5px;margin-bottom:10px}
+.training-session-preview{margin:0;min-width:0;gap:0}
+.training-session-preview>.training-kicker{color:#bbb;font-size:9px;margin:0 0 7px 2px;letter-spacing:.12em}
+.training-session-preview>div{grid-template-columns:30px minmax(0,1fr);gap:6px;align-items:center;min-height:45px;border:1px solid #28282a;background:linear-gradient(110deg,#0c0c0d,#111112);padding:6px}
+.training-session-preview>div+div{border-top:0}
+.training-session-preview>div:nth-child(2){border-radius:10px 10px 0 0}
+.training-session-preview>div:last-of-type{border-radius:0 0 10px 10px}
+.training-session-preview>div>span{width:28px;height:28px;display:grid;place-items:center;background:transparent;color:#fa0712}
+.training-session-preview strong{font-size:11px;font-weight:400;line-height:1.35}
+.training-session-preview small{font-size:10px;line-height:1.35;color:#aaa;margin-top:2px}
+.training-session-overview .training-anatomy__figures svg{height:200px}
+.training-session-hero>.training-primary-button{background:linear-gradient(110deg,#d40000,#c40005);display:flex;align-items:center;justify-content:center;gap:10px;width:100%;font-size:14px;font-weight:600;min-height:44px;border-radius:10px}
+.training-session-hero>.training-primary-button .ds-section-icon{width:18px;height:18px;fill:white;stroke:none}
+
+@media (max-width:600px){
+  .training-page>.training-session-hero .training-session-hero__header{margin-bottom:10px}
+  .training-page>.training-session-hero .training-session-overview{margin-bottom:5px}
+  .training-page>.training-session-hero .training-session-preview>div{min-height:42px;padding-top:4px;padding-bottom:4px}
+}
+.training-home-grid{gap:8px;margin:10px 0 12px}
+.training-home-grid>.training-mini-card{min-height:103px;padding:12px 13px;border-radius:13px;background:linear-gradient(115deg,#0d0d0e,#070708)}
+.training-mini-card>span{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:400;letter-spacing:0}
+.training-mini-card .ds-section-icon{width:15px;height:15px;color:#fb0813}
+.training-mini-card>strong{font-size:26px;line-height:1;margin:9px 0 6px}
+.training-mini-card>strong em{font-size:16px;font-style:normal;font-weight:600}
+.training-mini-card>small{font-size:10px;color:#999}
+.training-mini-card progress{width:100%;height:8px;margin-top:7px;border:0;border-radius:99px;background:#252526;display:block}
+.training-mini-card progress::-webkit-progress-bar{background:#252526;border-radius:99px}
+.training-mini-card progress::-webkit-progress-value{background:#e2070c;border-radius:99px}
+
+/* Routine catalogue owns its plan overview and one-line reusable definitions. */
+.training-week-plan{padding:12px 9px 9px;margin:10px 0;border:1px solid #29292b;border-radius:13px;background:linear-gradient(125deg,#101011,#070708)}
+.training-week-plan>header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.training-week-plan>header>.ds-section-icon{color:#ff0a14;width:26px;height:26px}
+.training-week-plan h2{margin:0;font-size:15px;font-weight:600}
+.training-week-plan p{margin:4px 0 0;color:#999;font-size:10px}
+.training-week-plan>header>span{margin-left:auto;color:#aaa;font-size:10px}
+.training-week-plan__days{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px}
+.training-week-plan__days button{min-height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:0;padding:6px 3px;border:1px solid #29292b;border-radius:9px;background:transparent;color:white}
+.training-week-plan__days button.is-current{background:linear-gradient(135deg,#85080d,#4c0607);border-color:#f30911}
+.training-week-plan__days span{font-size:10px;color:#aaa}.training-week-plan__days strong{font-size:11px;font-weight:400}
+.training-week-plan__days .ds-section-icon{color:#ff101c;width:24px;height:24px}
+.training-week-plan__days i{font-size:18px;font-style:normal;color:#aaa}.training-week-plan__days i[aria-label="Completada"]{color:#4cda64}.training-week-plan__days i[aria-label="Hoy"]{color:#ff0815}
+.training-text-action{min-height:32px;border:0;background:transparent;color:#ff1520;font-size:12px}
+.training-routines-grid{display:grid;grid-template-columns:1fr;gap:6px}
+.training-routine-card--summary{position:relative;display:grid;grid-template-columns:38px minmax(0,1fr) 88px 30px;grid-template-areas:none;gap:8px;align-items:center;min-height:69px;padding:5px 8px;background:linear-gradient(110deg,#101011,#080809)}
+.training-routine-icon{display:grid;place-items:center;width:38px;height:38px;border:1px solid #333;border-radius:50%;color:#ff0a15}
+.training-routine-icon .ds-section-icon{width:27px;height:27px}
+.training-routine-card--summary>.training-routine-card__header{display:block;grid-area:auto;min-width:0}
+.training-routine-card--summary .training-routine-card__header h2{font-size:13px;font-weight:600;margin:0 0 4px}
+.training-routine-card--summary .training-routine-card__header p{display:block;font-size:10px;line-height:1.25;margin:0 0 4px;overflow:visible}
+.training-routine-card__header>small{display:flex;align-items:center;gap:4px;font-size:9px;color:#aaa}.training-routine-card__header>small .ds-section-icon{width:12px;height:12px}
+.training-routine-card--summary>.training-anatomy--compact{grid-area:auto;width:88px;max-width:none;margin:0;padding:0}
+.training-routine-card--summary>.training-anatomy--compact svg{height:65px}
+.training-routine-open{display:flex;gap:6px;align-items:center;justify-content:center;min-width:30px;min-height:44px;border:0;background:transparent;color:#ff1320;font-size:11px;padding:0}
+.training-routine-open .ds-section-icon{width:9px;height:16px;color:#aaa}
+.training-routine-options{position:absolute;right:0;top:0;z-index:2}
+.training-routine-options summary{width:28px;height:24px;display:grid;place-items:center;color:#888;font-size:11px;cursor:pointer;list-style:none}
+.training-routine-options summary::-webkit-details-marker{display:none}
+.training-routine-options>div{position:absolute;right:0;top:24px;min-width:130px;border:1px solid #333;border-radius:8px;background:#151517;padding:4px;display:grid}
+.training-routine-options button{min-height:44px;padding:6px 9px;background:transparent;color:#eee;border:0;text-align:left}
+.training-catalog-tools{display:block;margin:10px 0}.training-catalog-tools input{width:100%;font-size:13px;background:linear-gradient(120deg,#101011,#080809);border-color:#29292b;min-height:37px}
+.training-muscle-filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:9px 0 7px;padding-bottom:3px}
+.training-muscle-filters button{flex:0 0 auto;min-height:27px;padding:0 10px;font-size:10px;border:1px solid #333;border-radius:20px;color:#aaa;background:#0c0c0d}
+.training-muscle-filters button[aria-pressed="true"]{background:linear-gradient(130deg,#970609,#600406);border-color:#f0141a;color:#fff}
+.training-catalog-label{display:flex;justify-content:space-between;align-items:center;margin:7px 0;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#999}
+.training-catalog-label button{min-height:28px;font-size:10px;background:transparent;border:0;color:#ccc;padding:0 2px}
+.training-exercise-catalog--grid{display:grid;grid-template-columns:1fr;gap:5px}
+.training-catalog-card--button{position:relative;display:grid;grid-template-columns:74px minmax(0,1fr) 54px 12px;gap:7px;min-height:72px;padding:5px 7px;border-radius:10px;background:linear-gradient(120deg,#0c0c0d,#09090a)}
+.training-catalog-card--button .training-exercise-visual__media{height:62px;min-height:62px}
+.training-catalog-card--button .training-exercise-anatomy svg{height:62px}
+.training-catalog-card--button .training-catalog-card__heading h3{font-size:13px;font-weight:500;line-height:1.2;margin:0 0 4px}
+.training-catalog-card--button .training-catalog-card__heading p{font-size:10px;line-height:1.3;margin:0;color:#aaa}
+.training-catalog-card--button .training-catalog-card__heading small{display:block;font-size:9px;margin-top:5px;color:#888}
+.training-catalog-card--button>.ds-section-icon{grid-column:4;grid-row:1;width:9px;height:20px;color:#aaa}
+
+/* Full-page Training sheets share the real shell navigation and domain handlers. */
+.training-sheet{background:#050506}
+.training-overlay-header{padding:0 14px}
+.training-overlay-header .ds-app-header{min-height:104px;padding-top:4px}
+.training-overlay-header .ds-app-header__main{gap:10px}
+.training-overlay-header .ds-app-header__back{width:30px;height:30px;border-radius:9px;margin:0}
+.training-overlay-header .ds-app-header h1{font-size:34px}
+.training-overlay-header .ds-app-header p{font-size:12px}
+.training-overlay-header .ds-app-header:not(.ds-app-header--back){min-height:92px}
+.training-sheet--routine-editor .training-overlay-header .ds-app-header{height:111px;min-height:111px;margin-top:-15px;padding-top:0;padding-bottom:0}
+.training-overlay-header .ds-segmented{margin:0 0 8px}
+.training-sheet .ds-sheet__content{padding:0 14px calc(82px + env(safe-area-inset-bottom))}
+.training-sheet--routine-editor .ds-sheet__content{padding-left:4px;padding-right:4px}
+.training-sheet--routine-detail .ds-sheet__content{padding-left:4px;padding-right:4px}
+.training-sheet--routine-detail .training-overlay-header .ds-app-header{min-height:92px;height:92px;padding-bottom:0}
+.training-sheet .training-kicker{font-weight:500}
+.training-routine-detail-v21{gap:10px}
+.training-routine-detail-v21__hero{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 128px;gap:5px;padding:8px 10px;min-height:148px;border-radius:11px;background:linear-gradient(120deg,#101011,#080809)}
+.training-routine-detail-v21__icon{position:absolute;left:10px;top:12px;display:grid;place-items:center;width:48px;height:48px;border:1px solid #3a3a3d;border-radius:50%;color:var(--fenix-accent)}
+.training-routine-detail-v21__icon .ds-section-icon{width:28px;height:28px}
+.training-routine-detail-v21__hero>div:first-of-type{padding-left:63px}
+.training-routine-detail-v21__hero h2{font-size:22px;line-height:1.1;margin:2px 0 8px}
+.training-routine-detail-v21__hero p{position:absolute;left:10px;right:138px;top:94px;font-size:9px;line-height:1.45;margin:0;color:#aaa}
+.training-routine-detail-v21__hero .training-anatomy{display:block;padding:0}
+.training-routine-detail-v21__hero .training-anatomy__copy{display:none}
+.training-routine-detail-v21__hero .training-anatomy__figures svg{height:132px}
+.training-routine-detail-v21__meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.training-routine-detail-v21__meta .ds-pill{background:transparent;color:#aaa;font-size:10px;padding:0;min-height:20px;text-transform:none;font-weight:400}
+.training-routine-detail-v21__section>header{font-size:11px;font-weight:400;color:#aaa;padding:4px 0}
+.training-routine-detail-v21__section>header .training-kicker{font-size:11px;color:#aaa}
+.training-routine-detail-v21__list{gap:4px}
+.training-routine-detail-v21__exercise{display:grid;grid-template-columns:30px 54px minmax(0,1fr);gap:9px;min-height:45px;padding:3px 7px;border-radius:9px;background:linear-gradient(120deg,#101011,#080809)}
+.training-routine-detail-v21__order{width:25px;height:25px;border-radius:50%;background:#161617;border:1px solid #333;font-size:13px;font-weight:400}
+.training-routine-detail-v21__exercise-visual{height:40px}
+.training-routine-detail-v21__exercise-visual .training-exercise-visual--v21{display:block;height:40px}
+.training-routine-detail-v21__exercise-visual .training-exercise-anatomy{display:none}
+.training-routine-detail-v21__exercise-visual .training-exercise-visual__media{height:40px;min-height:40px;border-radius:5px}
+.training-routine-detail-v21__exercise strong{font-size:12px;font-weight:400;line-height:1.2}
+.training-routine-detail-v21__exercise span{font-size:10px;line-height:1.3}
+.training-routine-detail-v21__exercise small{font-size:8px}
+.training-routine-detail-v21__exercise small{display:none}
+.training-routine-detail-v21__meta>.ds-pill:last-child{display:none}
+.training-routine-detail-v21__actions{display:grid;grid-template-columns:1fr;gap:8px}
+.training-routine-detail-v21__actions button{min-height:40px;font-size:13px;font-weight:500}
+.training-routine-detail-v21__actions .ds-button--primary{background:linear-gradient(110deg,#d30000,#be0004)}
+.training-exercise-detail-v21{display:grid;gap:7px}
+.training-exercise-detail-v21 h2,.training-exercise-detail-v21 h3{margin:0;font-weight:600}
+.training-exercise-detail-v21>section{padding:10px 8px;background:linear-gradient(120deg,#101011,#080809);border-color:#29292b;border-radius:11px}
+.training-exercise-detail-hero{display:grid;grid-template-columns:46% minmax(0,1fr) 16%;grid-template-rows:auto;position:relative;align-items:center;min-height:163px;gap:6px}
+.training-exercise-detail-hero .training-exercise-visual--v21{display:contents}
+.training-exercise-detail-hero .training-exercise-visual__media{grid-area:auto;grid-column:1;grid-row:1;min-height:140px;height:140px;border:0;background:transparent}
+.training-exercise-detail-hero .training-exercise-anatomy{grid-area:auto;grid-column:3;grid-row:1}
+.training-exercise-detail-hero .training-exercise-anatomy svg{height:120px}
+.training-exercise-detail-hero .training-motion-controls{position:absolute;bottom:3px;left:3px;display:flex;gap:3px;z-index:1}
+.training-exercise-detail-hero .training-motion-controls button{min-height:24px;padding:2px 4px;font-size:8px;border-radius:5px;background:#101012dc}
+.training-exercise-detail-hero__copy{grid-column:2;grid-row:1;min-width:0}
+.training-exercise-detail-hero__copy h2{font-size:19px;line-height:1.15;white-space:normal}
+.training-exercise-detail-hero__copy>.ds-pill,.training-exercise-detail-hero__copy>div .ds-pill{font-size:9px;font-weight:400;text-transform:none;padding:3px 6px;margin-top:8px}
+.training-exercise-detail-hero__copy>p{display:flex;gap:7px;align-items:center;font-size:10px;margin:14px 0 0;line-height:1.4}
+.training-exercise-detail-hero__copy>p .ds-section-icon{width:20px;height:20px}
+.training-exercise-detail-hero__copy small{display:block;font-size:9px;color:#aaa}
+.training-exercise-last,.training-exercise-technique{display:grid;grid-template-columns:43px minmax(0,1fr);gap:9px}
+.training-detail-icon{display:grid;place-items:center;width:40px;height:40px;border:1px solid #62080d;border-radius:50%;color:#ff111b}
+.training-detail-icon .ds-section-icon{width:25px;height:25px}
+.training-exercise-last{min-height:62px;align-items:center}
+.training-exercise-detail-v21 h3{font-size:12px;line-height:1.3}
+.training-exercise-detail-v21 .training-exercise-last p{font-size:11px;margin:5px 0;color:#ddd}
+.training-exercise-last small{font-size:8px;color:#aaa}
+.training-exercise-technique{min-height:135px}
+.training-exercise-technique ol{list-style:none;counter-reset:technique;padding:0;margin:8px 0 0;display:grid;gap:7px}
+.training-exercise-technique li{counter-increment:technique;display:grid;grid-template-columns:20px minmax(0,1fr);gap:9px;font-size:10px;line-height:1.45;color:#bbb}
+.training-exercise-technique li:before{content:counter(technique);display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#bf080d,#720609);color:white}
+.training-exercise-muscles{display:grid;grid-template-columns:43px minmax(0,1fr) 96px;gap:9px;align-items:start;min-height:123px}
+.training-exercise-muscles p{font-size:10px;border-top:1px solid #222;padding-top:7px;margin-top:7px}
+.training-exercise-muscles small{display:block;margin-top:4px;font-size:9px;color:#aaa;line-height:1.35}
+.training-exercise-muscles .training-exercise-anatomy svg{height:110px}
+.training-exercise-contract-actions{display:grid;grid-template-columns:1.2fr 1fr;gap:7px}
+.training-exercise-contract-actions button{min-height:42px;border:1px solid #333;border-radius:10px;background:#0e0e0f;color:#aaa;font-size:12px;cursor:not-allowed}
+.training-exercise-contract-actions button:first-child{border-color:#b5090f;background:linear-gradient(110deg,#7f0307,#580207);color:#ddd}
+.training-exercise-contract-actions small{display:block;font-size:8px;margin-top:2px}
+.training-personal-context summary{min-height:28px;padding:6px 0;color:#aaa;font-size:11px;cursor:pointer}
+.training-routine-definition{padding:5px 9px;border:1px solid #333;border-radius:10px;background:linear-gradient(120deg,#101011,#080809)}
+.training-routine-definition header{display:flex;justify-content:space-between;align-items:center}
+.training-routine-definition h2{font-size:16px;font-weight:600;margin:0 0 5px}
+.training-routine-definition header button{min-height:24px;border:0;background:transparent;color:#ff1320;font-size:10px}
+.training-routine-definition .training-editor-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.training-routine-definition .training-field{margin:1px 0}
+.training-routine-definition input,.training-routine-definition select{min-height:31px;font-size:12px;padding:4px 6px}
+.training-routine-definition .training-field>span{font-size:9px}
+.training-routine-definition>.training-field,.training-routine-definition>.training-editor-grid>.training-field{position:relative;display:block}.training-routine-definition>.training-field>span,.training-routine-definition>.training-editor-grid>.training-field>span{position:absolute;z-index:1;top:5px;left:8px;font-size:8px}.training-routine-definition>.training-field input,.training-routine-definition>.training-editor-grid input,.training-routine-definition>.training-editor-grid select{min-height:39px;padding:14px 7px 2px}
+.training-routine-editor-v21{gap:5px}
+.training-routine-editor-v21__heading{display:flex;justify-content:space-between;padding:5px 0;color:#aaa;font-size:10px;font-weight:400}
+.training-routine-editor-row{display:block;padding:0;border:1px solid #303032;border-radius:9px;background:linear-gradient(120deg,#0e0e0f,#070708)}
+.training-routine-editor-row>summary{display:grid;grid-template-columns:12px 24px 40px minmax(0,1fr) 12px;gap:7px;min-height:37px;align-items:center;padding:2px 7px;cursor:pointer;list-style:none}
+.training-routine-editor-row>summary::-webkit-details-marker{display:none}
+.training-routine-editor-row>summary>.ds-section-icon{width:12px;height:18px;color:#aaa}
+.training-routine-editor-row>summary>strong{display:grid;place-items:center;width:23px;height:23px;border:1px solid #333;border-radius:50%;font-size:11px;font-weight:400;background:#18181a}
+.training-routine-editor-row>summary>span{font-size:11px;line-height:1.3}
+.training-routine-editor-row>summary small{display:block;color:#aaa;font-size:9px;line-height:1.35;margin-top:4px}
+.training-routine-editor-row>summary .training-exercise-visual--v21{display:block}
+.training-routine-editor-row>summary .training-exercise-anatomy{display:none}
+.training-routine-editor-row>summary .training-exercise-visual__media{min-height:32px;height:32px;background:transparent;border:0;border-radius:4px}
+.training-routine-editor-row[open]>.training-editor-grid,.training-routine-editor-row[open]>.training-routine-editor-row__top{margin:8px}
+.training-add-exercise{min-height:34px;border:1px dashed #444;border-radius:8px;background:transparent;color:#ff101a;font-size:12px}
+.training-routine-notes{border:1px solid #333;border-radius:9px;padding:7px}
+.training-routine-notes summary{display:flex;align-items:center;gap:9px;min-height:30px;list-style:none;font-size:11px;cursor:pointer}
+.training-routine-notes summary>.ds-section-icon{width:18px;height:22px;color:#aaa}
+.training-routine-notes summary>span{flex:1;min-width:0}
+.training-routine-notes summary small{display:block;font-size:9px;color:#aaa;line-height:1.35;margin-top:4px}
+.training-routine-editor-v21>.ds-button{min-height:34px;font-size:12px;background:linear-gradient(110deg,#e00000,#bb0004);font-weight:600}
+.training-routine-editor-v21>.ds-dialog__actions{margin-top:2px;gap:6px}
+.training-routine-editor-v21>.ds-dialog__actions button{min-height:32px;font-size:11px;padding:3px}
+.training-archive-routine{min-height:32px;border:1px solid #333;border-radius:10px;background:transparent;color:#aaa;font-size:10px}
+.training-unavailable-action small{display:block;font-size:8px}
+.training-overlay-editor-title{display:flex;align-items:center;gap:12px;margin:6px 0}
+.training-overlay-editor-title button{width:28px;height:28px;border:1px solid #333;border-radius:7px;background:#101011;color:white;font-size:22px}
+.training-overlay-editor-title h2{font-size:15px;font-weight:500;margin:0}
+.training-custom-exercise-editor{gap:6px}
+.training-custom-exercise-editor>.training-field,.training-custom-exercise-editor>.training-editor-grid>.training-field{padding:7px;border:1px solid #333;border-radius:9px;margin:0;background:linear-gradient(125deg,#111112,#080809)}
+.training-custom-exercise-editor .training-field>span{font-size:10px;line-height:1.35}
+.training-custom-exercise-editor input,.training-custom-exercise-editor select{min-height:31px;padding:5px 8px;font-size:12px}
+.training-editor-preview{padding:7px;border:1px solid #29292b;border-radius:9px;background:linear-gradient(120deg,#111112,#080809)}
+.training-editor-preview>span{font-size:9px;color:#aaa}
+.training-editor-preview .training-exercise-visual--v21{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+.training-editor-preview .training-exercise-visual__media{height:135px;min-height:135px;border:0;background:transparent}
+.training-editor-preview .training-exercise-anatomy svg{height:126px}
+.training-custom-exercise-editor textarea{min-height:65px;font-size:10px;line-height:1.4}
+.training-editor-extra{font-size:10px;color:#aaa}
+.training-editor-extra summary{min-height:24px;cursor:pointer;padding:5px}
+.training-custom-exercise-editor>.ds-dialog__actions{margin:0}
+.training-custom-exercise-editor>.ds-dialog__actions button{min-height:34px;font-size:12px}
+@media(min-width:600px){.training-overlay-header .ds-app-header{padding-top:14px}.training-sheet .ds-sheet__content{padding:12px 18px 84px}}
+
+/* Keep the routine catalogue's compact card owner consistent at mobile widths.
+   This is intentionally scoped to the catalogue summary cards so the shared
+   Training detail/session surfaces keep their approved interaction floor. */
+@media (max-width:600px){
+  .training-routines-screen .training-week-plan{padding:10px 8px 8px;margin:8px 0}
+  .training-routines-screen .training-week-plan>header{margin-bottom:6px}
+  .training-routines-screen .training-week-plan__days{gap:3px}
+  .training-routines-screen .training-week-plan__days button{min-height:78px;padding:4px 2px;gap:4px}
+  .training-routines-screen .training-routine-card--summary{
+    grid-template-columns:38px minmax(0,1fr) 84px 30px;
+    gap:6px;
+    min-height:64px;
+    padding:5px 8px;
+  }
+  .training-routines-screen .training-routine-icon{width:38px;height:38px}
+  .training-routines-screen .training-routine-icon .ds-section-icon{width:27px;height:27px}
+  .training-routines-screen .training-routine-card--summary .training-routine-card__header h2{font-size:13px;margin:0 0 3px}
+  .training-routines-screen .training-routine-card--summary .training-routine-card__header p{font-size:9px;line-height:1.2;margin:0 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .training-routines-screen .training-routine-card--summary .training-routine-card__header>small{font-size:9px}
+  .training-routines-screen .training-routine-card--summary>.training-anatomy--compact{width:84px}
+  .training-routines-screen .training-routine-card--summary>.training-anatomy--compact svg{height:58px}
+  .training-routines-screen .training-routine-open{min-height:44px;font-size:11px}
+}
+.training-create-exercise-after-list{width:100%;min-height:44px;margin-top:8px;border:1px solid var(--fenix-border);border-radius:12px;background:var(--fenix-surface);color:var(--fenix-accent)}

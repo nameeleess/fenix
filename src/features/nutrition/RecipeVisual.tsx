@@ -1,5 +1,7 @@
 import type { NutritionRole, Recipe } from '../../types/nutrition'
 
+import './recipe-visual.css'
+
 function fallbackClass(role?: NutritionRole | null) {
   if (role === 'preworkout') return 'is-pre'
   if (role === 'postworkout') return 'is-post'

@@ -1,4 +1,5 @@
 import { db } from '../../db/database'
+import { createUuid } from '../../utils/uuid'
 import { publishCommittedMutation } from '../../app/freshnessEvents'
 import {
   normalizeIngredientName as normalizeName,
@@ -69,7 +70,7 @@ function createBase() {
   const now = new Date().toISOString()
 
   return {
-    id: crypto.randomUUID(),
+    id: createUuid(),
     createdAt: now,
     updatedAt: now,
     deletedAt: null,

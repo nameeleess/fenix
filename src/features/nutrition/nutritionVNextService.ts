@@ -1,6 +1,9 @@
 import { db } from '../../db/database'
+import { getLocalDateKey, shiftDateKey, startOfWeek } from '../../utils/date'
+export { getLocalDateKey } from '../../utils/date'
 import { publishCommittedMutation } from '../../app/freshnessEvents'
 import { createKeyedSerialQueue } from '../../app/keyedSerialQueue'
+import { createUuid } from '../../utils/uuid'
 
 import type {
   AppetiteMode,
@@ -117,7 +120,7 @@ const roleOrder: Record<NutritionRole, number> = {
   extra: 6,
 }
 
-function createBase(id: string = crypto.randomUUID()) {
+function createBase(id: string = createUuid()) {
   const now = new Date().toISOString()
 
   return {
@@ -129,30 +132,8 @@ function createBase(id: string = crypto.randomUUID()) {
   }
 }
 
-export function getLocalDateKey(date = new Date()) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function parseDateKey(dateKey: string) {
-  const [year, month, day] = dateKey.split('-').map(Number)
-  return new Date(year, month - 1, day, 12)
-}
-
-function shiftDateKey(dateKey: string, days: number) {
-  const date = parseDateKey(dateKey)
-  date.setDate(date.getDate() + days)
-  return getLocalDateKey(date)
-}
-
 export function getMonday(dateKey: string) {
-  const date = parseDateKey(dateKey)
-  const day = date.getDay()
-  const diff = day === 0 ? -6 : 1 - day
-  date.setDate(date.getDate() + diff)
-  return getLocalDateKey(date)
+  return startOfWeek(dateKey)
 }
 
 function nonTrainingRolesFor(hasTraining: boolean) {
@@ -1464,7 +1445,7 @@ export async function updateNutritionGoal(input: NutritionGoalInput) {
 
   const now = new Date().toISOString()
   const today = getLocalDateKey()
-  const newGoalId = crypto.randomUUID()
+  const newGoalId = createUuid()
 
   await db.transaction('rw', db.nutritionGoals, async () => {
     const activeGoals = (await db.nutritionGoals.toArray())

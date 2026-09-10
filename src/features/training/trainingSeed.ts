@@ -1,4 +1,6 @@
 import { db } from '../../db/database'
+import { getLocalDateKey, parseDateKey, shiftDateKey } from '../../utils/date'
+import { createUuid } from '../../utils/uuid'
 import type {
   Exercise,
   WorkoutSessionExercise,
@@ -24,25 +26,6 @@ function entityBase(id: string) {
     deletedAt: null,
     version: 1,
   }
-}
-
-function getLocalDateKey(date = new Date()) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-
-  return `${year}-${month}-${day}`
-}
-
-function parseDateKey(dateKey: string) {
-  const [year, month, day] = dateKey.split('-').map(Number)
-  return new Date(year, month - 1, day, 12, 0, 0, 0)
-}
-
-function shiftDateKey(dateKey: string, amount: number) {
-  const date = parseDateKey(dateKey)
-  date.setDate(date.getDate() + amount)
-  return getLocalDateKey(date)
 }
 
 function targetRirRange(config: WorkoutTemplateExercise | undefined) {
@@ -125,7 +108,7 @@ async function preserveLegacySessionsBeforeProgramChange() {
             const firstSet = matchingSets[0]
 
             const next: WorkoutSessionExercise = {
-              ...entityBase(crypto.randomUUID()),
+              ...entityBase(createUuid()),
               workoutSessionId: session.id,
               sourceTemplateExerciseId: config?.id ?? null,
               exerciseId,
@@ -909,7 +892,7 @@ async function ensurePlanningWindow() {
       }
 
       additions.push({
-        ...entityBase(crypto.randomUUID()),
+        ...entityBase(createUuid()),
         workoutTemplateId: template.id,
         templateName: template.name,
         originalScheduledDate: cursor,
