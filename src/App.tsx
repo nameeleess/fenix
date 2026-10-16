@@ -35,6 +35,7 @@ import './styles/visual-polish.css'
 
 import './styles/final-v1.css'
 import './features/settings/settings.css'
+import './features/training/training-editors.css'
 
 type AppState =
   | 'checking'

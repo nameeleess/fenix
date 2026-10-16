@@ -127,6 +127,7 @@ function SetRow({
   onChanged: () => Promise<void>
   onCompleted: (seconds: number) => Promise<void>
 }) {
+  const [editVersion, setEditVersion] = useState(set.version)
   const [weight, setWeight] = useState(set.weight?.toString() ?? '')
   const [reps, setReps] = useState(set.reps?.toString() ?? '')
   const [rir, setRir] = useState(set.rir?.toString() ?? '')
@@ -150,7 +151,8 @@ function SetRow({
     mutationLock.current = true
     setBusy(true)
     try {
-      await saveSetDraft(set.id, values(), set.version)
+      await saveSetDraft(set.id, values(), editVersion)
+      setEditVersion(editVersion + 1)
       setError('')
       await onChanged()
     } catch (error) {
@@ -164,7 +166,8 @@ function SetRow({
     setBusy(true)
 
     try {
-      const result = await toggleSetCompletion(set.id, values(), set.version)
+      const result = await toggleSetCompletion(set.id, values(), editVersion)
+      setEditVersion(editVersion + 1)
       setError('')
 
       if (result.completed && result.restSeconds > 0) {
@@ -189,7 +192,7 @@ function SetRow({
     if (set.completedAt !== null) { setError('Desmarca la serie antes de eliminarla.'); return }
     mutationLock.current = true
     setBusy(true)
-    try { await removeExerciseSet(set.id, set.version); await onChanged() }
+    try { await removeExerciseSet(set.id, editVersion); await onChanged() }
     catch (error) { setError(error instanceof Error ? error.message : 'No se pudo quitar la serie.') }
     finally { mutationLock.current = false; setBusy(false) }
   }
@@ -207,6 +210,7 @@ function SetRow({
         <div className="training-set-row__simple">
           <span>OBJETIVO</span>
           <strong>{simpleText}</strong>
+          <label>Repeticiones realizadas<input type="number" min="1" step="1" disabled={busy} value={reps} onChange={event => setReps(event.target.value)} /></label>
         </div>
       ) : (
         <>
@@ -274,7 +278,10 @@ function SetRow({
         ×
       </button>
 
-      {error ? <p className="training-inline-error">{error}</p> : null}
+      {error ? <div className="training-inline-error"><p role="alert">{error}</p><button type="button" disabled={busy} onClick={() => {
+        setWeight(set.weight?.toString() ?? ''); setReps(set.reps?.toString() ?? ''); setRir(set.rir?.toString() ?? '')
+        setEditVersion(set.version); setError('')
+      }}>Descartar borrador y recargar serie</button></div> : null}
     </div>
   )
 }
@@ -557,7 +564,7 @@ function ActiveTraining({
 
             {warmups.map((set) => (
               <SetRow
-                key={`${set.id}-${set.updatedAt}`}
+                key={set.id}
                 set={set}
                 targetRir="—"
                 onChanged={onReload}
@@ -943,8 +950,8 @@ function HomeView({
       ) : (
         <section className="training-empty-card">
           <span className="training-kicker">TRAINING</span>
-          <h2>No hay sesión formal pendiente.</h2>
-          <p>La programación futura se genera localmente a partir de tus rutinas aprobadas.</p>
+          <h2>No hay sesión pendiente.</h2>
+          <p>Abre Rutinas para crear o planificar una sesión. No se generan sesiones automáticamente.</p>
         </section>
       )}
 
@@ -952,7 +959,7 @@ function HomeView({
         <article className="training-mini-card">
           <span>SEMANA</span>
           <strong>{home.completedThisWeek}/{home.plannedThisWeek}</strong>
-          <small>sesiones formales completadas</small>
+          <small>sesiones planificadas completadas</small>
         </article>
         <article className="training-mini-card">
           <span>RACHA</span>
@@ -1015,7 +1022,7 @@ function ExercisesView({
       <CustomExerciseManager exercises={exercises} onReload={onReload} />
       {exercises.map((exercise) => (
         <ExerciseContextEditor
-          key={`${exercise.id}-${exercise.updatedAt}`}
+          key={exercise.id}
           exercise={exercise}
           onReload={onReload}
         />
@@ -1031,6 +1038,7 @@ function ExerciseContextEditor({
   exercise: Exercise
   onReload: () => Promise<void>
 }) {
+  const [contextVersion, setContextVersion] = useState(exercise.version)
   const [tolerance, setTolerance] = useState<ExerciseTolerance | ''>(
     exercise.tolerance ?? '',
   )
@@ -1048,7 +1056,8 @@ function ExerciseContextEditor({
     await updateExercisePersonalContext(exercise.id, {
       tolerance: tolerance === '' ? null : tolerance,
       personalNotes: notes.trim() === '' ? null : notes.trim(),
-    }, exercise.version)
+    }, contextVersion)
+    setContextVersion(contextVersion + 1)
     setSaved('Guardado')
     await onReload()
     } catch (error) { setSaved(error instanceof Error ? error.message : 'No se pudo guardar.') }
@@ -1089,7 +1098,11 @@ function ExerciseContextEditor({
       <button type="button" className="training-secondary-button" disabled={saving} onClick={() => void save()}>
         Guardar contexto
       </button>
-      {saved ? <small className="training-editor-message">{saved}</small> : null}
+      {saved ? <small className="training-editor-message" role="status">{saved}</small> : null}
+      <button type="button" disabled={saving} onClick={() => {
+        setTolerance(exercise.tolerance ?? ''); setNotes(exercise.personalNotes ?? '')
+        setContextVersion(exercise.version); setSaved('')
+      }}>Recargar contexto</button>
     </article>
   )
 }

@@ -658,8 +658,6 @@ async function createSessionFromTemplate(
     async () => {
       const currentTemplate = await db.workoutTemplates.get(template.id)
       if (!currentTemplate || currentTemplate.deletedAt !== null) throw new Error('Rutina no disponible.')
-      const prepared = await buildSessionFromTemplate(currentTemplate, plannedWorkoutId)
-      if (!prepared.snapshots.length) throw new Error('Añade ejercicios antes de iniciar la rutina.')
       const activeSessions = (await db.workoutSessions
         .where('status')
         .equals('active')
@@ -734,6 +732,9 @@ async function createSessionFromTemplate(
           }
         }
 
+        const prepared = await buildSessionFromTemplate(currentTemplate, plannedWorkoutId)
+        if (!prepared.snapshots.length) throw new Error('Añade ejercicios antes de iniciar la rutina.')
+
         await db.workoutSessions.add(prepared.session)
         await db.workoutSessionExercises.bulkAdd(prepared.snapshots)
         await db.exerciseSets.bulkAdd(prepared.sets)
@@ -764,6 +765,9 @@ async function createSessionFromTemplate(
           created: false,
         }
       }
+
+      const prepared = await buildSessionFromTemplate(currentTemplate, plannedWorkoutId)
+      if (!prepared.snapshots.length) throw new Error('Añade ejercicios antes de iniciar la rutina.')
 
       await db.workoutSessions.add(prepared.session)
       await db.workoutSessionExercises.bulkAdd(prepared.snapshots)
