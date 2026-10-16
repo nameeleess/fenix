@@ -1,3 +1,4 @@
+import { assertEditorVersion } from './trainingEditorService'
 import { db } from '../../db/database'
 import { publishCommittedMutation } from '../../app/freshnessEvents'
 import type {
@@ -234,9 +235,7 @@ export async function getTrainingHome(
   const activePlanned = planned
     .filter(
       (session) =>
-        session.deletedAt === null &&
-        session.isFormalStrength &&
-        !session.isExtra,
+        session.deletedAt === null,
     )
     .sort(comparePlannedWorkoutSessions)
 
@@ -652,15 +651,15 @@ async function createSessionFromTemplate(
   template: WorkoutTemplate,
   plannedWorkoutId: string | null,
 ) {
-  const prepared = await buildSessionFromTemplate(template, plannedWorkoutId)
-
   const outcome = await db.transaction(
     'rw',
-    db.workoutSessions,
-    db.workoutSessionExercises,
-    db.exerciseSets,
-    db.plannedWorkoutSessions,
+    [db.workoutSessions, db.workoutSessionExercises, db.exerciseSets,
+      db.plannedWorkoutSessions, db.workoutTemplates, db.workoutTemplateExercises, db.exercises],
     async () => {
+      const currentTemplate = await db.workoutTemplates.get(template.id)
+      if (!currentTemplate || currentTemplate.deletedAt !== null) throw new Error('Rutina no disponible.')
+      const prepared = await buildSessionFromTemplate(currentTemplate, plannedWorkoutId)
+      if (!prepared.snapshots.length) throw new Error('Añade ejercicios antes de iniciar la rutina.')
       const activeSessions = (await db.workoutSessions
         .where('status')
         .equals('active')
@@ -820,14 +819,17 @@ export async function startTemplateWorkout(workoutTemplateId: string) {
   return createSessionFromTemplate(template, null)
 }
 
-export async function saveSetDraft(setId: string, values: SetValues) {
-  await db.transaction('rw', db.exerciseSets, async () => {
+export async function saveSetDraft(setId: string, values: SetValues, expectedVersion?: number) {
+  await db.transaction('rw', db.exerciseSets, db.workoutSessions, async () => {
     const set = await db.exerciseSets.get(setId)
 
     if (!set || set.deletedAt !== null) {
       throw new Error('Serie no encontrada.')
     }
 
+    if (expectedVersion !== undefined) assertEditorVersion(set.version, expectedVersion)
+    const session = await db.workoutSessions.get(set.workoutSessionId)
+    if (!session || session.deletedAt !== null || session.status !== 'active') throw new Error('Solo puedes editar series de una sesión activa.')
     const validationMode = set.completedAt === null ? 'draft' : 'complete'
     validateSetValues(values, set.setType, validationMode)
 
@@ -850,6 +852,7 @@ export async function saveSetDraft(setId: string, values: SetValues) {
 export async function toggleSetCompletion(
   setId: string,
   values: SetValues,
+  expectedVersion?: number,
 ): Promise<{
   completed: boolean
   restSeconds: number
@@ -865,6 +868,8 @@ export async function toggleSetCompletion(
       if (!set || set.deletedAt !== null) {
         throw new Error('Serie no encontrada.')
       }
+
+      if (expectedVersion !== undefined) assertEditorVersion(set.version, expectedVersion)
 
       const session = await db.workoutSessions.get(set.workoutSessionId)
 
@@ -1019,7 +1024,7 @@ export async function addExerciseSet(
   publishCommittedMutation('training')
 }
 
-export async function removeExerciseSet(setId: string) {
+export async function removeExerciseSet(setId: string, expectedVersion?: number) {
   const removed = await db.transaction(
     'rw',
     db.workoutSessions,
@@ -1053,6 +1058,8 @@ export async function removeExerciseSet(setId: string) {
           'Integridad Training: el ejercicio de sesión ya no está disponible.',
         )
       }
+
+      if (expectedVersion !== undefined) assertEditorVersion(set.version, expectedVersion)
 
       const session = await db.workoutSessions.get(set.workoutSessionId)
 
@@ -1299,7 +1306,7 @@ export async function discardEmptyWorkout(workoutSessionId: string) {
   publishCommittedMutation('training')
 }
 
-export async function omitPlannedWorkout(plannedWorkoutId: string) {
+export async function omitPlannedWorkout(plannedWorkoutId: string, expectedVersion?: number) {
   const now = nowIso()
 
   await db.transaction('rw', db.plannedWorkoutSessions, async () => {
@@ -1309,6 +1316,7 @@ export async function omitPlannedWorkout(plannedWorkoutId: string) {
       throw new Error('Sesión planificada no encontrada.')
     }
 
+    if (expectedVersion !== undefined) assertEditorVersion(planned.version, expectedVersion)
     assertPlannedPending(planned.status, 'omit')
 
     await db.plannedWorkoutSessions.update(planned.id, {
@@ -1325,6 +1333,7 @@ export async function omitPlannedWorkout(plannedWorkoutId: string) {
 export async function reprogramPlannedWorkout(
   plannedWorkoutId: string,
   newDate: string,
+  expectedVersion?: number,
 ) {
   assertValidTrainingDateKey(newDate)
 
@@ -1335,6 +1344,7 @@ export async function reprogramPlannedWorkout(
       throw new Error('Sesión planificada no encontrada.')
     }
 
+    if (expectedVersion !== undefined) assertEditorVersion(planned.version, expectedVersion)
     assertPlannedPending(planned.status, 'reprogram')
 
     if (planned.scheduledDate === newDate) {
@@ -1623,23 +1633,17 @@ export async function getExerciseCatalog() {
 
 export async function updateExercisePersonalContext(
   exerciseId: string,
-  values: {
-    tolerance: ExerciseTolerance | null
-    personalNotes: string | null
-  },
+  values: { tolerance: ExerciseTolerance | null; personalNotes: string | null },
+  expectedVersion?: number,
 ) {
-  const exercise = await db.exercises.get(exerciseId)
-
-  if (!exercise || exercise.deletedAt !== null) {
-    throw new Error('Ejercicio no encontrado.')
-  }
-
-  await db.exercises.update(exercise.id, {
-    tolerance: values.tolerance,
-    personalNotes: values.personalNotes,
-    updatedAt: nowIso(),
-    version: exercise.version + 1,
+  await db.transaction('rw', db.exercises, async () => {
+    const exercise = await db.exercises.get(exerciseId)
+    if (!exercise || exercise.deletedAt !== null) throw new Error('Ejercicio no encontrado.')
+    if (expectedVersion !== undefined) assertEditorVersion(exercise.version, expectedVersion)
+    await db.exercises.update(exercise.id, {
+      tolerance: values.tolerance, personalNotes: values.personalNotes,
+      updatedAt: nowIso(), version: exercise.version + 1,
+    })
   })
-
   publishCommittedMutation('training')
 }

@@ -8,7 +8,6 @@ import type {
 
 const PROGRAM_VERSION = '2'
 const PROGRAM_MIGRATION_KEY = 'trainingProgramVersion'
-const PLANNING_START_KEY = 'trainingPlanningStartDate'
 
 function nowIso() {
   return new Date().toISOString()
@@ -24,25 +23,6 @@ function entityBase(id: string) {
     deletedAt: null,
     version: 1,
   }
-}
-
-function getLocalDateKey(date = new Date()) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-
-  return `${year}-${month}-${day}`
-}
-
-function parseDateKey(dateKey: string) {
-  const [year, month, day] = dateKey.split('-').map(Number)
-  return new Date(year, month - 1, day, 12, 0, 0, 0)
-}
-
-function shiftDateKey(dateKey: string, amount: number) {
-  const date = parseDateKey(dateKey)
-  date.setDate(date.getDate() + amount)
-  return getLocalDateKey(date)
 }
 
 function targetRirRange(config: WorkoutTemplateExercise | undefined) {
@@ -857,83 +837,15 @@ async function applyApprovedProgram() {
   )
 }
 
-async function ensurePlanningWindow() {
-  let planningStart = await db.appMeta.get(PLANNING_START_KEY)
-
-  if (!planningStart) {
-    planningStart = {
-      key: PLANNING_START_KEY,
-      value: getLocalDateKey(),
-      updatedAt: nowIso(),
-    }
-
-    await db.appMeta.put(planningStart)
-  }
-
-  const today = getLocalDateKey()
-  const start = planningStart.value > today ? planningStart.value : today
-  const end = shiftDateKey(today, 42)
-
-  const templates = (await db.workoutTemplates.toArray())
-    .filter(
-      (template) =>
-        template.deletedAt === null &&
-        template.isFormalStrength === true &&
-        template.dayOfWeek !== null,
-    )
-
-  const existing = (await db.plannedWorkoutSessions.toArray())
-    .filter((session) => session.deletedAt === null)
-
-  const keys = new Set(
-    existing.map(
-      (session) =>
-        `${session.workoutTemplateId}:${session.originalScheduledDate}`,
-    ),
-  )
-
-  const additions = []
-
-  for (let cursor = start; cursor <= end; cursor = shiftDateKey(cursor, 1)) {
-    const weekday = parseDateKey(cursor).getDay()
-
-    for (const template of templates) {
-      if (template.dayOfWeek !== weekday) {
-        continue
-      }
-
-      const key = `${template.id}:${cursor}`
-
-      if (keys.has(key)) {
-        continue
-      }
-
-      additions.push({
-        ...entityBase(crypto.randomUUID()),
-        workoutTemplateId: template.id,
-        templateName: template.name,
-        originalScheduledDate: cursor,
-        scheduledDate: cursor,
-        status: 'pending' as const,
-        executionSessionId: null,
-        isFormalStrength: true,
-        isExtra: false,
-        estimatedDurationMinutes: template.estimatedDurationMinutes ?? null,
-        rescheduleCount: 0,
-        resolvedAt: null,
-        notes: null,
-      })
-
-      keys.add(key)
-    }
-  }
-
-  if (additions.length > 0) {
-    await db.plannedWorkoutSessions.bulkAdd(additions)
-  }
-}
-
 export async function ensureTrainingSeed() {
+  // Existing installations must never be reseeded or migrated on startup.
+  // Only a fresh Training database receives catalog definitions; no sessions.
+  const existing = await Promise.all([
+    db.workoutTemplates.count(), db.exercises.count(), db.workoutSessions.count(),
+    db.plannedWorkoutSessions.count(), db.workoutSessionExercises.count(),
+    db.exerciseSets.count(), db.workoutTemplateExercises.count(),
+    db.appMeta.get(PROGRAM_MIGRATION_KEY),
+  ])
+  if (existing.some(value => Boolean(value))) return
   await applyApprovedProgram()
-  await ensurePlanningWindow()
 }

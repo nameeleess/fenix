@@ -1,0 +1,18 @@
+.training-definition-editor, .training-definition-list { margin: 16px 0; color: var(--fenix-text); }
+.training-definition-editor { padding: 16px; border: 1px solid var(--fenix-border); border-radius: 16px; background: var(--fenix-surface); }
+.training-definition-editor fieldset { border: 0; padding: 0; min-width: 0; }
+.training-definition-editor label { display: block; margin: 12px 0; }
+.training-definition-editor input:not([type=checkbox]), .training-definition-editor select, .training-definition-editor textarea { display: block; box-sizing: border-box; width: 100%; min-width: 0; margin-top: 6px; padding: 10px; background: var(--fenix-bg); color: var(--fenix-text); border: 1px solid var(--fenix-border); border-radius: 8px; }
+.training-definition-editor button, .training-definition-list button { margin: 6px; padding: 12px; background: var(--fenix-surface-elevated); color: var(--fenix-text); border: 1px solid var(--fenix-border); border-radius: 10px; }
+.training-definition-editor button:disabled { opacity: .5; }
+.training-definition-row { padding: 12px 0; border-bottom: 1px solid var(--fenix-border); }
+.training-definition-numbers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.training-definition-editor [role=alert] { color: var(--fenix-danger); }
+.fenix-app .training-main-header { padding-right: 100px; }
+
+.fenix-app .training-set-row { grid-template-columns: 28px repeat(3, minmax(0, 1fr)) auto auto auto; gap: 6px; }
+@media (max-width: 480px) {
+  .fenix-app .training-set-row { grid-template-columns: 24px repeat(3, minmax(0, 1fr)); }
+  .fenix-app .training-set-row > button { min-height: 40px; }
+  .training-definition-numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

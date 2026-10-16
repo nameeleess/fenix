@@ -117,7 +117,7 @@ async function getTodayTraining(dateKey: string): Promise<TodayTrainingSummary> 
     }
   }
 
-  const focus = plannedSessions[0] ?? null
+  const focus = home.focusSession ?? plannedSessions[0] ?? null
 
   if (!focus) {
     return {

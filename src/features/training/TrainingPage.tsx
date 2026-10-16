@@ -1,5 +1,7 @@
+import { RoutineManager, CustomExerciseManager } from './TrainingEditors'
 import {
   useEffect,
+  useRef,
   useState,
 } from 'react'
 
@@ -32,7 +34,6 @@ import {
   substituteSessionExercise,
   toggleSetCompletion,
   updateExercisePersonalContext,
-  updateRoutineExercise,
   type ActiveSessionView,
   type HistorySessionView,
   type SetValues,
@@ -130,6 +131,7 @@ function SetRow({
   const [reps, setReps] = useState(set.reps?.toString() ?? '')
   const [rir, setRir] = useState(set.rir?.toString() ?? '')
   const [busy, setBusy] = useState(false)
+  const mutationLock = useRef(false)
   const [error, setError] = useState('')
 
   function values(): SetValues {
@@ -144,23 +146,25 @@ function SetRow({
   }
 
   async function save() {
+    if (mutationLock.current) return
+    mutationLock.current = true
+    setBusy(true)
     try {
-      await saveSetDraft(set.id, values())
+      await saveSetDraft(set.id, values(), set.version)
       setError('')
-    } catch (saveError: unknown) {
-      setError(
-        saveError instanceof Error
-          ? saveError.message
-          : 'No se ha podido guardar la serie.',
-      )
-    }
+      await onChanged()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'No se pudo guardar.')
+    } finally { mutationLock.current = false; setBusy(false) }
   }
 
   async function toggle() {
+    if (mutationLock.current) return
+    mutationLock.current = true
     setBusy(true)
 
     try {
-      const result = await toggleSetCompletion(set.id, values())
+      const result = await toggleSetCompletion(set.id, values(), set.version)
       setError('')
 
       if (result.completed && result.restSeconds > 0) {
@@ -175,18 +179,19 @@ function SetRow({
           : 'No se ha podido actualizar la serie.',
       )
     } finally {
+      mutationLock.current = false
       setBusy(false)
     }
   }
 
   async function remove() {
-    if (set.completedAt !== null) {
-      setError('Desmarca la serie antes de eliminarla.')
-      return
-    }
-
-    await removeExerciseSet(set.id)
-    await onChanged()
+    if (mutationLock.current) return
+    if (set.completedAt !== null) { setError('Desmarca la serie antes de eliminarla.'); return }
+    mutationLock.current = true
+    setBusy(true)
+    try { await removeExerciseSet(set.id, set.version); await onChanged() }
+    catch (error) { setError(error instanceof Error ? error.message : 'No se pudo quitar la serie.') }
+    finally { mutationLock.current = false; setBusy(false) }
   }
 
   return (
@@ -212,9 +217,9 @@ function SetRow({
               inputMode="decimal"
               min="0"
               step="0.5"
+              disabled={busy}
               value={weight}
               onChange={(event) => setWeight(event.target.value)}
-              onBlur={() => void save()}
             />
           </label>
 
@@ -225,9 +230,9 @@ function SetRow({
               inputMode="numeric"
               min="0"
               step="1"
+              disabled={busy}
               value={reps}
               onChange={(event) => setReps(event.target.value)}
-              onBlur={() => void save()}
             />
           </label>
 
@@ -240,15 +245,15 @@ function SetRow({
               max="10"
               step="0.5"
               value={set.setType === 'warmup' ? '' : rir}
-              disabled={set.setType === 'warmup'}
+              disabled={busy || set.setType === 'warmup'}
               placeholder={set.setType === 'warmup' ? '—' : targetRir}
               onChange={(event) => setRir(event.target.value)}
-              onBlur={() => void save()}
             />
           </label>
         </>
       )}
 
+      <button type="button" disabled={busy} onClick={() => void save()}>Guardar</button>
       <button
         type="button"
         className="training-set-row__complete"
@@ -262,6 +267,7 @@ function SetRow({
       <button
         type="button"
         className="training-set-row__remove"
+        disabled={busy}
         aria-label="Eliminar serie"
         onClick={() => void remove()}
       >
@@ -331,6 +337,7 @@ function ActiveTraining({
   const [selectedAlternative, setSelectedAlternative] = useState('')
   const [updateRoutine, setUpdateRoutine] = useState(false)
   const [busy, setBusy] = useState(false)
+  const mutationLock = useRef(false)
   const [error, setError] = useState('')
 
   const boundedIndex = Math.min(
@@ -338,6 +345,15 @@ function ActiveTraining({
     Math.max(view.exercises.length - 1, 0),
   )
   const item = view.exercises[boundedIndex]
+
+  async function addWorkingSet() {
+    if (mutationLock.current || !item) return
+    mutationLock.current = true
+    setBusy(true)
+    try { await addExerciseSet(item.snapshot.id, 'working'); await onReload() }
+    catch (error) { setError(error instanceof Error ? error.message : 'No se pudo añadir la serie.') }
+    finally { mutationLock.current = false; setBusy(false) }
+  }
 
   async function completeSet(seconds: number) {
     if (seconds <= 0) {
@@ -365,6 +381,8 @@ function ActiveTraining({
       return
     }
 
+    if (mutationLock.current) return
+    mutationLock.current = true
     setBusy(true)
 
     try {
@@ -383,11 +401,14 @@ function ActiveTraining({
           : 'No se ha podido sustituir el ejercicio.',
       )
     } finally {
+      mutationLock.current = false
       setBusy(false)
     }
   }
 
   async function finalize(result: 'completed' | 'incomplete') {
+    if (mutationLock.current) return
+    mutationLock.current = true
     setBusy(true)
 
     try {
@@ -403,11 +424,14 @@ function ActiveTraining({
           : 'No se ha podido finalizar la sesión.',
       )
     } finally {
+      mutationLock.current = false
       setBusy(false)
     }
   }
 
   async function discard() {
+    if (mutationLock.current) return
+    mutationLock.current = true
     setBusy(true)
 
     try {
@@ -423,6 +447,7 @@ function ActiveTraining({
           : 'No se ha podido descartar la sesión.',
       )
     } finally {
+      mutationLock.current = false
       setBusy(false)
     }
   }
@@ -563,10 +588,8 @@ function ActiveTraining({
             <button
               type="button"
               className="training-secondary-button"
-              onClick={async () => {
-                await addExerciseSet(item.snapshot.id, 'working')
-                await onReload()
-              }}
+              disabled={busy}
+              onClick={() => void addWorkingSet()}
             >
               + Añadir serie
             </button>
@@ -980,101 +1003,6 @@ function HomeView({
   )
 }
 
-function RoutinesView({
-  templates,
-  onReload,
-}: {
-  templates: TrainingTemplateView[]
-  onReload: () => Promise<void>
-}) {
-  const formal = templates.filter((item) => item.template.isFormalStrength)
-
-  return (
-    <div className="training-routines-grid">
-      {formal.map((view) => (
-        <section key={view.template.id} className="training-routine-card">
-          <div className="training-routine-card__header">
-            <div>
-              <span className="training-kicker">RUTINA</span>
-              <h2>{view.template.name}</h2>
-              <p>{view.template.description}</p>
-            </div>
-            <strong>{view.totalSets} series</strong>
-          </div>
-
-          <RoutineMuscleMap template={view} compact />
-
-          {view.exercises.map((item) => (
-            <RoutineExerciseEditor
-              key={`${item.config.id}-${item.config.updatedAt}`}
-              item={item}
-              onReload={onReload}
-            />
-          ))}
-        </section>
-      ))}
-    </div>
-  )
-}
-
-function RoutineExerciseEditor({
-  item,
-  onReload,
-}: {
-  item: TrainingTemplateView['exercises'][number]
-  onReload: () => Promise<void>
-}) {
-  const [sets, setSets] = useState(String(item.config.targetSets))
-  const [minReps, setMinReps] = useState(String(item.config.minReps))
-  const [maxReps, setMaxReps] = useState(String(item.config.maxReps))
-  const [rirMin, setRirMin] = useState(
-    String(item.config.targetRirMin ?? item.config.targetRir ?? ''),
-  )
-  const [rirMax, setRirMax] = useState(
-    String(item.config.targetRirMax ?? item.config.targetRir ?? ''),
-  )
-  const [rest, setRest] = useState(String(item.config.restSeconds))
-  const [message, setMessage] = useState('')
-
-  async function save() {
-    try {
-      await updateRoutineExercise(item.config.id, {
-        targetSets: Number(sets),
-        minReps: Number(minReps),
-        maxReps: Number(maxReps),
-        targetRirMin: rirMin === '' ? null : Number(rirMin),
-        targetRirMax: rirMax === '' ? null : Number(rirMax),
-        restSeconds: Number(rest),
-      })
-      setMessage('Guardado')
-      await onReload()
-    } catch (saveError: unknown) {
-      setMessage(
-        saveError instanceof Error ? saveError.message : 'No se ha podido guardar.',
-      )
-    }
-  }
-
-  return (
-    <div className="training-routine-exercise">
-      <div>
-        <strong>{item.exercise.name}</strong>
-        <small>{item.exercise.primaryMuscle}</small>
-      </div>
-
-      <label><span>Series</span><input value={sets} onChange={(event) => setSets(event.target.value)} /></label>
-      <label><span>Rep min</span><input value={minReps} onChange={(event) => setMinReps(event.target.value)} /></label>
-      <label><span>Rep max</span><input value={maxReps} onChange={(event) => setMaxReps(event.target.value)} /></label>
-      <label><span>RIR min</span><input value={rirMin} onChange={(event) => setRirMin(event.target.value)} /></label>
-      <label><span>RIR max</span><input value={rirMax} onChange={(event) => setRirMax(event.target.value)} /></label>
-      <label><span>Desc. s</span><input value={rest} onChange={(event) => setRest(event.target.value)} /></label>
-
-      <button type="button" onClick={() => void save()}>Guardar</button>
-      {message ? <small className="training-editor-message">{message}</small> : null}
-    </div>
-  )
-}
-
 function ExercisesView({
   exercises,
   onReload,
@@ -1084,6 +1012,7 @@ function ExercisesView({
 }) {
   return (
     <div className="training-exercise-catalog">
+      <CustomExerciseManager exercises={exercises} onReload={onReload} />
       {exercises.map((exercise) => (
         <ExerciseContextEditor
           key={`${exercise.id}-${exercise.updatedAt}`}
@@ -1108,13 +1037,22 @@ function ExerciseContextEditor({
   const [notes, setNotes] = useState(exercise.personalNotes ?? '')
   const [saved, setSaved] = useState('')
 
+  const contextLock = useRef(false)
+  const [saving, setSaving] = useState(false)
+
   async function save() {
+    if (contextLock.current) return
+    contextLock.current = true
+    setSaving(true)
+    try {
     await updateExercisePersonalContext(exercise.id, {
       tolerance: tolerance === '' ? null : tolerance,
       personalNotes: notes.trim() === '' ? null : notes.trim(),
-    })
+    }, exercise.version)
     setSaved('Guardado')
     await onReload()
+    } catch (error) { setSaved(error instanceof Error ? error.message : 'No se pudo guardar.') }
+    finally { contextLock.current = false; setSaving(false) }
   }
 
   return (
@@ -1148,7 +1086,7 @@ function ExerciseContextEditor({
         <textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
       </label>
 
-      <button type="button" className="training-secondary-button" onClick={() => void save()}>
+      <button type="button" className="training-secondary-button" disabled={saving} onClick={() => void save()}>
         Guardar contexto
       </button>
       {saved ? <small className="training-editor-message">{saved}</small> : null}
@@ -1240,6 +1178,7 @@ export default function TrainingPage({
   const [data, setData] = useState<TrainingData | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const mutationLock = useRef(false)
   const [error, setError] = useState('')
   const [activeVisible, setActiveVisible] = useState(true)
   const [reprogramSession, setReprogramSession] = useState<PlannedWorkoutSession | null>(null)
@@ -1263,8 +1202,6 @@ export default function TrainingPage({
     let active = true
 
     const timer = window.setTimeout(() => {
-      setLoading(true)
-
       void fetchTrainingData()
         .then((next) => {
           if (!active) return
@@ -1295,6 +1232,8 @@ export default function TrainingPage({
       return
     }
 
+    if (mutationLock.current) return
+    mutationLock.current = true
     setBusy(true)
 
     try {
@@ -1307,6 +1246,7 @@ export default function TrainingPage({
         startError instanceof Error ? startError.message : 'No se ha podido iniciar la sesión.',
       )
     } finally {
+      mutationLock.current = false
       setBusy(false)
     }
   }
@@ -1317,6 +1257,8 @@ export default function TrainingPage({
       return
     }
 
+    if (mutationLock.current) return
+    mutationLock.current = true
     setBusy(true)
 
     try {
@@ -1329,6 +1271,7 @@ export default function TrainingPage({
         startError instanceof Error ? startError.message : 'No se ha podido iniciar la rutina.',
       )
     } finally {
+      mutationLock.current = false
       setBusy(false)
     }
   }
@@ -1336,10 +1279,12 @@ export default function TrainingPage({
   async function confirmReprogram() {
     if (!reprogramSession || reprogramDate === '') return
 
+    if (mutationLock.current) return
+    mutationLock.current = true
     setBusy(true)
 
     try {
-      await reprogramPlannedWorkout(reprogramSession.id, reprogramDate)
+      await reprogramPlannedWorkout(reprogramSession.id, reprogramDate, reprogramSession.version)
       setReprogramSession(null)
       setReprogramDate('')
       setError('')
@@ -1351,6 +1296,7 @@ export default function TrainingPage({
           : 'No se ha podido reprogramar.',
       )
     } finally {
+      mutationLock.current = false
       setBusy(false)
     }
   }
@@ -1358,10 +1304,12 @@ export default function TrainingPage({
   async function confirmOmit() {
     if (!omitSession) return
 
+    if (mutationLock.current) return
+    mutationLock.current = true
     setBusy(true)
 
     try {
-      await omitPlannedWorkout(omitSession.id)
+      await omitPlannedWorkout(omitSession.id, omitSession.version)
       setOmitSession(null)
       setError('')
       await reload()
@@ -1370,6 +1318,7 @@ export default function TrainingPage({
         omitError instanceof Error ? omitError.message : 'No se ha podido omitir la sesión.',
       )
     } finally {
+      mutationLock.current = false
       setBusy(false)
     }
   }
@@ -1377,7 +1326,8 @@ export default function TrainingPage({
   if (loading || !data) {
     return (
       <main className="training-page training-loading">
-        <p>Preparando Training…</p>
+        <p>{error || 'Preparando Training…'}</p>
+        {error && <button type="button" onClick={() => void reload().then(() => { setLoading(false); setError('') }).catch(value => setError(value instanceof Error ? value.message : 'No se pudo cargar.'))}>Reintentar</button>}
       </main>
     )
   }
@@ -1446,7 +1396,7 @@ export default function TrainingPage({
       ) : null}
 
       {tab === 'routines' ? (
-        <RoutinesView templates={data.templates} onReload={reload} />
+        <RoutineManager templates={data.templates} catalog={data.exercises} onReload={reload} onStart={startTemplate} />
       ) : null}
 
       {tab === 'exercises' ? (
@@ -1464,7 +1414,7 @@ export default function TrainingPage({
           <section className="training-dialog" role="dialog" aria-modal="true" aria-label="Reprogramar sesión">
             <span className="training-kicker">REPROGRAMAR</span>
             <h2>{reprogramSession.templateName}</h2>
-            <p>La identidad de la sesión se conserva. Nutrition podrá mantener asociados sus bloques Pre/Post pendientes.</p>
+            <p>La identidad y el historial de la sesión se conservan al cambiar la fecha.</p>
 
             <label className="training-field">
               <span>Nueva fecha</span>

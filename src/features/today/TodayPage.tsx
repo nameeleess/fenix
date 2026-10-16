@@ -119,8 +119,7 @@ function TodayPage({
       }
 
       const isTrainingDay =
-        moduleSummary.training.status !== 'rest' &&
-        moduleSummary.training.status !== 'omitted'
+        moduleSummary.training.sessions.some(session => session.status !== 'omitted')
 
       const isWorkDay = Boolean(
         existingShift &&
@@ -223,8 +222,7 @@ function TodayPage({
     try {
       const next = await startDay(dateKey, {
         isTrainingDay:
-          integration.training.status !== 'rest' &&
-          integration.training.status !== 'omitted',
+          integration.training.sessions.some(session => session.status !== 'omitted'),
         isWorkDay: Boolean(workShift?.isWorking),
       })
 
@@ -296,8 +294,7 @@ function TodayPage({
         },
         {
           isTrainingDay:
-            integration.training.status !== 'rest' &&
-            integration.training.status !== 'omitted',
+            integration.training.sessions.some(session => session.status !== 'omitted'),
           isWorkDay: Boolean(workShift?.isWorking),
         },
       )
@@ -685,8 +682,7 @@ function TodayPage({
             dateKey={dateKey}
             context={{
               isTrainingDay:
-                integration.training.status !== 'rest' &&
-                integration.training.status !== 'omitted',
+                integration.training.sessions.some(session => session.status !== 'omitted'),
               isWorkDay: Boolean(workShift?.isWorking),
             }}
             onClose={() => setEditingRoutine(false)}
