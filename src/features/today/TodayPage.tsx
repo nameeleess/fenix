@@ -39,8 +39,6 @@ interface TodayPageProps {
   dateKey: string
   refreshRevision: number
   onOpenTraining: () => void
-  onOpenNutrition: () => void
-  onOpenProgress: () => void
 }
 
 const BLOCKS: Array<{ key: TodayBlock; label: string }> = [
@@ -73,13 +71,6 @@ function formatTodayDate(dateKey: string) {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-function formatNumber(value: number, decimals = 0) {
-  return new Intl.NumberFormat('es-ES', {
-    maximumFractionDigits: decimals,
-    minimumFractionDigits: decimals,
-  }).format(value)
-}
-
 function getTaskStatusSymbol(status: TodayTaskStatus) {
   if (status === 'completed') return '✓'
   if (status === 'skipped') return '—'
@@ -93,25 +84,11 @@ function progressColor(progress: number) {
   return 'var(--fenix-accent)'
 }
 
-function weightPrimary(summary: TodayIntegrationSummary['progress']) {
-  if (summary.weight.currentMean !== null) {
-    return `${formatNumber(summary.weight.currentMean, 1)} kg`
-  }
-
-  if (summary.weight.latest) {
-    return `${formatNumber(summary.weight.latest.weightKg, 1)} kg`
-  }
-
-  return '—'
-}
-
 function TodayPage({
   isActive,
   dateKey,
   refreshRevision,
   onOpenTraining,
-  onOpenNutrition,
-  onOpenProgress,
 }: TodayPageProps) {
   const [view, setView] = useState<DailyRoutineView | null>(null)
   const [integration, setIntegration] = useState<TodayIntegrationSummary | null>(null)
@@ -505,17 +482,6 @@ function TodayPage({
   }
 
   const dayStarted = view.routine.startedAt !== null
-  const nutritionMeal = integration.nutrition.nextMeal
-  const priorityNutrition = Boolean(
-    nutritionMeal &&
-      (nutritionMeal.role === 'breakfast' ||
-        (nutritionMeal.role === 'preworkout' &&
-          integration.training.status === 'pending') ||
-        (nutritionMeal.role === 'postworkout' &&
-          (integration.training.status === 'completed' ||
-            integration.training.status === 'incomplete')))
-  )
-
   const ringStyle = {
     '--today-progress-color': progressColor(routineProgress),
     background: `conic-gradient(var(--today-progress-color) ${routineProgress}%, var(--fenix-border) ${routineProgress}% 100%)`,
@@ -527,12 +493,20 @@ function TodayPage({
         <header className="today-header">
           <div>
             <span className="today-brand">FÉNIX</span>
-            <h1>HOY</h1>
+            <h1>HOME</h1>
             <p>{formatTodayDate(dateKey)}</p>
           </div>
         </header>
 
         {error && <div className="today-inline-error" role="alert">{error}</div>}
+
+        <section className="today-training-summary" aria-label="Próxima acción de Training">
+          <h2>{integration.training.title}</h2>
+          <p>{integration.training.completedThisWeek}/{integration.training.plannedThisWeek} sesiones completadas esta semana</p>
+          <button type="button" className="today-primary-button" onClick={onOpenTraining}>
+            {integration.training.status === 'in_progress' ? 'Continuar entrenamiento' : integration.training.status === 'pending' ? 'Ver sesión pendiente' : 'Planificar o consultar Training'}
+          </button>
+        </section>
 
         {!dayStarted ? (
           <section className="today-start-card">
@@ -541,7 +515,7 @@ function TodayPage({
               <span className="today-eyebrow">HOY</span>
               <h2>Tu día está preparado</h2>
               <p>
-                Training, Nutrition y Progreso ya están conectados. Iniciar el día activa la rutina sin inventar cumplimiento.
+                Home y Training comparten el estado de tus sesiones. Iniciar el día activa tu rutina diaria.
               </p>
             </div>
             <button type="button" className="today-primary-button" onClick={() => void handleStartDay()}>
@@ -579,17 +553,11 @@ function TodayPage({
                       Continuar entrenamiento
                     </button>
                   </>
-                ) : priorityNutrition && nutritionMeal ? (
+                ) : integration.training.status === 'pending' ? (
                   <>
-                    <h2>{nutritionMeal.roleLabel}</h2>
-                    <p>{nutritionMeal.name}</p>
-                    <button
-                      type="button"
-                      className="today-primary-button today-primary-button--compact"
-                      onClick={onOpenNutrition}
-                    >
-                      Abrir Nutrition
-                    </button>
+                    <h2>{integration.training.title}</h2>
+                    <p>Tu siguiente sesión está preparada.</p>
+                    <button type="button" className="today-primary-button today-primary-button--compact" onClick={onOpenTraining}>Abrir Training</button>
                   </>
                 ) : recommendedTask ? (
                   <>
@@ -603,22 +571,10 @@ function TodayPage({
                       Completar
                     </button>
                   </>
-                ) : nutritionMeal ? (
-                  <>
-                    <h2>{nutritionMeal.roleLabel}</h2>
-                    <p>{nutritionMeal.name}</p>
-                    <button
-                      type="button"
-                      className="today-primary-button today-primary-button--compact"
-                      onClick={onOpenNutrition}
-                    >
-                      Abrir Nutrition
-                    </button>
-                  </>
                 ) : (
                   <>
                     <h2>Día resuelto</h2>
-                    <p>No quedan acciones locales ni comidas pendientes.</p>
+                    <p>No quedan acciones pendientes en tu rutina.</p>
                   </>
                 )}
               </div>
@@ -706,35 +662,6 @@ function TodayPage({
                 <b>{integration.training.status === 'in_progress' ? 'Continuar' : 'Abrir'} ›</b>
               </button>
 
-              <button
-                type="button"
-                className="today-dashboard-card today-dashboard-card--nutrition"
-                onClick={onOpenNutrition}
-              >
-                <span className="today-dashboard-card__eyebrow">NUTRITION</span>
-                <strong>{nutritionMeal ? nutritionMeal.roleLabel : 'Día resuelto'}</strong>
-                <small>
-                  {formatNumber(integration.nutrition.consumed.calories)} kcal
-                  {' · '}P {formatNumber(integration.nutrition.consumed.protein)} g
-                </small>
-                <b>Abrir ›</b>
-              </button>
-
-              <button
-                type="button"
-                className="today-dashboard-card today-dashboard-card--progress"
-                onClick={onOpenProgress}
-              >
-                <span className="today-dashboard-card__eyebrow">PROGRESO</span>
-                <strong>{weightPrimary(integration.progress)}</strong>
-                <small>
-                  Rutina{' '}
-                  {integration.progress.routine.adherencePercent === null
-                    ? '—'
-                    : `${integration.progress.routine.adherencePercent}%`}
-                </small>
-                <b>Ver ›</b>
-              </button>
             </section>
 
             {remainingBlocks.length > 0 && (

@@ -16,28 +16,14 @@ import {
 } from './features/training/trainingSeed'
 
 import {
-  ensureNutritionSeed,
-} from './features/nutrition/nutritionSeed'
-
-import {
   ensureTodaySeed,
 } from './features/today/todaySeed'
+
+import SettingsPage from './features/settings/SettingsPage'
 
 import TodayPage from './features/today/TodayPage'
 
 import TrainingPage from './features/training/TrainingPage'
-
-import NutritionPage from './features/nutrition/NutritionPage'
-
-import ProgressPage from './features/progress/ProgressPage'
-
-import {
-  ensureProgressSeed,
-} from './features/progress/progressSeed'
-
-import {
-  ensureVNextDataMigrations,
-} from './services/vNextMigrationService'
 
 import './styles/app.css'
 
@@ -48,6 +34,7 @@ import './styles/render-parity.css'
 import './styles/visual-polish.css'
 
 import './styles/final-v1.css'
+import './features/settings/settings.css'
 
 type AppState =
   | 'checking'
@@ -57,8 +44,7 @@ type AppState =
 type AppSection =
   | 'today'
   | 'training'
-  | 'nutrition'
-  | 'progress'
+  | 'settings'
 
 function NavigationIcon({
   section,
@@ -109,29 +95,6 @@ function NavigationIcon({
     )
   }
 
-  if (
-    section ===
-    'nutrition'
-  ) {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M7 3v7" />
-        <path d="M4.5 3v5a2.5 2.5 0 0 0 5 0V3" />
-        <path d="M7 10v11" />
-        <path d="M16 3c2 1.5 3 4 3 7v11" />
-        <path d="M16 3v9h3" />
-      </svg>
-    )
-  }
-
   return (
     <img
       className="fenix-phoenix-icon"
@@ -170,13 +133,7 @@ function App() {
 
       await ensureTrainingSeed()
 
-      await ensureNutritionSeed()
-
       await ensureTodaySeed()
-
-      await ensureVNextDataMigrations()
-
-      await ensureProgressSeed()
     }
 
     initializeApp()
@@ -271,16 +228,6 @@ function App() {
               'training',
             )
           }
-          onOpenNutrition={() =>
-            setSection(
-              'nutrition',
-            )
-          }
-          onOpenProgress={() =>
-            setSection(
-              'progress',
-            )
-          }
         />
       </div>
 
@@ -302,41 +249,8 @@ function App() {
         />
       </div>
 
-      <div
-        className="fenix-view"
-        hidden={
-          section !==
-          'nutrition'
-        }
-      >
-        <NutritionPage
-          isActive={
-            section ===
-            'nutrition'
-          }
-          refreshRevision={
-            freshness.revision
-          }
-        />
-      </div>
-
-      <div
-        className="fenix-view"
-        hidden={
-          section !==
-          'progress'
-        }
-      >
-        <ProgressPage
-          isActive={
-            section ===
-            'progress'
-          }
-          refreshRevision={
-            freshness.revision
-          }
-        />
-      </div>
+      {section === 'settings' && <SettingsPage onClose={() => setSection('today')} />}
+      <button type="button" className="fenix-settings-access" aria-label="Abrir Settings" onClick={() => setSection('settings')}>Settings</button>
 
       <nav
         className="fenix-navigation"
@@ -347,20 +261,13 @@ function App() {
             [
               [
                 'today',
-                'Hoy',
+                'Home',
               ],
               [
                 'training',
                 'Training',
               ],
-              [
-                'nutrition',
-                'Nutrition',
-              ],
-              [
-                'progress',
-                'Progreso',
-              ],
+
             ] as const
           ).map(
             ([

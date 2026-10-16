@@ -1,19 +1,8 @@
 import { db } from '../../db/database'
-import type { NutritionMealView } from '../nutrition/nutritionVNextService'
-import {
-  getNutritionDay,
-  getRelevantNutritionMeal,
-  nutritionRoleLabel,
-  type MacroSummary,
-} from '../nutrition/nutritionVNextService'
 import {
   getActiveWorkout,
   getTrainingHome,
 } from '../training/trainingService'
-import {
-  getProgressSummary,
-  type ProgressSummary,
-} from '../progress/progressService'
 import type { PlannedWorkoutSession, PlannedWorkoutStatus } from '../../types/training'
 
 export type TodayTrainingStatus =
@@ -43,26 +32,8 @@ export interface TodayTrainingSummary {
   streakPending: boolean
 }
 
-export interface TodayNutritionMealSummary {
-  id: string
-  roleLabel: string
-  role: NutritionMealView['meal']['role']
-  name: string
-  plannedCalories: number | null
-}
-
-export interface TodayNutritionSummary {
-  nextMeal: TodayNutritionMealSummary | null
-  consumed: MacroSummary
-  planned: MacroSummary
-  targetCalories: number | null
-  targetProtein: number | null
-}
-
 export interface TodayIntegrationSummary {
   training: TodayTrainingSummary
-  nutrition: TodayNutritionSummary
-  progress: ProgressSummary
 }
 
 function durationMinutes(startedAt: string, endedAt: string | null | undefined) {
@@ -152,7 +123,7 @@ async function getTodayTraining(dateKey: string): Promise<TodayTrainingSummary> 
     return {
       ...common,
       status: 'rest',
-      title: 'Descanso programado',
+      title: 'Sin sesión planificada hoy',
       plannedWorkoutId: null,
       estimatedDurationMinutes: null,
       durationMinutes: null,
@@ -171,39 +142,6 @@ async function getTodayTraining(dateKey: string): Promise<TodayTrainingSummary> 
   }
 }
 
-async function getTodayNutrition(dateKey: string): Promise<TodayNutritionSummary> {
-  const day = await getNutritionDay(dateKey)
-  const relevant = getRelevantNutritionMeal(day)
-
-  return {
-    nextMeal: relevant
-      ? {
-          id: relevant.meal.id,
-          roleLabel: nutritionRoleLabel(relevant.meal.role),
-          role: relevant.meal.role,
-          name: relevant.meal.name,
-          plannedCalories: relevant.meal.plannedCalories,
-        }
-      : null,
-    consumed: day.consumed,
-    planned: day.planned,
-    targetCalories: day.goal?.targetCalories ?? null,
-    targetProtein: day.goal?.targetProtein ?? null,
-  }
-}
-
-export async function getTodayIntegrationSummary(
-  dateKey: string,
-): Promise<TodayIntegrationSummary> {
-  const [training, nutrition, progress] = await Promise.all([
-    getTodayTraining(dateKey),
-    getTodayNutrition(dateKey),
-    getProgressSummary(dateKey),
-  ])
-
-  return {
-    training,
-    nutrition,
-    progress,
-  }
+export async function getTodayIntegrationSummary(dateKey: string): Promise<TodayIntegrationSummary> {
+  return { training: await getTodayTraining(dateKey) }
 }
