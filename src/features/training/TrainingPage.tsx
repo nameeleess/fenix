@@ -582,7 +582,7 @@ function ActiveTraining({
 
           {working.map((set) => (
             <SetRow
-              key={`${set.id}-${set.updatedAt}`}
+              key={set.id}
               set={set}
               targetRir={targetRir}
               simpleText={isGuidedSession ? simpleTarget : null}
