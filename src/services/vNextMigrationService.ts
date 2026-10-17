@@ -1,8 +1,5 @@
 import { db } from '../db/database'
-import type {
-  WorkoutSessionExercise,
-  WorkoutTemplateExercise,
-} from '../types/training'
+import { ensureTrainingVNextMigration } from './trainingVNextMigration'
 import type {
   NutritionDataQuality,
   NutritionRole,
@@ -10,7 +7,6 @@ import type {
   RecipeType,
 } from '../types/nutrition'
 
-const TRAINING_VNEXT_MIGRATION_VERSION = '1'
 const NUTRITION_VNEXT_MIGRATION_VERSION = '1'
 
 function entityBase(id: string = crypto.randomUUID()) {
@@ -31,149 +27,6 @@ function getLocalDateKey(date = new Date()) {
   const day = String(date.getDate()).padStart(2, '0')
 
   return `${year}-${month}-${day}`
-}
-
-function getTargetRirRange(config: WorkoutTemplateExercise | undefined) {
-  if (!config) {
-    return {
-      min: null,
-      max: null,
-    }
-  }
-
-  const min = config.targetRirMin ?? config.targetRir ?? null
-  const max = config.targetRirMax ?? config.targetRir ?? null
-
-  return { min, max }
-}
-
-async function ensureTrainingVNextMigration() {
-  const meta = await db.appMeta.get('trainingVNextMigrationVersion')
-
-  if (meta?.value === TRAINING_VNEXT_MIGRATION_VERSION) {
-    return
-  }
-
-  await db.transaction(
-    'rw',
-    db.appMeta,
-    db.workoutSessions,
-    db.workoutTemplateExercises,
-    db.workoutSessionExercises,
-    db.exerciseSets,
-    async () => {
-      const [sessions, templateConfigs] = await Promise.all([
-        db.workoutSessions.toArray(),
-        db.workoutTemplateExercises.toArray(),
-      ])
-
-      for (const session of sessions) {
-        if (session.deletedAt !== null) {
-          continue
-        }
-
-        const existingSnapshots = await db.workoutSessionExercises
-          .where('workoutSessionId')
-          .equals(session.id)
-          .toArray()
-
-        const sets = (await db.exerciseSets
-          .where('workoutSessionId')
-          .equals(session.id)
-          .toArray())
-          .filter((set) => set.deletedAt === null)
-
-        if (sets.length === 0) {
-          continue
-        }
-
-        const snapshotsByExerciseId = new Map(
-          existingSnapshots
-            .filter((item) => item.deletedAt === null)
-            .map((item) => [item.exerciseId, item]),
-        )
-
-        const exerciseIds: string[] = []
-
-        for (const set of sets) {
-          if (!exerciseIds.includes(set.exerciseId)) {
-            exerciseIds.push(set.exerciseId)
-          }
-        }
-
-        for (const exerciseId of exerciseIds) {
-          let snapshot = snapshotsByExerciseId.get(exerciseId)
-
-          if (!snapshot) {
-            const matchingSets = sets
-              .filter((set) => set.exerciseId === exerciseId)
-              .sort((a, b) => a.order - b.order)
-
-            const config = templateConfigs.find(
-              (item) =>
-                item.deletedAt === null &&
-                item.workoutTemplateId === session.workoutTemplateId &&
-                item.exerciseId === exerciseId,
-            )
-
-            const rir = getTargetRirRange(config)
-            const firstSet = matchingSets[0]
-
-            const next: WorkoutSessionExercise = {
-              ...entityBase(),
-              workoutSessionId: session.id,
-              sourceTemplateExerciseId: config?.id ?? null,
-              exerciseId,
-              exerciseName: firstSet?.exerciseName ?? exerciseId,
-              order: config?.order ?? exerciseIds.indexOf(exerciseId) + 1,
-              targetSets:
-                config?.targetSets ??
-                matchingSets.filter((set) => set.setType === 'working').length,
-              minReps: config?.minReps ?? 0,
-              maxReps: config?.maxReps ?? 0,
-              targetRirMin: rir.min,
-              targetRirMax: rir.max,
-              restSeconds: config?.restSeconds ?? 90,
-              substitutedFromExerciseId: null,
-              notes: null,
-            }
-
-            await db.workoutSessionExercises.add(next)
-            snapshot = next
-            snapshotsByExerciseId.set(exerciseId, next)
-          }
-
-          for (const set of sets.filter((item) => item.exerciseId === exerciseId)) {
-            if (set.workoutSessionExerciseId === snapshot.id) {
-              continue
-            }
-
-            await db.exerciseSets.update(set.id, {
-              workoutSessionExerciseId: snapshot.id,
-              updatedAt: new Date().toISOString(),
-              version: set.version + 1,
-            })
-          }
-        }
-      }
-
-      const planningStart = await db.appMeta.get('trainingPlanningStartDate')
-
-      if (!planningStart) {
-        await db.appMeta.put({
-          key: 'trainingPlanningStartDate',
-          value: getLocalDateKey(),
-          updatedAt: new Date().toISOString(),
-        })
-      }
-
-      await db.appMeta.put({
-        key: 'trainingVNextMigrationVersion',
-        value: TRAINING_VNEXT_MIGRATION_VERSION,
-        updatedAt: new Date().toISOString(),
-      })
-    },
-  )
 }
 
 function recipeTypeFor(recipe: Recipe): RecipeType {

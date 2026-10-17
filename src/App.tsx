@@ -1,3 +1,4 @@
+import { ensureTrainingVNextMigration } from './services/trainingVNextMigration'
 import {
   useEffect,
   useState,
@@ -133,6 +134,7 @@ function App() {
       await initializeDatabase()
 
       await ensureTrainingSeed()
+      await ensureTrainingVNextMigration()
 
       await ensureTodaySeed()
     }

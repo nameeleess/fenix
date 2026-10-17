@@ -1,6 +1,7 @@
 import { db } from '../../db/database'
 import {
   getActiveWorkout,
+  getLocalDateKey,
   getTrainingHome,
 } from '../training/trainingService'
 import type { PlannedWorkoutSession, PlannedWorkoutStatus } from '../../types/training'
@@ -18,6 +19,8 @@ export interface TodayTrainingSessionSummary {
 }
 
 export interface TodayTrainingSummary {
+  scheduledDate: string | null
+  dateRelation: 'today' | 'overdue' | 'future' | 'none'
   status: TodayTrainingStatus
   title: string
   plannedWorkoutId: string | null
@@ -103,9 +106,13 @@ async function getTodayTraining(dateKey: string): Promise<TodayTrainingSummary> 
     streakPending: home.streakPending,
   }
 
+  const relation = (date: string) => date < dateKey ? 'overdue' as const : date > dateKey ? 'future' as const : 'today' as const
+
   if (active) {
     return {
       ...common,
+      scheduledDate: active.planned?.scheduledDate ?? getLocalDateKey(new Date(active.session.startedAt)),
+      dateRelation: relation(active.planned?.scheduledDate ?? getLocalDateKey(new Date(active.session.startedAt))),
       status: 'in_progress',
       title: active.template.name,
       plannedWorkoutId: active.planned?.id ?? null,
@@ -122,6 +129,8 @@ async function getTodayTraining(dateKey: string): Promise<TodayTrainingSummary> 
   if (!focus) {
     return {
       ...common,
+      scheduledDate: null,
+      dateRelation: 'none',
       status: 'rest',
       title: 'Sin sesión planificada hoy',
       plannedWorkoutId: null,
@@ -134,6 +143,8 @@ async function getTodayTraining(dateKey: string): Promise<TodayTrainingSummary> 
 
   return {
     ...common,
+    scheduledDate: focus.scheduledDate,
+    dateRelation: relation(focus.scheduledDate),
     status: focus.status,
     title: focus.templateName,
     plannedWorkoutId: focus.id,

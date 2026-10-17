@@ -18,6 +18,7 @@ import {
   discardEmptyWorkout,
   finishWorkout,
   getActiveWorkout,
+  getSetForEditing,
   getExerciseAlternatives,
   getExerciseCatalog,
   getTrainingHome,
@@ -146,6 +147,23 @@ function SetRow({
     }
   }
 
+  async function reloadPersistedSet() {
+    if (mutationLock.current) return
+    mutationLock.current = true
+    setBusy(true)
+    try {
+      const latest = await getSetForEditing(set.id)
+      setWeight(latest.weight?.toString() ?? '')
+      setReps(latest.reps?.toString() ?? '')
+      setRir(latest.rir?.toString() ?? '')
+      setEditVersion(latest.version)
+      setError('')
+      await onChanged()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'No se pudo recargar la serie.')
+    } finally { mutationLock.current = false; setBusy(false) }
+  }
+
   async function save() {
     if (mutationLock.current) return
     mutationLock.current = true
@@ -220,7 +238,7 @@ function SetRow({
               type="number"
               inputMode="decimal"
               min="0"
-              step="0.5"
+              step="any"
               disabled={busy}
               value={weight}
               onChange={(event) => setWeight(event.target.value)}
@@ -278,10 +296,7 @@ function SetRow({
         ×
       </button>
 
-      {error ? <div className="training-inline-error"><p role="alert">{error}</p><button type="button" disabled={busy} onClick={() => {
-        setWeight(set.weight?.toString() ?? ''); setReps(set.reps?.toString() ?? ''); setRir(set.rir?.toString() ?? '')
-        setEditVersion(set.version); setError('')
-      }}>Descartar borrador y recargar serie</button></div> : null}
+      {error ? <div className="training-inline-error"><p role="alert">{error}</p><button type="button" disabled={busy} onClick={() => void reloadPersistedSet()}>Descartar borrador y recargar serie</button></div> : null}
     </div>
   )
 }

@@ -499,9 +499,10 @@ function TodayPage({
 
         <section className="today-training-summary" aria-label="Próxima acción de Training">
           <h2>{integration.training.title}</h2>
+          {integration.training.scheduledDate && <p>{integration.training.dateRelation === 'overdue' ? (integration.training.status === 'pending' ? 'Sesión vencida' : 'Fecha anterior') : integration.training.dateRelation === 'future' ? 'Sesión futura' : 'Sesión de hoy'} · {formatTodayDate(integration.training.scheduledDate)}</p>}
           <p>{integration.training.completedThisWeek}/{integration.training.plannedThisWeek} sesiones completadas esta semana</p>
           <button type="button" className="today-primary-button" onClick={onOpenTraining}>
-            {integration.training.status === 'in_progress' ? 'Continuar entrenamiento' : integration.training.status === 'pending' ? 'Ver sesión pendiente' : 'Planificar o consultar Training'}
+            {integration.training.status === 'in_progress' ? 'Continuar entrenamiento' : integration.training.status === 'pending' ? (integration.training.dateRelation === 'overdue' ? 'Revisar sesión vencida' : integration.training.dateRelation === 'future' ? 'Ver próxima sesión' : 'Ver sesión de hoy') : 'Planificar o consultar Training'}
           </button>
         </section>
 
@@ -536,7 +537,7 @@ function TodayPage({
               </div>
 
               <div className="today-now-card today-now-card--integrated">
-                <span className="today-eyebrow">AHORA</span>
+                <span className="today-eyebrow">{integration.training.status === 'pending' && integration.training.dateRelation === 'future' ? 'PRÓXIMA SESIÓN' : 'AHORA'}</span>
 
                 {integration.training.status === 'in_progress' ? (
                   <>
@@ -553,7 +554,7 @@ function TodayPage({
                 ) : integration.training.status === 'pending' ? (
                   <>
                     <h2>{integration.training.title}</h2>
-                    <p>Tu siguiente sesión está preparada.</p>
+                    <p>{integration.training.dateRelation === 'overdue' ? 'Sesión pendiente de una fecha anterior: puedes revisarla o reprogramarla en Training.' : integration.training.dateRelation === 'future' ? 'Sesión planificada para una fecha futura.' : 'Tu sesión de hoy está preparada.'}</p>
                     <button type="button" className="today-primary-button today-primary-button--compact" onClick={onOpenTraining}>Abrir Training</button>
                   </>
                 ) : recommendedTask ? (

@@ -823,6 +823,18 @@ export async function startTemplateWorkout(workoutTemplateId: string) {
   return createSessionFromTemplate(template, null)
 }
 
+export async function getSetForEditing(setId: string) {
+  return db.transaction('r', db.exerciseSets, db.workoutSessions, async () => {
+    const set = await db.exerciseSets.get(setId)
+    if (!set || set.deletedAt !== null) throw new Error('La serie ya no está disponible.')
+    const session = await db.workoutSessions.get(set.workoutSessionId)
+    if (!session || session.deletedAt !== null || session.status !== 'active') {
+      throw new Error('La sesión ya no está activa. Recarga Training para consultar su estado.')
+    }
+    return set
+  })
+}
+
 export async function saveSetDraft(setId: string, values: SetValues, expectedVersion?: number) {
   await db.transaction('rw', db.exerciseSets, db.workoutSessions, async () => {
     const set = await db.exerciseSets.get(setId)
