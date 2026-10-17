@@ -24,7 +24,7 @@
 .beta-ui button { min-height: 44px; min-width: 44px; padding: 10px 16px; border: 1px solid var(--fenix-border); border-radius: 12px; color: var(--fenix-text); background: var(--fenix-surface-elevated); cursor: pointer; line-height: 1.35; white-space: normal; }
 .beta-ui button:disabled { opacity: .5; cursor: default; }
 .beta-ui button:not(:disabled):active { transform: translateY(1px); }
-.beta-ui :is(button, input, select, textarea, summary):focus-visible { outline: 2px solid #ff9b91; outline-offset: 3px; }
+.beta-ui :is(button, input, select, textarea, summary):focus-visible { outline: 2px solid var(--fenix-accent); outline-offset: 3px; }
 .beta-ui :is(input:not([type=checkbox]), select, textarea) { width: 100%; min-width: 0; min-height: 48px; font-size: 16px; border: 1px solid var(--fenix-border); border-radius: 10px; padding: 12px; color: var(--fenix-text); background: var(--fenix-bg-soft); }
 .beta-ui input[type=checkbox] { width: 24px; height: 24px; vertical-align: middle; margin-right: 8px; }
 .beta-ui label { line-height: 1.5; }
@@ -43,13 +43,13 @@
 .beta-ui .today-page { min-height: 0; padding: 0; background: transparent; }
 .beta-ui :is(.today-header,.training-main-header) { padding: 0; margin-bottom: 24px; gap: 16px; }
 .beta-ui :is(.today-header h1,.training-main-header h1,.training-active-header h1) { font-size: 28px; line-height: 1.2; letter-spacing: -.025em; }
-.beta-ui :is(.today-primary-button,.training-primary-button,button[type=submit]) { background: #ca3029; border-color: #ca3029; color: white; box-shadow: none; font-weight: 700; }
+.beta-ui :is(.today-primary-button,.training-primary-button,button[type=submit]) { background: var(--fenix-accent); border-color: var(--fenix-accent); color: white; box-shadow: none; font-weight: 700; }
 .beta-ui :is(.today-secondary-button,.training-secondary-button,.today-text-button,.training-ghost-button) { background: transparent; box-shadow: none; }
 .beta-ui :is(.today-training-summary,.today-start-card,.training-session-hero,.training-empty-card,.training-secondary-programs,.training-routine-card,.training-catalog-card,.training-history-card,.training-current-card,.training-upcoming-card,.training-mini-card,.training-definition-editor,.fenix-settings section) { padding: 24px; margin: 0 0 24px; border: 1px solid var(--fenix-border-soft); border-radius: 18px; background: var(--fenix-surface); box-shadow: none; }
 .beta-ui .fenix-settings header { margin-bottom: 24px; }
 .beta-ui .training-tabs { background: transparent; border: 0; border-bottom: 1px solid var(--fenix-border); border-radius: 0; padding: 0 0 8px; gap: 4px; margin-bottom: 24px; }
 .beta-ui .training-tabs button { font-size: 14px; padding: 10px 4px; background: transparent; border: 0; color: var(--fenix-text-muted); }
-.beta-ui .training-tabs button.active { background: var(--fenix-surface-elevated); box-shadow: none; color: var(--fenix-text); }
+.beta-ui .training-tabs button.active { background: var(--fenix-accent); box-shadow: none; color: white; }
 .beta-ui .training-week-strip { gap: 4px; margin-bottom: 24px; }
 .beta-ui .training-week-day { background: transparent; border: 0; border-radius: 10px; min-height: 76px; gap: 4px; padding: 8px 0; }
 .beta-ui .training-week-day span { font-size: 11px; }
@@ -78,7 +78,8 @@
 .beta-ui .fenix-navigation { position: fixed; left: 0; right: 0; bottom: 0; width: 100%; padding: 8px max(16px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); background: #0b0d10f5; border: 0; border-top: 1px solid var(--fenix-border-soft); box-shadow: none; backdrop-filter: blur(12px); }
 .beta-ui .fenix-navigation__inner { max-width: 480px; margin: auto; padding: 0; gap: 16px; border: 0; border-radius: 0; background: transparent; }
 .beta-ui .fenix-navigation button { min-height: 52px; border: 0; border-radius: 12px; background: transparent; color: var(--fenix-text-muted); padding: 8px 16px; }
-.beta-ui .fenix-navigation button.active { background: var(--fenix-surface-elevated); color: white; box-shadow: none; }
+.beta-ui .fenix-navigation button.active { background: var(--fenix-accent); color: white; box-shadow: none; }
+.beta-ui .fenix-navigation button.active .fenix-navigation__icon { color: inherit; }
 .beta-ui .fenix-navigation__label { font-size: 13px; }
 .beta-ui .fenix-navigation__icon { width: 20px; height: 20px; }
 .beta-ui :is(.training-dialog,.today-editor-modal) { max-height: calc(100dvh - 48px); overflow-y: auto; padding: 24px; border-radius: 18px; }
@@ -136,7 +137,7 @@
 .beta-ui .training-upcoming-list strong { font-size: 15px; }
 .beta-ui .training-rest-timer { position: static; margin: 0 0 24px; padding: 20px; border-radius: 16px; }
 /* Home: action, personal routine, supporting Training summary, remaining day. */
-.beta-ui .today-training-summary { border-top: 3px solid #dc6254; }
+.beta-ui .today-training-summary { border-top: 3px solid var(--fenix-accent); }
 .beta-ui .today-training-summary > button { width: 100%; margin-top: 8px; }
 .beta-ui .today-start-card { min-height: 0; display: block; text-align: left; }
 .beta-ui .today-start-card > button { width: 100%; }
@@ -158,9 +159,9 @@
 .beta-ui .today-section-heading button { font-size: 14px; padding: 10px 12px; }
 .beta-ui .today-current-block .today-block { border-color: var(--fenix-border); box-shadow: none; }
 .beta-ui .today-block { border-radius: 16px; margin-bottom: 12px; background: var(--fenix-surface); }
-.beta-ui .today-block-header { min-height: 64px; padding: 16px; }
+.beta-ui .today-block__header { min-height: 64px; padding: 16px; }
 .beta-ui .today-task { padding: 16px; gap: 12px; }
-.beta-ui .today-task-title { font-size: 15px; }
+.beta-ui .today-task__content strong { font-size: 15px; }
 .beta-ui .today-task button { flex-shrink: 0; }
 .beta-ui .today-dashboard-grid { display: block; margin: 0 0 24px; }
 .beta-ui .today-dashboard-card { width: 100%; min-height: 0; padding: 20px; text-align: left; display: grid; gap: 8px; background: var(--fenix-surface); box-shadow: none; }
