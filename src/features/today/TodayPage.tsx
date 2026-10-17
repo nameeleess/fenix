@@ -508,7 +508,7 @@ function TodayPage({
 
         {!dayStarted ? (
           <section className="today-start-card">
-            <img src="/fenix-icon-192.png" alt="" className="today-start-card__icon" />
+
             <div>
               <span className="today-eyebrow">HOY</span>
               <h2>Tu día está preparado</h2>
@@ -516,7 +516,7 @@ function TodayPage({
                 Home y Training comparten el estado de tus sesiones. Iniciar el día activa tu rutina diaria.
               </p>
             </div>
-            <button type="button" className="today-primary-button" onClick={() => void handleStartDay()}>
+            <button type="button" className="today-secondary-button" onClick={() => void handleStartDay()}>
               Iniciar día
             </button>
           </section>
@@ -537,27 +537,9 @@ function TodayPage({
               </div>
 
               <div className="today-now-card today-now-card--integrated">
-                <span className="today-eyebrow">{integration.training.status === 'pending' && integration.training.dateRelation === 'future' ? 'PRÓXIMA SESIÓN' : 'AHORA'}</span>
+                <span className="today-eyebrow">TU RUTINA PERSONAL</span>
 
-                {integration.training.status === 'in_progress' ? (
-                  <>
-                    <h2>{integration.training.title}</h2>
-                    <p>Entrenamiento en curso</p>
-                    <button
-                      type="button"
-                      className="today-primary-button today-primary-button--compact"
-                      onClick={onOpenTraining}
-                    >
-                      Continuar entrenamiento
-                    </button>
-                  </>
-                ) : integration.training.status === 'pending' ? (
-                  <>
-                    <h2>{integration.training.title}</h2>
-                    <p>{integration.training.dateRelation === 'overdue' ? 'Sesión pendiente de una fecha anterior: puedes revisarla o reprogramarla en Training.' : integration.training.dateRelation === 'future' ? 'Sesión planificada para una fecha futura.' : 'Tu sesión de hoy está preparada.'}</p>
-                    <button type="button" className="today-primary-button today-primary-button--compact" onClick={onOpenTraining}>Abrir Training</button>
-                  </>
-                ) : recommendedTask ? (
+                {recommendedTask ? (
                   <>
                     <h2>{recommendedTask.title}</h2>
                     {recommendedTask.description && <p>{recommendedTask.description}</p>}
@@ -648,7 +630,7 @@ function TodayPage({
                 onClick={onOpenTraining}
               >
                 <span className="today-dashboard-card__eyebrow">TRAINING</span>
-                <strong>{integration.training.title}</strong>
+                <strong>Tu semana de entrenamiento</strong>
                 <small>
                   {integration.training.completedThisWeek}/{integration.training.plannedThisWeek} semana
                   {' · '}racha {integration.training.streak}
@@ -657,7 +639,7 @@ function TodayPage({
                     ? ` · ${integration.training.sessionCount} sesiones hoy`
                     : ''}
                 </small>
-                <b>{integration.training.status === 'in_progress' ? 'Continuar' : 'Abrir'} ›</b>
+                <b>Ver Training ›</b>
               </button>
 
             </section>

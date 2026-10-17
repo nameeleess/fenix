@@ -31,15 +31,13 @@ import TrainingPage from './features/training/TrainingPage'
 
 import './styles/app.css'
 
-import './styles/mobile-density.css'
 
-import './styles/render-parity.css'
 
-import './styles/visual-polish.css'
 
-import './styles/final-v1.css'
 import './features/settings/settings.css'
 import './features/training/training-editors.css'
+import './styles/beta-training-visuals.css'
+import './styles/beta-ui.css'
 
 type AppState =
   | 'checking'
@@ -235,7 +233,8 @@ function App() {
   }
 
   return (
-    <div className="fenix-app">
+    <div className="fenix-app beta-ui">
+      <header className="beta-app-header"><span>FÉNIX</span><button type="button" className="fenix-settings-access" aria-label="Abrir Settings" onClick={() => setSection('settings')}>Settings</button></header>
       <div
         className="fenix-view"
         hidden={
@@ -281,7 +280,6 @@ function App() {
       </div>
 
       {section === 'settings' && <SettingsPage onClose={() => setSection('today')} />}
-      <button type="button" className="fenix-settings-access" aria-label="Abrir Settings" onClick={() => setSection('settings')}>Settings</button>
 
       <nav
         className="fenix-navigation"

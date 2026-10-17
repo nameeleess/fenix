@@ -1,0 +1,131 @@
+/* OT-BETA-04: one presentation layer for the mounted BETA screens.
+   Legacy polish/density layers are not loaded by App. Domain styles stay intact. */
+.fenix-app.beta-ui {
+  --fenix-bg: #0b0d10;
+  --fenix-bg-soft: #101318;
+  --fenix-surface: #15191f;
+  --fenix-surface-soft: #191e25;
+  --fenix-surface-elevated: #202630;
+  --fenix-border: #343c47;
+  --fenix-border-soft: #29313b;
+  --fenix-text: #f4f5f7;
+  --fenix-text-muted: #b4bdc9;
+  --fenix-text-dim: #a0abba;
+  --fenix-carbon-texture: none;
+  --ui-gap: 24px;
+  color: var(--fenix-text);
+  background: var(--fenix-bg);
+  min-height: 100dvh;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.beta-ui *, .beta-ui *::before, .beta-ui *::after { box-sizing: border-box; }
+.beta-ui :is(button, input, select, textarea) { font: inherit; }
+.beta-ui button { min-height: 44px; min-width: 44px; padding: 10px 16px; border: 1px solid var(--fenix-border); border-radius: 12px; color: var(--fenix-text); background: var(--fenix-surface-elevated); cursor: pointer; line-height: 1.35; white-space: normal; }
+.beta-ui button:disabled { opacity: .5; cursor: default; }
+.beta-ui button:not(:disabled):active { transform: translateY(1px); }
+.beta-ui :is(button, input, select, textarea, summary):focus-visible { outline: 2px solid #ff9b91; outline-offset: 3px; }
+.beta-ui :is(input:not([type=checkbox]), select, textarea) { width: 100%; min-width: 0; min-height: 48px; font-size: 16px; border: 1px solid var(--fenix-border); border-radius: 10px; padding: 12px; color: var(--fenix-text); background: var(--fenix-bg-soft); }
+.beta-ui input[type=checkbox] { width: 24px; height: 24px; vertical-align: middle; margin-right: 8px; }
+.beta-ui label { line-height: 1.5; }
+.beta-ui :is(h1,h2,h3,p) { overflow-wrap: anywhere; }
+.beta-ui h1 { font-size: 28px; line-height: 1.15; letter-spacing: -.025em; margin: 0 0 8px; }
+.beta-ui h2 { font-size: 22px; line-height: 1.25; letter-spacing: -.015em; margin: 0 0 12px; }
+.beta-ui h3 { font-size: 18px; line-height: 1.3; margin: 0 0 8px; }
+.beta-ui p { font-size: 15px; line-height: 1.6; color: var(--fenix-text-muted); margin: 0 0 16px; }
+.beta-ui small { font-size: 13px; line-height: 1.5; }
+.beta-ui :is(.today-eyebrow,.training-kicker,.training-brand,.today-brand) { font-size: 12px; line-height: 1.5; letter-spacing: .07em; color: #ff9388; margin-bottom: 8px; }
+.beta-ui :is(.today-brand,.training-brand) { display: none; }
+.beta-ui .beta-app-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: min(100%, 960px); margin: auto; padding: calc(12px + env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 12px max(20px, env(safe-area-inset-left)); }
+.beta-ui .beta-app-header > span { font-size: 13px; font-weight: 800; letter-spacing: .15em; color: #ff9388; }
+.beta-ui .fenix-settings-access { position: static; z-index: auto; padding: 10px 12px; background: transparent; border-color: transparent; font-size: 14px; }
+.beta-ui :is(.training-page,.today-shell,.fenix-settings) { width: min(100%, 960px); max-width: 960px; min-height: 0; margin: auto; padding: 20px max(20px, env(safe-area-inset-right)) calc(112px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); background: transparent; }
+.beta-ui .today-page { min-height: 0; padding: 0; background: transparent; }
+.beta-ui :is(.today-header,.training-main-header) { padding: 0; margin-bottom: 24px; gap: 16px; }
+.beta-ui :is(.today-header h1,.training-main-header h1,.training-active-header h1) { font-size: 28px; line-height: 1.2; letter-spacing: -.025em; }
+.beta-ui :is(.today-primary-button,.training-primary-button,button[type=submit]) { background: #ca3029; border-color: #ca3029; color: white; box-shadow: none; font-weight: 700; }
+.beta-ui :is(.today-secondary-button,.training-secondary-button,.today-text-button,.training-ghost-button) { background: transparent; box-shadow: none; }
+.beta-ui :is(.today-training-summary,.today-start-card,.training-session-hero,.training-empty-card,.training-secondary-programs,.training-routine-card,.training-catalog-card,.training-history-card,.training-current-card,.training-upcoming-card,.training-mini-card,.training-definition-editor,.fenix-settings section) { padding: 24px; margin: 0 0 24px; border: 1px solid var(--fenix-border-soft); border-radius: 18px; background: var(--fenix-surface); box-shadow: none; }
+.beta-ui .fenix-settings header { margin-bottom: 24px; }
+.beta-ui .training-tabs { background: transparent; border: 0; border-bottom: 1px solid var(--fenix-border); border-radius: 0; padding: 0 0 8px; gap: 4px; margin-bottom: 24px; }
+.beta-ui .training-tabs button { font-size: 14px; padding: 10px 4px; background: transparent; border: 0; color: var(--fenix-text-muted); }
+.beta-ui .training-tabs button.active { background: var(--fenix-surface-elevated); box-shadow: none; color: var(--fenix-text); }
+.beta-ui .training-week-strip { gap: 4px; margin-bottom: 24px; }
+.beta-ui .training-week-day { background: transparent; border: 0; border-radius: 10px; min-height: 76px; gap: 4px; padding: 8px 0; }
+.beta-ui .training-week-day span { font-size: 11px; }
+.beta-ui .training-week-day.is-today { background: var(--fenix-surface-elevated); box-shadow: inset 0 0 0 1px var(--fenix-border); }
+.beta-ui .training-week-day.is-today strong { color: white; }
+.beta-ui .training-session-hero__header { gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.beta-ui .training-status-pill { font-size: 12px; padding: 6px 10px; }
+.beta-ui .training-session-preview { margin: 20px 0; }
+.beta-ui .training-anatomy { grid-template-columns: 96px minmax(0,1fr); padding: 16px; gap: 16px; }
+.beta-ui .training-anatomy__copy span { font-size: 11px; color: var(--fenix-text-muted); }
+.beta-ui .training-anatomy__copy strong { font-size: 14px; }
+.beta-ui .training-anatomy__copy small { font-size: 12px; }
+.beta-ui .training-anatomy__figures svg { height: 100px; }
+.beta-ui .training-active-header { position: static; top: auto; background: transparent; padding: 0 0 20px; }
+.beta-ui .training-session-preview > div { padding: 12px 0; gap: 12px; }
+.beta-ui .training-session-preview strong { font-size: 15px; }
+.beta-ui :is(.training-inline-actions,.training-same-day-actions) { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.beta-ui :is(.training-inline-actions,.training-same-day-actions) button { flex: 1 1 100px; font-size: 14px; }
+.beta-ui .training-home-grid { gap: 16px; margin-bottom: 24px; }
+.beta-ui .training-mini-card { margin: 0; padding: 20px; }
+.beta-ui .training-mini-card strong { font-size: 26px; }
+.beta-ui .training-secondary-programs__grid { gap: 20px; }
+.beta-ui .training-secondary-programs__grid article { padding: 0; border: 0; background: transparent; }
+.beta-ui :is(.training-session-queue,.training-same-day-panel) { margin: 0 0 24px; }
+.beta-ui :is(.training-session-queue__item,.training-same-day-session) { padding: 16px; margin-top: 12px; border-radius: 14px; background: var(--fenix-surface); flex-wrap: wrap; gap: 12px; }
+.beta-ui .fenix-navigation { position: fixed; left: 0; right: 0; bottom: 0; width: 100%; padding: 8px max(16px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); background: #0b0d10f5; border: 0; border-top: 1px solid var(--fenix-border-soft); box-shadow: none; backdrop-filter: blur(12px); }
+.beta-ui .fenix-navigation__inner { max-width: 480px; margin: auto; padding: 0; gap: 16px; border: 0; border-radius: 0; background: transparent; }
+.beta-ui .fenix-navigation button { min-height: 52px; border: 0; border-radius: 12px; background: transparent; color: var(--fenix-text-muted); padding: 8px 16px; }
+.beta-ui .fenix-navigation button.active { background: var(--fenix-surface-elevated); color: white; box-shadow: none; }
+.beta-ui .fenix-navigation__label { font-size: 13px; }
+.beta-ui .fenix-navigation__icon { width: 20px; height: 20px; }
+.beta-ui :is(.training-dialog,.today-editor-modal) { max-height: calc(100dvh - 48px); overflow-y: auto; padding: 24px; border-radius: 18px; }
+.beta-ui :is(.training-dialog-backdrop,.today-editor-backdrop) { padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); }
+/* Home: action, personal routine, supporting Training summary, remaining day. */
+.beta-ui .today-training-summary { border-top: 3px solid #dc6254; }
+.beta-ui .today-training-summary > button { width: 100%; margin-top: 8px; }
+.beta-ui .today-start-card { min-height: 0; display: block; text-align: left; }
+.beta-ui .today-start-card > button { width: 100%; }
+.beta-ui .today-start-card p { max-width: none; }
+.beta-ui .today-hero--integrated { display: grid; grid-template-columns: minmax(0,1fr); gap: 20px; margin: 0 0 24px; padding: 0; background: transparent; }
+.beta-ui .today-hero__progress { display: flex; align-items: center; gap: 20px; padding: 20px; background: var(--fenix-surface); border: 1px solid var(--fenix-border-soft); border-radius: 18px; }
+.beta-ui .today-progress-ring { width: 96px; height: 96px; flex-shrink: 0; box-shadow: none; }
+.beta-ui .today-progress-ring__inner { width: 78px; height: 78px; }
+.beta-ui .today-progress-ring__inner strong { font-size: 24px; }
+.beta-ui .today-progress-ring__inner span { font-size: 12px; }
+.beta-ui .today-hero__numbers strong { font-size: 22px; }
+.beta-ui .today-hero__numbers span { font-size: 14px; }
+.beta-ui .today-now-card--integrated { padding: 20px; border: 1px solid var(--fenix-border-soft); border-radius: 18px; background: var(--fenix-surface); }
+.beta-ui .today-now-card--integrated::after { display: none; }
+.beta-ui .today-now-card button { background: transparent; border-color: var(--fenix-border); }
+.beta-ui .today-section { margin: 0 0 24px; }
+.beta-ui .today-section-heading { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.beta-ui .today-section-heading__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.beta-ui .today-section-heading button { font-size: 14px; padding: 10px 12px; }
+.beta-ui .today-current-block .today-block { border-color: var(--fenix-border); box-shadow: none; }
+.beta-ui .today-block { border-radius: 16px; margin-bottom: 12px; background: var(--fenix-surface); }
+.beta-ui .today-block-header { min-height: 64px; padding: 16px; }
+.beta-ui .today-task { padding: 16px; gap: 12px; }
+.beta-ui .today-task-title { font-size: 15px; }
+.beta-ui .today-task button { flex-shrink: 0; }
+.beta-ui .today-dashboard-grid { display: block; margin: 0 0 24px; }
+.beta-ui .today-dashboard-card { width: 100%; min-height: 0; padding: 20px; text-align: left; display: grid; gap: 8px; background: var(--fenix-surface); box-shadow: none; }
+.beta-ui .today-dashboard-card strong { font-size: 18px; }
+.beta-ui .today-dashboard-card small { color: var(--fenix-text-muted); font-size: 14px; }
+.beta-ui .today-dashboard-card b { font-size: 14px; font-weight: 500; }
+.beta-ui .today-add-task { display: grid; gap: 12px; padding: 16px; }
+@media (max-width: 480px) {
+  .beta-ui .training-reference-grid { grid-template-columns: 1fr; }
+  .fenix-app.beta-ui .training-set-row { padding: 12px; gap: 8px; }
+}
+@media (max-width: 480px) {
+  .beta-ui :is(.today-training-summary,.today-start-card,.training-session-hero,.training-empty-card,.training-secondary-programs,.training-routine-card,.training-catalog-card,.training-history-card,.training-current-card,.training-upcoming-card,.training-definition-editor,.fenix-settings section) { padding: 20px; }
+  .beta-ui .training-secondary-programs__grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 359px) {
+  .beta-ui :is(.training-page,.today-shell,.fenix-settings,.beta-app-header) { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  .beta-ui :is(.training-current-card,.training-session-hero,.training-definition-editor) { padding: 16px; }
+  .beta-ui .training-home-grid { grid-template-columns: 1fr; }
+}

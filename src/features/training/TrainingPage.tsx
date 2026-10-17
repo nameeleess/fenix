@@ -822,80 +822,6 @@ function HomeView({
         ))}
       </section>
 
-      {multiSessionDays.length > 0 ? (
-        <section className="training-same-day-panel">
-          <div className="training-section-heading">
-            <div>
-              <span className="training-kicker">MÚLTIPLES SESIONES</span>
-              <h2>Sesiones que comparten fecha</h2>
-            </div>
-          </div>
-
-          <div className="training-same-day-list">
-            {multiSessionDays.flatMap((day) =>
-              day.sessions.map((session) => (
-                <article key={session.id} className="training-same-day-session">
-                  <div>
-                    <span>{formatDate(day.date)}</span>
-                    <strong>{session.templateName}</strong>
-                    <small className={statusClass(session.status)}>{statusLabel(session.status)}</small>
-                  </div>
-                  <div className="training-same-day-actions">
-                    {(session.status === 'pending' || session.status === 'in_progress') ? (
-                      <button type="button" onClick={() => void onStart(session)}>
-                        {session.status === 'in_progress' ? 'Reabrir' : 'Iniciar'}
-                      </button>
-                    ) : null}
-                    {session.status === 'pending' ? (
-                      <>
-                        <button type="button" onClick={() => onReprogram(session)}>Reprogramar</button>
-                        <button type="button" onClick={() => onOmit(session)}>Omitir</button>
-                      </>
-                    ) : null}
-                  </div>
-                </article>
-              )),
-            )}
-          </div>
-        </section>
-      ) : null}
-
-      {home.actionableSessions.length > 1 ? (
-        <section className="training-session-queue">
-          <div className="training-section-heading">
-            <div>
-              <span className="training-kicker">AGENDA PENDIENTE</span>
-              <h2>Otras sesiones disponibles</h2>
-            </div>
-          </div>
-
-          <div className="training-session-queue__list">
-            {home.actionableSessions.slice(1).map((session) => (
-              <article key={session.id} className="training-session-queue__item">
-                <div>
-                  <span>{formatDate(session.scheduledDate)}</span>
-                  <strong>{session.templateName}</strong>
-                  <small>{statusLabel(session.status)}</small>
-                </div>
-                <div className="training-same-day-actions">
-                  {(session.status === 'pending' || session.status === 'in_progress') ? (
-                    <button type="button" onClick={() => void onStart(session)}>
-                      {session.status === 'in_progress' ? 'Reabrir' : 'Iniciar'}
-                    </button>
-                  ) : null}
-                  {session.status === 'pending' ? (
-                    <>
-                      <button type="button" onClick={() => onReprogram(session)}>Reprogramar</button>
-                      <button type="button" onClick={() => onOmit(session)}>Omitir</button>
-                    </>
-                  ) : null}
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
       {home.unresolvedPast > 0 ? (
         <div className="training-attention-banner">
           <strong>{home.unresolvedPast} sesión pendiente de resolver</strong>
@@ -969,6 +895,80 @@ function HomeView({
           <p>Abre Rutinas para crear o planificar una sesión. No se generan sesiones automáticamente.</p>
         </section>
       )}
+
+      {multiSessionDays.length > 0 ? (
+        <section className="training-same-day-panel">
+          <div className="training-section-heading">
+            <div>
+              <span className="training-kicker">MÚLTIPLES SESIONES</span>
+              <h2>Sesiones que comparten fecha</h2>
+            </div>
+          </div>
+
+          <div className="training-same-day-list">
+            {multiSessionDays.flatMap((day) =>
+              day.sessions.map((session) => (
+                <article key={session.id} className="training-same-day-session">
+                  <div>
+                    <span>{formatDate(day.date)}</span>
+                    <strong>{session.templateName}</strong>
+                    <small className={statusClass(session.status)}>{statusLabel(session.status)}</small>
+                  </div>
+                  <div className="training-same-day-actions">
+                    {(session.status === 'pending' || session.status === 'in_progress') ? (
+                      <button type="button" onClick={() => void onStart(session)}>
+                        {session.status === 'in_progress' ? 'Reabrir' : 'Iniciar'}
+                      </button>
+                    ) : null}
+                    {session.status === 'pending' ? (
+                      <>
+                        <button type="button" onClick={() => onReprogram(session)}>Reprogramar</button>
+                        <button type="button" onClick={() => onOmit(session)}>Omitir</button>
+                      </>
+                    ) : null}
+                  </div>
+                </article>
+              )),
+            )}
+          </div>
+        </section>
+      ) : null}
+
+      {home.actionableSessions.length > 1 ? (
+        <section className="training-session-queue">
+          <div className="training-section-heading">
+            <div>
+              <span className="training-kicker">AGENDA PENDIENTE</span>
+              <h2>Otras sesiones disponibles</h2>
+            </div>
+          </div>
+
+          <div className="training-session-queue__list">
+            {home.actionableSessions.slice(1).map((session) => (
+              <article key={session.id} className="training-session-queue__item">
+                <div>
+                  <span>{formatDate(session.scheduledDate)}</span>
+                  <strong>{session.templateName}</strong>
+                  <small>{statusLabel(session.status)}</small>
+                </div>
+                <div className="training-same-day-actions">
+                  {(session.status === 'pending' || session.status === 'in_progress') ? (
+                    <button type="button" onClick={() => void onStart(session)}>
+                      {session.status === 'in_progress' ? 'Reabrir' : 'Iniciar'}
+                    </button>
+                  ) : null}
+                  {session.status === 'pending' ? (
+                    <>
+                      <button type="button" onClick={() => onReprogram(session)}>Reprogramar</button>
+                      <button type="button" onClick={() => onOmit(session)}>Omitir</button>
+                    </>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="training-home-grid">
         <article className="training-mini-card">
