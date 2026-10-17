@@ -39,6 +39,11 @@ try {
   await page.getByRole('button',{name:'Training',exact:true}).click()
   await page.waitForFunction(()=>document.querySelector('.training-set-row:not(.is-warmup) input')?.value==='15.125')
   await page.screenshot({path:'../../outputs/mobile-offline-active.png',fullPage:true})
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Active session horizontal overflow')
+  for(const button of await page.locator('.training-set-row:not(.is-warmup)').first().locator(':scope > button').all()) {
+    const box=await button.boundingBox()
+    assert.ok(box && box.x>=0 && box.x+box.width<=390,'Working set action clipped')
+  }
   assert.equal(await page.evaluate(async()=>{try {await fetch('/offline-network-probe-'+crypto.randomUUID(),{cache:'no-store'});return false}catch{return true}}),true,'Uncached network request must fail')
   console.log('PASS production build: Settings synthetic restore, service worker controlled; offline reload and tab reopen retain active session and 15.125kg saved working-set draft. Chromium mobile 390x844; physical iPhone NOT_RUN.')
 } finally {await browser.close()}
