@@ -97,6 +97,7 @@ function TodayPage({
   const [openBlock, setOpenBlock] = useState<TodayBlock>('morning')
   const [taskMenuId, setTaskMenuId] = useState<string | null>(null)
   const [addingTask, setAddingTask] = useState(false)
+  const [routineExpanded, setRoutineExpanded] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [newTaskBlock, setNewTaskBlock] = useState<TodayBlock>('development')
   const [editingRoutine, setEditingRoutine] = useState(false)
@@ -500,12 +501,36 @@ function TodayPage({
         <section className="today-training-summary" aria-label="Próxima acción de Training">
           <h2>{integration.training.title}</h2>
           {integration.training.scheduledDate && <p>{integration.training.dateRelation === 'overdue' ? (integration.training.status === 'pending' ? 'Sesión vencida' : 'Fecha anterior') : integration.training.dateRelation === 'future' ? 'Sesión futura' : 'Sesión de hoy'} · {formatTodayDate(integration.training.scheduledDate)}</p>}
-          <p>{integration.training.completedThisWeek}/{integration.training.plannedThisWeek} sesiones completadas esta semana</p>
           <button type="button" className="today-primary-button" onClick={onOpenTraining}>
             {integration.training.status === 'in_progress' ? 'Continuar entrenamiento' : integration.training.status === 'pending' ? (integration.training.dateRelation === 'overdue' ? 'Revisar sesión vencida' : integration.training.dateRelation === 'future' ? 'Ver próxima sesión' : 'Ver sesión de hoy') : 'Planificar o consultar Training'}
           </button>
         </section>
 
+            <section className="today-dashboard-grid" aria-label="Resumen de módulos">
+              <div
+                className="today-dashboard-card today-dashboard-card--training"
+              >
+                <span className="today-dashboard-card__eyebrow">TRAINING</span>
+                <strong>Tu semana de entrenamiento</strong>
+                <small>
+                  {integration.training.completedThisWeek}/{integration.training.plannedThisWeek} semana
+                  {' · '}racha {integration.training.streak}
+                  {integration.training.streakPending ? ' pendiente' : ''}
+                  {integration.training.hasMultipleSessions
+                    ? ` · ${integration.training.sessionCount} sesiones hoy`
+                    : ''}
+                </small>
+              </div>
+
+            </section>
+
+
+        <section className="today-personal-routine">
+          <button type="button" className="today-routine-toggle" aria-expanded={routineExpanded} aria-controls="personal-routine-content" onClick={() => setRoutineExpanded(value => !value)}>
+            <span><strong>Rutina personal</strong><small>{dayStarted ? `${completedTasks.length}/${applicableTasks.length} acciones · ${recommendedTask?.title ?? 'Día resuelto'}` : 'Tu día está preparado'}</small></span>
+            <span aria-hidden="true">{routineExpanded ? '−' : '+'}</span>
+          </button>
+          <div id="personal-routine-content" hidden={!routineExpanded}>
         {!dayStarted ? (
           <section className="today-start-card">
 
@@ -623,27 +648,6 @@ function TodayPage({
               </div>
             </section>
 
-            <section className="today-dashboard-grid" aria-label="Resumen de módulos">
-              <button
-                type="button"
-                className="today-dashboard-card today-dashboard-card--training"
-                onClick={onOpenTraining}
-              >
-                <span className="today-dashboard-card__eyebrow">TRAINING</span>
-                <strong>Tu semana de entrenamiento</strong>
-                <small>
-                  {integration.training.completedThisWeek}/{integration.training.plannedThisWeek} semana
-                  {' · '}racha {integration.training.streak}
-                  {integration.training.streakPending ? ' pendiente' : ''}
-                  {integration.training.hasMultipleSessions
-                    ? ` · ${integration.training.sessionCount} sesiones hoy`
-                    : ''}
-                </small>
-                <b>Ver Training ›</b>
-              </button>
-
-            </section>
-
             {remainingBlocks.length > 0 && (
               <section className="today-section today-rest-of-day">
                 <div className="today-section-heading">
@@ -659,6 +663,9 @@ function TodayPage({
             )}
           </>
         )}
+
+          </div>
+        </section>
 
         {editingRoutine && (
           <RoutineEditor

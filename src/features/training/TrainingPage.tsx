@@ -541,10 +541,9 @@ function ActiveTraining({
             </p>
           </div>
 
-          <ExerciseVisual
-            guided={isGuidedSession}
-            exercise={item.exercise}
-          />
+          <details className="training-exercise-guide"><summary>Guía visual</summary>
+            <ExerciseVisual guided={isGuidedSession} exercise={item.exercise} />
+          </details>
         </div>
 
         {!isGuidedSession ? (
@@ -850,6 +849,23 @@ function HomeView({
             </span>
           </div>
 
+          <button
+            type="button"
+            className="training-primary-button"
+            onClick={() => void onStart(focus)}
+          >
+            Iniciar {focus.templateName}
+          </button>
+
+          <div className="training-inline-actions">
+            <button type="button" onClick={() => onReprogram(focus)}>
+              Reprogramar
+            </button>
+            <button type="button" onClick={() => onOmit(focus)}>
+              Omitir sesión
+            </button>
+          </div>
+          <details className="training-session-detail"><summary>Ejercicios y grupos musculares</summary>
           <RoutineMuscleMap template={template} />
 
           <div className="training-session-preview">
@@ -871,22 +887,7 @@ function HomeView({
             )}
           </div>
 
-          <button
-            type="button"
-            className="training-primary-button"
-            onClick={() => void onStart(focus)}
-          >
-            Iniciar {focus.templateName}
-          </button>
-
-          <div className="training-inline-actions">
-            <button type="button" onClick={() => onReprogram(focus)}>
-              Reprogramar
-            </button>
-            <button type="button" onClick={() => onOmit(focus)}>
-              Omitir sesión
-            </button>
-          </div>
+          </details>
         </section>
       ) : (
         <section className="training-empty-card">
@@ -1080,15 +1081,15 @@ function ExerciseContextEditor({
   }
 
   return (
-    <article className="training-catalog-card">
-      <div className="training-catalog-card__heading">
+    <details className="training-catalog-card">
+      <summary className="training-catalog-card__heading">
         <div>
           <span>{exercise.primaryMuscle}</span>
           <h3>{exercise.name}</h3>
           <p>{exercise.equipment}</p>
         </div>
         <b>{exercise.exerciseType}</b>
-      </div>
+      </summary>
 
       {exercise.techniqueNotes ? <p className="training-catalog-cue">{exercise.techniqueNotes}</p> : null}
 
@@ -1118,7 +1119,7 @@ function ExerciseContextEditor({
         setTolerance(exercise.tolerance ?? ''); setNotes(exercise.personalNotes ?? '')
         setContextVersion(exercise.version); setSaved('')
       }}>Recargar contexto</button>
-    </article>
+    </details>
   )
 }
 
@@ -1153,6 +1154,7 @@ function HistoryView({
             </div>
             <strong>{workingSets.length} series registradas</strong>
 
+            <details className="training-history-detail"><summary>Ver ejercicios y series</summary>
             <div className="training-history-exercises">
               {item.exercises.map((exercise) => {
                 const exerciseSets = workingSets.filter(
@@ -1173,6 +1175,7 @@ function HistoryView({
                 )
               })}
             </div>
+            </details>
           </article>
         )
       })}

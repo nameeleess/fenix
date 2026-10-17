@@ -147,8 +147,11 @@ export function RoutineManager({ templates, catalog, onReload, onStart }: {
   return <div className="training-definition-list">
     <button type="button" onClick={() => setEditing({ view: null })}>Crear rutina</button>
     {templates.map(view => <section className="training-routine-card" key={view.template.id}>
-      <h2>{view.template.name}</h2><p>{view.template.description}</p><p>{view.exercises.length} ejercicios · {view.totalSets} series</p>
-      <ol>{view.exercises.map(item => <li key={item.config.id}>{item.exercise.name}</li>)}</ol>
+      <details className="training-routine-detail">
+        <summary><h2>{view.template.name}</h2><span>{view.template.type} · {view.exercises.length} ejercicios · {view.totalSets} series</span></summary>
+        <p>{view.template.description}</p>
+        <ol>{view.exercises.map(item => <li key={item.config.id}>{item.exercise.name}</li>)}</ol>
+      </details>
       <div className="beta-routine-actions"><button type="button" onClick={() => setEditing({ view })}>Editar rutina</button>
       <button type="button" onClick={() => setPlanning(view)}>Planificar sesión</button>
       <button type="button" className="training-primary-button" onClick={() => void onStart(view.template.id)}>Iniciar ahora</button></div>
