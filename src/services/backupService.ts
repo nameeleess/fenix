@@ -99,7 +99,22 @@ function downloadBackup(file: File) {
 
 export async function exportFenixBackup(): Promise<BackupExportResult> {
   const backup = await buildBackup()
-  const fileName = createBackupFileName(backup.exportedAt)
+  return exportBackupFile(backup)
+}
+
+// Emergency preservation uses the same coherent, complete read as Settings.
+// Validation is reported, never weakened to make incompatible history pass.
+export async function exportFenixRecoveryBackup() {
+  const backup = await buildBackup()
+  const validation = validateFenixBackup(backup)
+  const result = await exportBackupFile(backup, !validation.valid)
+  return { ...result, validation }
+}
+
+async function exportBackupFile(backup: FenixBackup, preservationOnly = false): Promise<BackupExportResult> {
+  const fileName = preservationOnly
+    ? createBackupFileName(backup.exportedAt).replace('fenix-backup-', 'fenix-preservacion-NO-VALIDADA-')
+    : createBackupFileName(backup.exportedAt)
   const json = JSON.stringify(backup, null, 2)
   const file = new File([json], fileName, { type: 'application/json' })
 
@@ -111,8 +126,8 @@ export async function exportFenixBackup(): Promise<BackupExportResult> {
 
   if (canShareFile) {
     await navigator.share({
-      title: 'Copia de seguridad FÉNIX',
-      text: 'Copia completa de los datos locales de FÉNIX.',
+      title: preservationOnly ? 'Preservación FÉNIX (no validada)' : 'Copia de seguridad FÉNIX',
+      text: preservationOnly ? 'Archivo completo para revisión; no es un backup restaurable validado.' : 'Copia completa de los datos locales de FÉNIX.',
       files: [file],
     })
 

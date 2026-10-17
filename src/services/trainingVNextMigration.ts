@@ -25,8 +25,14 @@ export async function ensureTrainingVNextMigration() {
       const missing = sets.filter(item => !item.workoutSessionExerciseId)
       for (const exerciseId of new Set(missing.map(item => item.exerciseId))) {
         const candidates = snapshots.filter(item => item.exerciseId === exerciseId)
-        if (candidates.length > 1) throw new Error('Compatibilidad Training: varias identidades posibles; se requiere revisión sin alterar el historial.')
+        if (candidates.length > 0) throw new Error('Compatibilidad Training [RV-05]: una serie sin vínculo podría pertenecer a otra aparición del ejercicio; se requiere revisión sin alterar el historial.')
         const group = missing.filter(item => item.exerciseId === exerciseId)
+        // Neither series order, timestamps, names nor today's routine identify
+        // an original occurrence. Even disjoint order values can belong to two
+        // separate occurrences. Do not silently merge them into one snapshot.
+        if (sets.filter(item => item.exerciseId === exerciseId).length > 1) {
+          throw new Error('Compatibilidad Training [RV-05]: no se pueden distinguir con seguridad las apariciones históricas de un ejercicio. Conserva una copia para su revisión; no se han modificado los datos.')
+        }
         let snapshot = candidates[0]
         if (!snapshot) {
           // Do not project today's routine definition onto historical execution.

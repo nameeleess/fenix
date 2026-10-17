@@ -1,6 +1,8 @@
 import { ensureTrainingVNextMigration } from './services/trainingVNextMigration'
+import { exportFenixRecoveryBackup } from './services/backupService'
 import {
   useEffect,
+  useRef,
   useState,
 } from 'react'
 
@@ -10,6 +12,7 @@ import {
 
 import {
   initializeDatabase,
+  db,
 } from './db/database'
 
 import {
@@ -108,6 +111,28 @@ function NavigationIcon({
 }
 
 function App() {
+  const [initializationError, setInitializationError] = useState('')
+  const [recoveryMessage, setRecoveryMessage] = useState('')
+  const [exporting, setExporting] = useState(false)
+  const exportLock = useRef(false)
+
+  async function exportRecovery() {
+    if (exportLock.current) return
+    exportLock.current = true
+    setExporting(true)
+    setRecoveryMessage('')
+    try {
+      const result = await exportFenixRecoveryBackup()
+      setRecoveryMessage(result.validation.valid
+        ? `Copia completa exportada: ${result.totalRecords} registros. Formato e integridad validados. Restaurarla no corrige por sí sola la incompatibilidad de inicio.`
+        : `Copia completa de preservación exportada: ${result.totalRecords} registros. NO es un backup restaurable validado. Conserva el archivo para revisión. ${result.validation.errors.join(' · ')}`)
+    } catch (error) {
+      setRecoveryMessage(`Exportación bloqueada: no se ha podido garantizar una copia completa. ${error instanceof Error ? error.message : 'Error de lectura.'}`)
+    } finally {
+      exportLock.current = false
+      setExporting(false)
+    }
+  }
   const [
     appState,
     setAppState,
@@ -131,10 +156,13 @@ function App() {
     let active = true
 
     async function initializeApp() {
+      // Historical compatibility must succeed before seeds or metadata writes.
+      // On failure the recovery screen only reads the existing database.
+      await db.open()
+      await ensureTrainingVNextMigration()
       await initializeDatabase()
 
       await ensureTrainingSeed()
-      await ensureTrainingVNextMigration()
 
       await ensureTodaySeed()
     }
@@ -161,6 +189,7 @@ function App() {
           if (
             active
           ) {
+            setInitializationError(error instanceof Error ? error.message : 'No se ha podido leer la base local.')
             setAppState(
               'error',
             )
@@ -196,12 +225,11 @@ function App() {
           FÉNIX
         </h1>
 
-        <p>
-          No se ha podido iniciar
-          la base local. Tus datos
-          existentes no han sido
-          borrados.
-        </p>
+        <p role="alert">No se ha podido iniciar FÉNIX por una incompatibilidad con datos históricos o un error de acceso. La recuperación se ha detenido para proteger tus datos.</p>
+        <p>{initializationError}</p>
+        <p>Puedes exportar una copia completa sin iniciar Training ni ejecutar más migraciones. Si la copia no supera la validación, se identificará como archivo de preservación pendiente de revisión.</p>
+        <button type="button" disabled={exporting} onClick={() => void exportRecovery()}>Exportar copia completa de recuperación</button>
+        <p role="status">{recoveryMessage}</p>
       </main>
     )
   }
