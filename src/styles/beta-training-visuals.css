@@ -201,4 +201,3 @@
 @keyframes fenix-deadbug { 0%,100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
 @keyframes fenix-sideplank { 0%,100% { transform: translateY(4px); } 50% { transform: translateY(-4px); } }
 @keyframes fenix-breathe { 0%,100% { transform: scale(.72); opacity: .35; } 50% { transform: scale(1.12); opacity: .9; } }
-

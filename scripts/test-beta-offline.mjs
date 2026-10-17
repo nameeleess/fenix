@@ -38,7 +38,7 @@ try {
   await page.getByRole('heading',{name:'HOME',exact:true}).waitFor()
   await page.getByRole('button',{name:'Training',exact:true}).click()
   await page.waitForFunction(()=>document.querySelector('.training-set-row:not(.is-warmup) input')?.value==='15.125')
-  await page.screenshot({path:'../../outputs/mobile-offline-active.png',fullPage:true})
+  await page.screenshot({path:process.env.BETA_OFFLINE_SCREENSHOT || '../../outputs/mobile-offline-active.png',fullPage:true})
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Active session horizontal overflow')
   for(const button of await page.locator('.training-set-row:not(.is-warmup)').first().locator(':scope > button').all()) {
     const box=await button.boundingBox()

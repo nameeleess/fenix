@@ -275,7 +275,7 @@ function SetRow({
         </>
       )}
 
-      <button type="button" disabled={busy} onClick={() => void save()}>Guardar</button>
+      <button type="button" className="beta-set-save" disabled={busy} onClick={() => void save()}>{busy ? 'Guardando…' : 'Guardar'}</button>
       <button
         type="button"
         className="training-set-row__complete"
@@ -283,14 +283,14 @@ function SetRow({
         aria-label={set.completedAt ? 'Desmarcar serie' : 'Completar serie'}
         onClick={() => void toggle()}
       >
-        {set.completedAt ? '✓' : '○'}
+        {set.completedAt ? 'Desmarcar' : 'Completar'}
       </button>
 
       <button
         type="button"
         className="training-set-row__remove"
         disabled={busy}
-        aria-label="Eliminar serie"
+        aria-label="Eliminar serie" title="Eliminar serie"
         onClick={() => void remove()}
       >
         ×
@@ -506,7 +506,7 @@ function ActiveTraining({
   return (
     <main className="training-page training-page--active">
       <header className="training-active-header">
-        <button type="button" className="training-back-button" onClick={onExit}>
+        <button type="button" className="training-back-button" aria-label="Volver a Training" onClick={onExit}>
           ‹
         </button>
 
